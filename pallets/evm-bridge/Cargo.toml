@@ -1,0 +1,49 @@
+[package]
+name = "module-evm-bridge"
+version = "0.7.3"
+authors = ["Acala Developers"]
+edition = "2018"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+serde = { version = "1.0.101", optional = true, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
+frame-support = { version = "3.0.0", default-features = false }
+frame-system = { version = "3.0.0", default-features = false }
+sp-core = { version = "3.0.0", default-features = false }
+sp-runtime = { version = "3.0.0", default-features = false }
+sp-std = { version = "3.0.0", default-features = false }
+sp-io = { version = "3.0.0", default-features = false }
+primitive-types = { version = "0.9.0", default-features = false, features = ["rlp", "byteorder"] }
+sha3 = { version = "0.8", default-features = false }
+impl-trait-for-tuples = "0.2.1"
+ethereum-types = { version = "0.11.0", default-features = false }
+primitives = { package = "reef-primitives", path = "../../primitives", default-features = false }
+support = { package = "module-support", path = "../support", default-features = false }
+module-evm = { path = "../evm", default-features = false }
+hex-literal = { version = "0.3.1" }
+
+[dev-dependencies]
+pallet-balances = "3.0.0"
+pallet-timestamp = "3.0.0"
+
+[features]
+default = ["std"]
+std = [
+	"serde",
+	"codec/std",
+	"sp-core/std",
+	"sp-runtime/std",
+	"frame-support/std",
+	"frame-system/std",
+	"sp-io/std",
+	"sp-std/std",
+	"sha3/std",
+	"ethereum-types/std",
+	"primitives/std",
+	"primitive-types/std",
+	"support/std",
+	"module-evm/std",
+]
