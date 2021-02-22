@@ -73,7 +73,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(reef_properties()),
 		// Extensions
-		None,
+		Default::default(),
 	))
 }
 
@@ -121,7 +121,7 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(reef_properties()),
 		// Extensions
-		None,
+		Default::default(),
 	))
 }
 
@@ -161,7 +161,7 @@ pub fn aura_testnet_config() -> Result<ChainSpec, String> {
 		// Properties
 		Some(reef_properties()),
 		// Extensions
-		None,
+		Default::default(),
 	))
 }
 

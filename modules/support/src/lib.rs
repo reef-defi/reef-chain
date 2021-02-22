@@ -16,6 +16,12 @@ use sp_std::{
 	prelude::*,
 };
 
+
+pub type Price = FixedU128;
+pub type Ratio = FixedU128;
+pub type Rate = FixedU128;
+
+
 /// Return true if the call of EVM precompile contract is allowed.
 pub trait PrecompileCallerFilter {
 	fn is_allowed(caller: H160) -> bool;
