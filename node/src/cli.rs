@@ -1,6 +1,7 @@
 use structopt::StructOpt;
 use sc_cli::RunCmd;
 
+
 #[derive(Debug, StructOpt)]
 pub struct Cli {
 	#[structopt(subcommand)]
@@ -14,6 +15,23 @@ pub struct Cli {
 pub enum Subcommand {
 	/// Key management cli utilities
 	Key(sc_cli::KeySubcommand),
+
+	// /// The custom inspect subcommmand for decoding blocks and extrinsics.
+	// #[structopt(
+	// 	name = "inspect",
+	// 	about = "Decode given block or extrinsic using current native runtime."
+	// )]
+	// Inspect(inspect::cli::InspectCmd),
+
+	/// Verify a signature for a message, provided on STDIN, with a given
+	/// (public or secret) key.
+	Verify(sc_cli::VerifyCmd),
+
+	/// Generate a seed that provides a vanity address.
+	Vanity(sc_cli::VanityCmd),
+
+	/// Sign a message, with a given (secret) key.
+	Sign(sc_cli::SignCmd),
 
 	/// Build a chain specification.
 	BuildSpec(sc_cli::BuildSpecCmd),

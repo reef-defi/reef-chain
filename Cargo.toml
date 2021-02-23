@@ -6,6 +6,7 @@ members = [
     'node',
     'modules/*',
     'runtime',
+	'inspect',
     'primitives'
 ]
 exclude = ['rpc']
