@@ -76,8 +76,8 @@ impl tokens::Config for Runtime {
 	type WeightInfo = ();
 }
 
-pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::Token(TokenSymbol::ACA);
-pub const X_TOKEN_ID: CurrencyId = CurrencyId::Token(TokenSymbol::AUSD);
+pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::Token(TokenSymbol::REEF);
+pub const X_TOKEN_ID: CurrencyId = CurrencyId::Token(TokenSymbol::RUSD);
 
 parameter_types! {
 	pub const GetNativeCurrencyId: CurrencyId = NATIVE_CURRENCY_ID;

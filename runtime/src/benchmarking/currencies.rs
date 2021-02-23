@@ -38,7 +38,7 @@ runtime_benchmarks! {
 	transfer_native_currency_worst_case {
 		let existential_deposit = NativeTokenExistentialDeposit::get();
 		let amount: Balance = existential_deposit.saturating_mul(1000);
-		let native_currency_id = CurrencyId::Token(TokenSymbol::ACA);
+		let native_currency_id = CurrencyId::Token(TokenSymbol::REEF);
 		let from = account("from", 0, SEED);
 		set_balance(native_currency_id, &from, amount);
 
@@ -55,7 +55,7 @@ runtime_benchmarks! {
 	transfer_native_currency {
 		let existential_deposit = NativeTokenExistentialDeposit::get();
 		let amount: Balance = existential_deposit.saturating_mul(1000);
-		let native_currency_id = CurrencyId::Token(TokenSymbol::ACA);
+		let native_currency_id = CurrencyId::Token(TokenSymbol::REEF);
 		let from = account("from", 0, SEED);
 		set_balance(native_currency_id, &from, amount);
 
@@ -84,7 +84,7 @@ runtime_benchmarks! {
 		let existential_deposit = NativeTokenExistentialDeposit::get();
 		let balance: Balance = existential_deposit.saturating_mul(1000);
 		let amount: Amount = balance.unique_saturated_into();
-		let native_currency_id = CurrencyId::Token(TokenSymbol::ACA);
+		let native_currency_id = CurrencyId::Token(TokenSymbol::REEF);
 		let who: AccountId = account("who", 0, SEED);
 		let who_lookup = lookup_of_account(who.clone());
 	}: update_balance(RawOrigin::Root, who_lookup, native_currency_id, amount)
@@ -98,7 +98,7 @@ runtime_benchmarks! {
 		let existential_deposit = NativeTokenExistentialDeposit::get();
 		let balance: Balance = existential_deposit.saturating_mul(1000);
 		let amount: Amount = balance.unique_saturated_into();
-		let native_currency_id = CurrencyId::Token(TokenSymbol::ACA);
+		let native_currency_id = CurrencyId::Token(TokenSymbol::REEF);
 		let who: AccountId = account("who", 0, SEED);
 		let who_lookup = lookup_of_account(who.clone());
 		set_balance(native_currency_id, &who, balance);

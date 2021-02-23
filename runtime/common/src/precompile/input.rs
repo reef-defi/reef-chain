@@ -241,12 +241,12 @@ mod tests {
 	#[test]
 	fn currency_id_works() {
 		let input = TestInput::new(&[0u8; 32][..]);
-		assert_ok!(input.currency_id_at(0), CurrencyId::Token(TokenSymbol::ACA));
+		assert_ok!(input.currency_id_at(0), CurrencyId::Token(TokenSymbol::REEF));
 
 		let mut raw_input = [0u8; 32];
 		raw_input[30] = 1;
 		let input = TestInput::new(&raw_input[..]);
-		assert_ok!(input.currency_id_at(0), CurrencyId::Token(TokenSymbol::AUSD));
+		assert_ok!(input.currency_id_at(0), CurrencyId::Token(TokenSymbol::RUSD));
 	}
 
 	#[test]

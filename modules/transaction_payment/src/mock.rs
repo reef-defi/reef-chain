@@ -6,7 +6,7 @@ use super::*;
 use crate as transaction_payment;
 use frame_support::{construct_runtime, ord_parameter_types, parameter_types, weights::WeightToFeeCoefficients};
 use orml_traits::parameter_type_with_key;
-use primitives::{evm::EvmAddress, mocks::MockAddressMapping, Amount, TokenSymbol, TradingPair};
+use primitives::{evm::EvmAddress, mocks::MockAddressMapping, Amount, TokenSymbol};
 use smallvec::smallvec;
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::{
@@ -20,9 +20,9 @@ pub type BlockNumber = u64;
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
-pub const ACA: CurrencyId = CurrencyId::Token(TokenSymbol::ACA);
-pub const AUSD: CurrencyId = CurrencyId::Token(TokenSymbol::AUSD);
-pub const DOT: CurrencyId = CurrencyId::Token(TokenSymbol::DOT);
+
+pub const REEF: CurrencyId = CurrencyId::Token(TokenSymbol::REEF);
+pub const RUSD: CurrencyId = CurrencyId::Token(TokenSymbol::RUSD);
 
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
@@ -127,7 +127,7 @@ where
 }
 
 parameter_types! {
-	pub const GetNativeCurrencyId: CurrencyId = ACA;
+	pub const GetNativeCurrencyId: CurrencyId = REEF;
 }
 
 impl module_currencies::Config for Runtime {
@@ -148,27 +148,8 @@ ord_parameter_types! {
 }
 
 parameter_types! {
-	pub const DEXModuleId: ModuleId = ModuleId(*b"aca/dexm");
-	pub const GetExchangeFee: (u32, u32) = (0, 100);
-	pub const TradingPathLimit: u32 = 3;
-	pub EnabledTradingPairs : Vec<TradingPair> = vec![TradingPair::new(AUSD, ACA), TradingPair::new(AUSD, DOT)];
-}
-
-impl module_dex::Config for Runtime {
-	type Event = Event;
-	type Currency = Currencies;
-	type GetExchangeFee = GetExchangeFee;
-	type TradingPathLimit = TradingPathLimit;
-	type ModuleId = DEXModuleId;
-	type DEXIncentives = ();
-	type WeightInfo = ();
-	type ListingOrigin = frame_system::EnsureSignedBy<Zero, AccountId>;
-}
-
-parameter_types! {
-	pub AllNonNativeCurrencyIds: Vec<CurrencyId> = vec![AUSD, DOT];
-	pub MaxSlippageSwapWithDEX: Ratio = Ratio::one();
-	pub const StableCurrencyId: CurrencyId = AUSD;
+	pub AllNonNativeCurrencyIds: Vec<CurrencyId> = vec![RUSD];
+	pub const StableCurrencyId: CurrencyId = RUSD;
 	pub static TransactionByteFee: u128 = 1;
 }
 
@@ -182,8 +163,6 @@ impl Config for Runtime {
 	type TransactionByteFee = TransactionByteFee;
 	type WeightToFee = WeightToFee;
 	type FeeMultiplierUpdate = ();
-	type DEX = DEXModule;
-	type MaxSlippageSwapWithDEX = MaxSlippageSwapWithDEX;
 	type WeightInfo = ();
 }
 
@@ -219,7 +198,6 @@ construct_runtime!(
 		PalletBalances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
 		Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
 		Currencies: module_currencies::{Module, Call, Event<T>},
-		DEXModule: module_dex::{Module, Storage, Call, Event<T>, Config<T>},
 	}
 );
 
@@ -233,7 +211,7 @@ pub struct ExtBuilder {
 impl Default for ExtBuilder {
 	fn default() -> Self {
 		Self {
-			endowed_accounts: vec![(ALICE, AUSD, 10000), (ALICE, DOT, 1000)],
+			endowed_accounts: vec![(ALICE, RUSD, 10000)],
 			base_weight: 0,
 			byte_fee: 2,
 			weight_to_fee: 1,
@@ -273,14 +251,6 @@ impl ExtBuilder {
 
 		orml_tokens::GenesisConfig::<Runtime> {
 			endowed_accounts: self.endowed_accounts,
-		}
-		.assimilate_storage(&mut t)
-		.unwrap();
-
-		module_dex::GenesisConfig::<Runtime> {
-			initial_listing_trading_pairs: vec![],
-			initial_enabled_trading_pairs: EnabledTradingPairs::get(),
-			initial_added_liquidity_pools: vec![],
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();

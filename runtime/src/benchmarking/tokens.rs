@@ -26,9 +26,9 @@ runtime_benchmarks! {
 
 		let to: AccountId = account("to", 0, SEED);
 		let to_lookup = lookup_of_account(to.clone());
-	}: _(RawOrigin::Signed(from), to_lookup, CurrencyId::Token(TokenSymbol::AUSD), amount)
+	}: _(RawOrigin::Signed(from), to_lookup, CurrencyId::Token(TokenSymbol::RUSD), amount)
 	verify {
-		assert_eq!(<Tokens as MultiCurrency<_>>::total_balance(CurrencyId::Token(TokenSymbol::AUSD), &to), amount);
+		assert_eq!(<Tokens as MultiCurrency<_>>::total_balance(CurrencyId::Token(TokenSymbol::RUSD), &to), amount);
 	}
 
 	transfer_all {
@@ -39,9 +39,9 @@ runtime_benchmarks! {
 
 		let to: AccountId = account("to", 0, SEED);
 		let to_lookup = lookup_of_account(to);
-	}: _(RawOrigin::Signed(from.clone()), to_lookup, CurrencyId::Token(TokenSymbol::AUSD))
+	}: _(RawOrigin::Signed(from.clone()), to_lookup, CurrencyId::Token(TokenSymbol::RUSD))
 	verify {
-		assert_eq!(<Tokens as MultiCurrency<_>>::total_balance(CurrencyId::Token(TokenSymbol::AUSD), &from), 0);
+		assert_eq!(<Tokens as MultiCurrency<_>>::total_balance(CurrencyId::Token(TokenSymbol::RUSD), &from), 0);
 	}
 }
 

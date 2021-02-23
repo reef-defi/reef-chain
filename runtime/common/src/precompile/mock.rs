@@ -9,11 +9,11 @@ use frame_support::{
 	RuntimeDebug,
 };
 use frame_system::{EnsureRoot, EnsureSignedBy};
-use module_support::DEXIncentives;
 use orml_traits::{parameter_type_with_key, MultiReservableCurrency};
 pub use primitives::{
-	evm::AddressMapping, mocks::MockAddressMapping, Amount, BlockNumber, CurrencyId, Header, Nonce, TokenSymbol,
-	TradingPair, PREDEPLOY_ADDRESS_START,
+	evm::AddressMapping, mocks::MockAddressMapping,
+	Amount, BlockNumber, CurrencyId, Header, Nonce, TokenSymbol,
+	PREDEPLOY_ADDRESS_START,
 };
 use sp_core::{crypto::AccountId32, Bytes, H160, H256};
 use sp_runtime::{
@@ -55,22 +55,6 @@ impl frame_system::Config for Test {
 	type SS58Prefix = ();
 }
 
-parameter_types! {
-	pub const MinimumCount: u32 = 1;
-	pub const ExpiresIn: u32 = 600;
-	pub const RootOperatorAccountId: AccountId = ALICE;
-}
-
-impl orml_oracle::Config for Test {
-	type Event = Event;
-	type OnNewData = ();
-	type CombineData = orml_oracle::DefaultCombineData<Self, MinimumCount, ExpiresIn>;
-	type Time = Timestamp;
-	type OracleKey = Key;
-	type OracleValue = Price;
-	type RootOperatorAccountId = RootOperatorAccountId;
-	type WeightInfo = ();
-}
 
 impl pallet_timestamp::Config for Test {
 	type Moment = u64;
@@ -109,12 +93,11 @@ impl pallet_balances::Config for Test {
 	type MaxLocks = ();
 }
 
-pub const ACA: CurrencyId = CurrencyId::Token(TokenSymbol::ACA);
-pub const XBTC: CurrencyId = CurrencyId::Token(TokenSymbol::XBTC);
-pub const AUSD: CurrencyId = CurrencyId::Token(TokenSymbol::AUSD);
+pub const REEF: CurrencyId = CurrencyId::Token(TokenSymbol::REEF);
+pub const RUSD: CurrencyId = CurrencyId::Token(TokenSymbol::RUSD);
 
 parameter_types! {
-	pub const GetNativeCurrencyId: CurrencyId = ACA;
+	pub const GetNativeCurrencyId: CurrencyId = REEF;
 }
 
 impl module_currencies::Config for Test {
@@ -131,31 +114,9 @@ impl module_evm_bridge::Config for Test {
 }
 
 parameter_types! {
-	pub const CreateClassDeposit: Balance = 200;
-	pub const CreateTokenDeposit: Balance = 100;
-	pub const NftModuleId: ModuleId = ModuleId(*b"aca/aNFT");
-}
-impl module_nft::Config for Test {
-	type Event = Event;
-	type CreateClassDeposit = CreateClassDeposit;
-	type CreateTokenDeposit = CreateTokenDeposit;
-	type ModuleId = NftModuleId;
-	type Currency = AdaptedBasicCurrency;
-	type WeightInfo = ();
-}
-
-impl orml_nft::Config for Test {
-	type ClassId = u32;
-	type TokenId = u64;
-	type ClassData = module_nft::ClassData;
-	type TokenData = module_nft::TokenData;
-}
-
-parameter_types! {
 	pub const TransactionByteFee: Balance = 10;
-	pub const GetStableCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::AUSD);
-	pub AllNonNativeCurrencyIds: Vec<CurrencyId> = vec![CurrencyId::Token(TokenSymbol::AUSD)];
-	pub MaxSlippageSwapWithDEX: Ratio = Ratio::one();
+	pub const GetStableCurrencyId: CurrencyId = CurrencyId::Token(TokenSymbol::RUSD);
+	pub AllNonNativeCurrencyIds: Vec<CurrencyId> = vec![CurrencyId::Token(TokenSymbol::RUSD)];
 }
 
 impl module_transaction_payment::Config for Test {
@@ -168,8 +129,6 @@ impl module_transaction_payment::Config for Test {
 	type TransactionByteFee = TransactionByteFee;
 	type WeightToFee = IdentityFee<Balance>;
 	type FeeMultiplierUpdate = ();
-	type DEX = ();
-	type MaxSlippageSwapWithDEX = MaxSlippageSwapWithDEX;
 	type WeightInfo = ();
 }
 pub type ChargeTransactionPayment = module_transaction_payment::ChargeTransactionPayment<Test>;
@@ -244,46 +203,11 @@ impl pallet_scheduler::Config for Test {
 	type WeightInfo = ();
 }
 
-pub struct MockDEXIncentives;
-impl DEXIncentives<AccountId, CurrencyId, Balance> for MockDEXIncentives {
-	fn do_deposit_dex_share(who: &AccountId, lp_currency_id: CurrencyId, amount: Balance) -> DispatchResult {
-		Tokens::reserve(lp_currency_id, who, amount)
-	}
-
-	fn do_withdraw_dex_share(who: &AccountId, lp_currency_id: CurrencyId, amount: Balance) -> DispatchResult {
-		let _ = Tokens::unreserve(lp_currency_id, who, amount);
-		Ok(())
-	}
-}
-
-ord_parameter_types! {
-	pub const ListingOrigin: AccountId = ALICE;
-}
-
-parameter_types! {
-	pub const GetExchangeFee: (u32, u32) = (1, 100);
-	pub const TradingPathLimit: u32 = 3;
-	pub const DEXModuleId: ModuleId = ModuleId(*b"aca/dexm");
-}
-
-impl module_dex::Config for Test {
-	type Event = Event;
-	type Currency = Tokens;
-	type GetExchangeFee = GetExchangeFee;
-	type TradingPathLimit = TradingPathLimit;
-	type ModuleId = DEXModuleId;
-	type WeightInfo = ();
-	type DEXIncentives = MockDEXIncentives;
-	type ListingOrigin = EnsureSignedBy<ListingOrigin, AccountId>;
-}
-
 pub type AdaptedBasicCurrency = module_currencies::BasicCurrencyAdapter<Test, Balances, Amount, BlockNumber>;
 
 pub type MultiCurrencyPrecompile = crate::MultiCurrencyPrecompile<AccountId, MockAddressMapping, Currencies>;
 
-pub type NFTPrecompile = crate::NFTPrecompile<AccountId, MockAddressMapping, NFTModule>;
 pub type StateRentPrecompile = crate::StateRentPrecompile<AccountId, MockAddressMapping, ModuleEVM>;
-pub type OraclePrecompile = crate::OraclePrecompile<AccountId, MockAddressMapping, Oracle>;
 pub type ScheduleCallPrecompile = crate::ScheduleCallPrecompile<
 	AccountId,
 	MockAddressMapping,
@@ -294,7 +218,6 @@ pub type ScheduleCallPrecompile = crate::ScheduleCallPrecompile<
 	OriginCaller,
 	Test,
 >;
-pub type DexPrecompile = crate::DexPrecompile<AccountId, MockAddressMapping, DexModule>;
 
 parameter_types! {
 	pub NetworkContractSource: H160 = alice();
@@ -330,11 +253,8 @@ impl module_evm::Config for Test {
 	type Precompiles = AllPrecompiles<
 		SystemContractsFilter,
 		MultiCurrencyPrecompile,
-		NFTPrecompile,
 		StateRentPrecompile,
-		OraclePrecompile,
 		ScheduleCallPrecompile,
-		DexPrecompile,
 	>;
 	type ChainId = ChainId;
 	type GasToWeight = GasToWeight;
@@ -380,7 +300,7 @@ pub fn evm_genesis() -> (BTreeMap<H160, module_evm::GenesisAccount<Balance, Nonc
 }
 
 pub const INITIAL_BALANCE: Balance = 1_000_000_000_000;
-pub const ACA_ERC20_ADDRESS: &str = "0x0000000000000000000000000000000000000800";
+pub const REEF_ERC20_ADDRESS: &str = "0x0000000000000000000000000000000000000800";
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -392,18 +312,15 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Module, Call, Storage, Config, Event<T>},
-		Oracle: orml_oracle::{Module, Storage, Call, Config<T>, Event<T>},
 		Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
 		Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
 		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
 		Currencies: module_currencies::{Module, Call, Event<T>},
 		EVMBridge: module_evm_bridge::{Module},
-		NFTModule: module_nft::{Module, Call, Event<T>},
 		TransactionPayment: module_transaction_payment::{Module, Call, Storage},
 		Proxy: pallet_proxy::{Module, Call, Storage, Event<T>},
 		Utility: pallet_utility::{Module, Call, Event},
 		Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
-		DexModule: module_dex::{Module, Storage, Call, Event<T>, Config<T>},
 		ModuleEVM: module_evm::{Module, Config<T>, Call, Storage, Event<T>},
 	}
 );
@@ -412,12 +329,6 @@ frame_support::construct_runtime!(
 // according to our desired mockup.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut storage = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
-
-	let _ = orml_oracle::GenesisConfig::<Test> {
-		members: vec![ALICE, BOB, EVA].into(),
-		phantom: Default::default(),
-	}
-	.assimilate_storage(&mut storage);
 
 	let mut accounts = BTreeMap::new();
 	let (mut evm_genesis_accounts, network_contract_index) = evm_genesis();
@@ -460,15 +371,15 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		assert_ok!(Currencies::update_balance(
 			Origin::root(),
 			ALICE,
-			XBTC,
+			REEF,
 			1_000_000_000_000
 		));
-		assert_ok!(Currencies::update_balance(Origin::root(), ALICE, AUSD, 1_000_000_000));
+		assert_ok!(Currencies::update_balance(Origin::root(), ALICE, RUSD, 1_000_000_000));
 
 		assert_ok!(Currencies::update_balance(
 			Origin::root(),
 			MockAddressMapping::get_account_id(&alice()),
-			XBTC,
+			REEF,
 			1_000
 		));
 	});

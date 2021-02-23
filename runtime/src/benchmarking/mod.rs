@@ -3,7 +3,6 @@
 // module benchmarking
 pub mod evm;
 pub mod evm_accounts;
-pub mod incentives;
 
 // orml benchmarking
 pub mod auction;

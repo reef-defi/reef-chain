@@ -20,7 +20,7 @@ module-evm = { path = "../../modules/evm", default-features = false }
 orml-traits = { path = "../../orml/traits", default-features = false }
 
 module-support = { path = "../../modules/support", default-features = false }
-# module-transaction-payment = { path = "../../modules/transaction_payment", default-features = false }
+module-transaction-payment = { path = "../../modules/transaction_payment", default-features = false }
 primitives = { package = "reef-primitives", path = "../../primitives", default-features = false }
 
 [dev-dependencies]
@@ -31,6 +31,7 @@ pallet-timestamp = "3.0.0"
 pallet-balances = "3.0.0"
 pallet-proxy = "3.0.0"
 pallet-utility = "3.0.0"
+orml-tokens = { path = "../../orml/tokens", default-features = false }
 module-currencies = { path = "../../modules/currencies" }
 module-evm-bridge = { path = "../../modules/evm-bridge" }
 

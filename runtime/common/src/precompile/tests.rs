@@ -2,9 +2,9 @@
 use super::*;
 use crate::precompile::{
 	mock::{
-		alice, bob, get_task_id, new_test_ext, run_to_block, Balances, DexModule, DexPrecompile, Event as TestEvent,
-		Oracle, OraclePrecompile, Origin, Price, ScheduleCallPrecompile, System, Test, ACA_ERC20_ADDRESS, ALICE, AUSD,
-		XBTC,
+		alice, bob, get_task_id, new_test_ext, run_to_block, Balances, Event as TestEvent,
+		Origin, Price, ScheduleCallPrecompile, System, Test,
+		REEF_ERC20_ADDRESS, ALICE, RUSD,
 	},
 	schedule_call::TaskInfo,
 };
@@ -30,9 +30,6 @@ impl Precompile for DummyPrecompile {
 
 pub type WithSystemContractFilter = AllPrecompiles<
 	crate::SystemContractsFilter,
-	DummyPrecompile,
-	DummyPrecompile,
-	DummyPrecompile,
 	DummyPrecompile,
 	DummyPrecompile,
 	DummyPrecompile,
@@ -90,92 +87,6 @@ fn precompile_filter_does_not_work_on_non_system_contracts() {
 	);
 }
 
-#[test]
-fn oracle_precompile_should_work() {
-	new_test_ext().execute_with(|| {
-		let context = Context {
-			address: Default::default(),
-			caller: alice(),
-			apparent_value: Default::default(),
-		};
-
-		let price = Price::from(30_000);
-
-		// action + currency_id
-		let mut input = [0u8; 64];
-		U256::default().to_big_endian(&mut input[..32]);
-		U256::from_big_endian(&hex!("0300").to_vec()).to_big_endian(&mut input[32..64]);
-
-		// no price yet
-		let (reason, output, used_gas) = OraclePrecompile::execute(&input, None, &context).unwrap();
-		assert_eq!(reason, ExitSucceed::Returned);
-		assert_eq!(output, [0u8; 64]);
-		assert_eq!(used_gas, 0);
-
-		assert_ok!(Oracle::feed_value(ALICE, XBTC, price));
-		assert_eq!(
-			Oracle::get_no_op(&XBTC),
-			Some(orml_oracle::TimestampedValue {
-				value: price,
-				timestamp: 1
-			})
-		);
-
-		// returned price + timestamp
-		let mut expected_output = [0u8; 64];
-		U256::from(price.into_inner()).to_big_endian(&mut expected_output[..32]);
-		U256::from(1).to_big_endian(&mut expected_output[32..64]);
-
-		let (reason, output, used_gas) = OraclePrecompile::execute(&input, None, &context).unwrap();
-		assert_eq!(reason, ExitSucceed::Returned);
-		assert_eq!(output, expected_output);
-		assert_eq!(used_gas, 0);
-	});
-}
-
-#[test]
-fn oracle_precompile_should_handle_invalid_input() {
-	new_test_ext().execute_with(|| {
-		assert_noop!(
-			OraclePrecompile::execute(
-				&[0u8; 0],
-				None,
-				&Context {
-					address: Default::default(),
-					caller: alice(),
-					apparent_value: Default::default()
-				}
-			),
-			ExitError::Other("invalid input".into())
-		);
-
-		assert_noop!(
-			OraclePrecompile::execute(
-				&[0u8; 32],
-				None,
-				&Context {
-					address: Default::default(),
-					caller: alice(),
-					apparent_value: Default::default()
-				}
-			),
-			ExitError::Other("invalid input".into())
-		);
-
-		assert_noop!(
-			OraclePrecompile::execute(
-				&[1u8; 32],
-				None,
-				&Context {
-					address: Default::default(),
-					caller: alice(),
-					apparent_value: Default::default()
-				}
-			),
-			ExitError::Other("invalid action".into())
-		);
-	});
-}
 
 #[test]
 fn schedule_call_precompile_should_work() {
@@ -194,7 +105,7 @@ fn schedule_call_precompile_should_work() {
 		// from
 		U256::from(alice().as_bytes()).to_big_endian(&mut input[2 * 32..3 * 32]);
 		// target
-		U256::from(ACA_ERC20_ADDRESS).to_big_endian(&mut input[3 * 32..4 * 32]);
+		U256::from(REEF_ERC20_ADDRESS).to_big_endian(&mut input[3 * 32..4 * 32]);
 		// value
 		U256::from(0).to_big_endian(&mut input[4 * 32..5 * 32]);
 		// gas_limit
@@ -321,7 +232,7 @@ fn schedule_call_precompile_should_handle_invalid_input() {
 		// from
 		U256::from(alice().as_bytes()).to_big_endian(&mut input[2 * 32..3 * 32]);
 		// target
-		U256::from(ACA_ERC20_ADDRESS).to_big_endian(&mut input[3 * 32..4 * 32]);
+		U256::from(REEF_ERC20_ADDRESS).to_big_endian(&mut input[3 * 32..4 * 32]);
 		// value
 		U256::from(0).to_big_endian(&mut input[4 * 32..5 * 32]);
 		// gas_limit
@@ -381,84 +292,6 @@ fn schedule_call_precompile_should_handle_invalid_input() {
 	});
 }
 
-#[test]
-fn dex_precompile_get_liquidity_should_work() {
-	new_test_ext().execute_with(|| {
-		// enable XBTC/AUSD
-		assert_ok!(DexModule::enable_trading_pair(Origin::signed(ALICE), XBTC, AUSD,));
-
-		assert_ok!(DexModule::add_liquidity(
-			Origin::signed(ALICE),
-			XBTC,
-			AUSD,
-			1_000,
-			1_000_000,
-			true
-		));
-
-		let context = Context {
-			address: Default::default(),
-			caller: alice(),
-			apparent_value: Default::default(),
-		};
-
-		// action + currency_id_a + currency_id_b
-		let mut input = [0u8; 96];
-		U256::from(0).to_big_endian(&mut input[..32]);
-		U256::from_big_endian(&hex!("0300").to_vec()).to_big_endian(&mut input[32..64]);
-		U256::from_big_endian(&hex!("0100").to_vec()).to_big_endian(&mut input[64..96]);
-
-		let mut expected_output = [0u8; 64];
-		U256::from(1_000).to_big_endian(&mut expected_output[..32]);
-		U256::from(1_000_000).to_big_endian(&mut expected_output[32..64]);
-
-		let (reason, output, used_gas) = DexPrecompile::execute(&input, None, &context).unwrap();
-		assert_eq!(reason, ExitSucceed::Returned);
-		assert_eq!(output, expected_output);
-		assert_eq!(used_gas, 0);
-	});
-}
-
-#[test]
-fn dex_precompile_swap_with_exact_supply_should_work() {
-	new_test_ext().execute_with(|| {
-		// enable XBTC/AUSD
-		assert_ok!(DexModule::enable_trading_pair(Origin::signed(ALICE), XBTC, AUSD,));
-
-		assert_ok!(DexModule::add_liquidity(
-			Origin::signed(ALICE),
-			XBTC,
-			AUSD,
-			1_000,
-			1_000_000,
-			true
-		));
-
-		let context = Context {
-			address: Default::default(),
-			caller: alice(),
-			apparent_value: Default::default(),
-		};
-
-		// action + who + currency_id_a + currency_id_b + supply_amount +
-		// min_target_amount
-		let mut input = [0u8; 192];
-		U256::from(1).to_big_endian(&mut input[..32]);
-		U256::from(H256::from(alice()).to_fixed_bytes()).to_big_endian(&mut input[32..64]);
-		U256::from_big_endian(&hex!("0300").to_vec()).to_big_endian(&mut input[64..96]);
-		U256::from_big_endian(&hex!("0100").to_vec()).to_big_endian(&mut input[96..128]);
-		U256::from(1).to_big_endian(&mut input[128..160]);
-		U256::from(0).to_big_endian(&mut input[160..192]);
-
-		let mut expected_output = [0u8; 32];
-		U256::from(989).to_big_endian(&mut expected_output[..32]);
-
-		let (reason, output, used_gas) = DexPrecompile::execute(&input, None, &context).unwrap();
-		assert_eq!(reason, ExitSucceed::Returned);
-		assert_eq!(output, expected_output);
-		assert_eq!(used_gas, 0);
-	});
-}
 
 #[test]
 fn task_id_max_and_min() {

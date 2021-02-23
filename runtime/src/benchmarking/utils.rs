@@ -16,11 +16,11 @@ pub fn set_balance(currency_id: CurrencyId, who: &AccountId, balance: Balance) {
 }
 
 pub fn set_ausd_balance(who: &AccountId, balance: Balance) {
-	set_balance(CurrencyId::Token(TokenSymbol::AUSD), who, balance)
+	set_balance(CurrencyId::Token(TokenSymbol::RUSD), who, balance)
 }
 
 pub fn set_aca_balance(who: &AccountId, balance: Balance) {
-	set_balance(CurrencyId::Token(TokenSymbol::ACA), who, balance)
+	set_balance(CurrencyId::Token(TokenSymbol::REEF), who, balance)
 }
 
 pub fn dollars<T: Into<u128>>(d: T) -> Balance {

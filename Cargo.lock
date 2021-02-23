@@ -5488,6 +5488,8 @@ dependencies = [
  "module-evm",
  "module-evm-bridge",
  "module-support",
+ "module-transaction-payment",
+ "orml-tokens",
  "orml-traits",
  "pallet-balances",
  "pallet-proxy",
