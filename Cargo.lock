@@ -3964,6 +3964,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77af24da69f9d9341038eba93a073b1fdaaa1b788221b00a69bce9e762cb32de"
 
 [[package]]
+name = "orml-authority"
+version = "0.4.1-dev"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "funty",
+ "orml-traits",
+ "pallet-scheduler",
+ "parity-scale-codec",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "orml-currencies"
 version = "0.4.1-dev"
 dependencies = [
@@ -5290,6 +5307,7 @@ dependencies = [
  "module-evm-bridge",
  "module-evm-rpc-runtime-api",
  "module-transaction-payment",
+ "orml-authority",
  "orml-tokens",
  "orml-traits",
  "pallet-aura",
@@ -5297,6 +5315,7 @@ dependencies = [
  "pallet-grandpa",
  "pallet-indices",
  "pallet-randomness-collective-flip",
+ "pallet-scheduler",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment",

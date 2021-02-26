@@ -39,6 +39,7 @@ pallet-balances = { default-features = false, version = '3.0.0' }
 pallet-grandpa = { default-features = false, version = '3.0.0' }
 pallet-indices = { version = "3.0.0", default-features = false }
 pallet-randomness-collective-flip = { default-features = false, version = '3.0.0' }
+pallet-scheduler = { version = "3.0.0", default-features = false }
 pallet-sudo = { default-features = false, version = '3.0.0' }
 pallet-timestamp = { default-features = false, version = '3.0.0' }
 pallet-transaction-payment = { default-features = false, version = '3.0.0' }
@@ -62,6 +63,12 @@ libsecp256k1 = { version = "0.3.4", default-features = false, optional = true }
 # local dependencies
 orml-traits = { path = "../orml/traits", default-features = false }
 orml-tokens = { path = "../orml/tokens", default-features = false }
+orml-authority = { path = "../orml/authority", default-features = false }
+# orml-benchmarking = { path = "../../orml/benchmarking", default-features = false, optional = true }
+# orml-gradually-update = { path = "../../orml/gradually-update", default-features = false }
+# orml-vesting = { path = "../../orml/vesting", default-features = false }
+# orml-rewards = { path = "../../orml/rewards", default-features = false }
+# orml-nft= { path = "../../orml/nft", default-features = false }
 
 module-currencies = { path = "../modules/currencies", default-features = false }
 module-evm = { path = "../modules/evm", default-features = false }
@@ -105,6 +112,7 @@ std = [
 	"pallet-indices/std",
     'pallet-randomness-collective-flip/std',
     'pallet-sudo/std',
+	"pallet-scheduler/std",
     'pallet-timestamp/std',
     'pallet-transaction-payment/std',
     'pallet-transaction-payment-rpc-runtime-api/std',
@@ -121,8 +129,10 @@ std = [
 	"sp-transaction-pool/std",
 	"sp-version/std",
 
-
+	"orml-traits/std",
 	"orml-tokens/std",
+	"orml-authority/std",
+
 	"module-currencies/std",
 	"module-evm/std",
 	"module-evm-accounts/std",
