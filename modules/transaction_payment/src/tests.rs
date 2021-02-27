@@ -4,7 +4,7 @@
 
 use super::*;
 use frame_support::{
-	assert_ok,
+	assert_ok, assert_err,
 	weights::{DispatchClass, DispatchInfo, Pays},
 };
 use mock::{
@@ -93,6 +93,13 @@ fn charges_fee_when_validate_and_native_is_not_enough() {
 		assert_eq!(<Currencies as MultiCurrency<_>>::free_balance(REEF, &BOB), 0);
 		assert_eq!(<Currencies as MultiCurrency<_>>::free_balance(RUSD, &BOB), 1000);
 
+		let fee = 500 * 2 + 1000; // len * byte + weight
+		assert_err!(
+			ChargeTransactionPayment::<Runtime>::from(0)
+				.validate(&BOB, CALL2, &INFO, 500),
+				TransactionValidityError::Invalid(InvalidTransaction::Payment)
+		);
+
 		// // add liquidity to DEX
 		// assert_ok!(DEXModule::add_liquidity(
 		// 	Origin::signed(ALICE),
@@ -104,19 +111,18 @@ fn charges_fee_when_validate_and_native_is_not_enough() {
 		// ));
 		// assert_eq!(DEXModule::get_liquidity_pool(REEF, RUSD), (10000, 1000));
 
-		let fee = 500 * 2 + 1000; // len * byte + weight
-		assert_eq!(
-			ChargeTransactionPayment::<Runtime>::from(0)
-				.validate(&BOB, CALL2, &INFO, 500)
-				.unwrap()
-				.priority,
-			fee
-		);
+		// let fee = 500 * 2 + 1000; // len * byte + weight
+		// assert_eq!(
+		// 	ChargeTransactionPayment::<Runtime>::from(0)
+		// 		.validate(&BOB, CALL2, &INFO, 500)
+		// 		.unwrap()
+		// 		.priority,
+		// 	fee
+		// );
 
-		// TODO
 
-		assert_eq!(Currencies::free_balance(REEF, &BOB), 0);
-		assert_eq!(Currencies::free_balance(RUSD, &BOB), 749);
+		// assert_eq!(Currencies::free_balance(REEF, &BOB), 0);
+		// assert_eq!(Currencies::free_balance(RUSD, &BOB), 749);
 		// assert_eq!(DEXModule::get_liquidity_pool(REEF, RUSD), (10000 - 2000, 1251));
 	});
 }

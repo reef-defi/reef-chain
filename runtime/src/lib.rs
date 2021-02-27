@@ -83,6 +83,13 @@ mod constants;
 //
 parameter_types! {
 	pub const SevenDays: BlockNumber = 7 * DAYS;
+	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
+}
+
+pub fn get_all_module_accounts() -> Vec<AccountId> {
+	vec![
+		ZeroAccountId::get(),
+	]
 }
 
 pub struct AuthorityConfigImpl;
@@ -440,18 +447,18 @@ impl module_evm_bridge::Config for Runtime {
 
 parameter_types! {
 	pub const ExistentialDeposit: u128 = 500;
+	pub const NativeTokenExistentialDeposit: Balance = 0;
 	pub const MaxLocks: u32 = 50;
 }
 
 impl pallet_balances::Config for Runtime {
+	type Event = Event;
 	type MaxLocks = MaxLocks;
 	/// The type for recording an account's balance.
 	type Balance = Balance;
-	/// The ubiquitous event type.
-	type Event = Event;
-	type DustRemoval = ();
-	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = System;
+	type DustRemoval = (); // TODO: pallet_treasury
+	type ExistentialDeposit = NativeTokenExistentialDeposit;
+	type AccountStore = frame_system::Module<Runtime>;
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
 }
 

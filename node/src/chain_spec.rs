@@ -1,7 +1,10 @@
 use sp_core::{Pair, Public, sr25519, H160, Bytes};
 use reef_runtime::{
-	AccountId, AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig,
-	SudoConfig, SystemConfig, WASM_BINARY, Signature
+	AccountId, CurrencyId,
+	AuraConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
+	IndicesConfig, EVMConfig,
+	WASM_BINARY, Signature,
+	TokenSymbol, TokensConfig, DOLLARS,
 };
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
@@ -178,18 +181,6 @@ fn testnet_genesis(
 	_enable_println: bool,
 ) -> GenesisConfig {
 
-	use reef_runtime::{
-		Balance,
-		BalancesConfig, CurrencyId, EVMConfig,
-		GrandpaConfig,
-		IndicesConfig,
-		SudoConfig,
-		SystemConfig,
-		TokenSymbol,
-		TokensConfig,
-		CENTS, DOLLARS,
-	};
-
 	let (evm_genesis_accounts, network_contract_index) = evm_genesis();
 
 	const INITIAL_BALANCE: u128 = 1_000_000 * DOLLARS;
@@ -239,18 +230,6 @@ fn aura_testnet_genesis(
 	endowed_accounts: Vec<AccountId>,
 	_enable_println: bool,
 ) -> GenesisConfig {
-
-	use reef_runtime::{
-		Balance,
-		BalancesConfig, CurrencyId, EVMConfig,
-		GrandpaConfig,
-		IndicesConfig,
-		SudoConfig,
-		SystemConfig,
-		TokenSymbol,
-		TokensConfig,
-		CENTS, DOLLARS,
-	};
 
 	let (evm_genesis_accounts, network_contract_index) = evm_genesis();
 
