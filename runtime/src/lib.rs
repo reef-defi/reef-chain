@@ -385,19 +385,19 @@ parameter_types! {
 	pub const DeploymentFee: Balance = primitives::currency::DOLLARS;
 }
 
-// pub type MultiCurrencyPrecompile =
-// 	runtime_common::MultiCurrencyPrecompile<AccountId, EvmAddressMapping<Runtime>, Currencies>;
-// pub type StateRentPrecompile = runtime_common::StateRentPrecompile<AccountId, EvmAddressMapping<Runtime>, EVM>;
-// pub type ScheduleCallPrecompile = runtime_common::ScheduleCallPrecompile<
-// 	AccountId,
-// 	EvmAddressMapping<Runtime>,
-// 	Scheduler,
-// 	module_transaction_payment::ChargeTransactionPayment<Runtime>,
-// 	Call,
-// 	Origin,
-// 	OriginCaller,
-// 	Runtime,
-// >;
+pub type MultiCurrencyPrecompile =
+	runtime_common::MultiCurrencyPrecompile<AccountId, EvmAddressMapping<Runtime>, Currencies>;
+pub type StateRentPrecompile = runtime_common::StateRentPrecompile<AccountId, EvmAddressMapping<Runtime>, EVM>;
+pub type ScheduleCallPrecompile = runtime_common::ScheduleCallPrecompile<
+	AccountId,
+	EvmAddressMapping<Runtime>,
+	Scheduler,
+	module_transaction_payment::ChargeTransactionPayment<Runtime>,
+	Call,
+	Origin,
+	OriginCaller,
+	Runtime,
+>;
 
 impl module_evm::Config for Runtime {
 	type AddressMapping = EvmAddressMapping<Runtime>;
@@ -407,13 +407,13 @@ impl module_evm::Config for Runtime {
 	type StorageDepositPerByte = StorageDepositPerByte;
 	type MaxCodeSize = MaxCodeSize;
 	type Event = Event;
-	type Precompiles = ();
-	// type Precompiles = runtime_common::AllPrecompiles<
-	// 	SystemContractsFilter,
-	// 	MultiCurrencyPrecompile,
-	// 	StateRentPrecompile,
-	// 	ScheduleCallPrecompile,
-	// >;
+	// type Precompiles = ();
+	type Precompiles = runtime_common::AllPrecompiles<
+		SystemContractsFilter,
+		MultiCurrencyPrecompile,
+		StateRentPrecompile,
+		ScheduleCallPrecompile,
+	>;
 	type ChainId = ChainId;
 	type GasToWeight = GasToWeight;
 	type ChargeTransactionPayment = module_transaction_payment::ChargeTransactionPayment<Runtime>;
