@@ -64,11 +64,10 @@ libsecp256k1 = { version = "0.3.4", default-features = false, optional = true }
 orml-traits = { path = "../orml/traits", default-features = false }
 orml-tokens = { path = "../orml/tokens", default-features = false }
 orml-authority = { path = "../orml/authority", default-features = false }
-# orml-benchmarking = { path = "../../orml/benchmarking", default-features = false, optional = true }
-# orml-gradually-update = { path = "../../orml/gradually-update", default-features = false }
-# orml-vesting = { path = "../../orml/vesting", default-features = false }
-# orml-rewards = { path = "../../orml/rewards", default-features = false }
-# orml-nft= { path = "../../orml/nft", default-features = false }
+orml-benchmarking = { path = "../orml/benchmarking", default-features = false, optional = true }
+orml-gradually-update = { path = "../orml/gradually-update", default-features = false }
+# orml-vesting = { path = "../orml/vesting", default-features = false }
+# orml-rewards = { path = "../orml/rewards", default-features = false }
 
 module-currencies = { path = "../modules/currencies", default-features = false }
 module-evm = { path = "../modules/evm", default-features = false }
@@ -78,6 +77,8 @@ module-evm-bridge = { path = "../modules/evm-bridge", default-features = false }
 module-evm-rpc-runtime-api = { path = "../modules/evm/rpc/runtime_api",  default-features = false }
 
 module-transaction-payment = { path = "../modules/transaction_payment", default-features = false }
+module-support = { path = "../modules/support", default-features = false }
+
 primitives = { package = "reef-primitives", path = "../primitives", default-features = false }
 runtime-common = { path = "common", default-features = false }
 
@@ -85,6 +86,7 @@ runtime-common = { path = "common", default-features = false }
 [dev-dependencies]
 libsecp256k1 = "0.3.4"
 hex = "0.4.0"
+hex-literal = "0.2.1"
 
 
 [features]
@@ -132,13 +134,15 @@ std = [
 	"orml-traits/std",
 	"orml-tokens/std",
 	"orml-authority/std",
+	"orml-benchmarking/std",
+	"orml-gradually-update/std",
 
 	"module-currencies/std",
 	"module-evm/std",
 	"module-evm-accounts/std",
 	"module-evm-bridge/std",
-
 	"module-transaction-payment/std",
+	"module-support/std",
 	"primitives/std",
 	"runtime-common/std",
 

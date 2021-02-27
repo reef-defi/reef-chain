@@ -10,7 +10,6 @@ use frame_support::{
 	},
 };
 use frame_system::limits;
-pub use module_support::{PrecompileCallerFilter};
 use primitives::{PRECOMPILE_ADDRESS_START, PREDEPLOY_ADDRESS_START};
 use sp_core::H160;
 use sp_runtime::{
@@ -21,6 +20,8 @@ use sp_runtime::{
 };
 
 use static_assertions::const_assert;
+
+pub use module_support::{PrecompileCallerFilter};
 
 pub mod precompile;
 pub use precompile::{
@@ -33,7 +34,6 @@ pub use precompile::{
 pub type Price = FixedU128;
 pub type Ratio = FixedU128;
 pub type Rate = FixedU128;
-
 
 pub const SYSTEM_CONTRACT_LEADING_ZERO_BYTES: usize = 12;
 
@@ -110,6 +110,7 @@ parameter_types! {
 		.expect("Normal extrinsics have weight limit configured by default; qed")
 		.saturating_sub(BlockExecutionWeight::get());
 }
+
 
 #[cfg(test)]
 mod tests {

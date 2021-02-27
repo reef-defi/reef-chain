@@ -24,6 +24,10 @@ use sp_runtime::traits::{
 	StaticLookup,
 	BadOrigin,
 };
+pub use sp_runtime::{
+	Perbill, Percent, Permill, Perquintill,
+	DispatchResult,
+};
 use sp_api::impl_runtime_apis;
 use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 use pallet_grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
@@ -37,19 +41,19 @@ use sp_version::NativeVersion;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_balances::Call as BalancesCall;
 // pub use sp_runtime::BuildStorage;
-pub use sp_runtime::{Perbill, Percent, Permill, Perquintill};
 pub use frame_support::{
 	construct_runtime, parameter_types, debug,
 	StorageValue,
-	traits::{KeyOwnerProofSystem, Randomness},
+	traits::{KeyOwnerProofSystem, Randomness, schedule::Priority, EnsureOrigin, OriginTrait},
 	weights::{
 		Weight, IdentityFee,
 		constants::{BlockExecutionWeight, ExtrinsicBaseWeight, RocksDbWeight, WEIGHT_PER_SECOND},
 	},
 };
-use frame_system::{EnsureOneOf, EnsureRoot, RawOrigin};
+pub use frame_system::{ensure_root, EnsureOneOf, EnsureRoot, RawOrigin};
 
 use orml_traits::{parameter_type_with_key};
+use orml_authority::EnsureDelayed;
 // use orml_tokens::CurrencyAdapter;
 
 use module_evm::{CallInfo, CreateInfo};
@@ -60,6 +64,7 @@ use module_transaction_payment::{Multiplier, TargetedFeeAdjustment};
 pub use primitives::{
 	AccountId, AccountIndex, Amount, Balance, BlockNumber,
 	CurrencyId, EraIndex, Hash, Moment, Nonce, Signature, TokenSymbol,
+	AuthoritysOriginId,
 };
 
 pub use runtime_common::{
@@ -72,6 +77,71 @@ pub use constants::{currency::*, fee::*, time::*};
 mod weights;
 mod constants;
 
+
+//
+// formerly authority.rs
+//
+parameter_types! {
+	pub const SevenDays: BlockNumber = 7 * DAYS;
+}
+
+pub struct AuthorityConfigImpl;
+impl orml_authority::AuthorityConfig<Origin, OriginCaller, BlockNumber> for AuthorityConfigImpl {
+	fn check_schedule_dispatch(origin: Origin, _priority: Priority) -> DispatchResult {
+		EnsureRoot::<AccountId>::try_origin(origin)
+			.map_or_else(|_| Err(BadOrigin.into()), |_| Ok(()))
+	}
+
+	fn check_fast_track_schedule(
+		origin: Origin,
+		_initial_origin: &OriginCaller,
+		new_delay: BlockNumber,
+	) -> DispatchResult {
+		ensure_root(origin.clone()).or_else(|_| {
+			Err(BadOrigin.into())
+		})
+	}
+
+	fn check_delay_schedule(origin: Origin, _initial_origin: &OriginCaller) -> DispatchResult {
+		ensure_root(origin.clone()).or_else(|_| {
+			Err(BadOrigin.into())
+		})
+	}
+
+	fn check_cancel_schedule(origin: Origin, initial_origin: &OriginCaller) -> DispatchResult {
+		ensure_root(origin.clone()).or_else(|_| {
+			if origin.caller() == initial_origin {
+				Ok(())
+			} else {
+				Err(BadOrigin.into())
+			}
+		})
+	}
+}
+
+impl orml_authority::AsOriginId<Origin, OriginCaller> for AuthoritysOriginId {
+	fn into_origin(self) -> OriginCaller {
+		match self {
+			AuthoritysOriginId::Root => Origin::root().caller().clone(),
+		}
+	}
+
+	fn check_dispatch_from(&self, origin: Origin) -> DispatchResult {
+		ensure_root(origin.clone()).or_else(|_| {
+			match self {
+			AuthoritysOriginId::Root => <EnsureDelayed<
+				SevenDays,
+				EnsureRoot<AccountId>,
+				BlockNumber,
+				OriginCaller,
+			> as EnsureOrigin<Origin>>::ensure_origin(origin)
+			.map_or_else(|_| Err(BadOrigin.into()), |_| Ok(())),
+		}
+		})
+	}
+}
+
+// end authority.rs
 
 /// Opaque types. These are used by the CLI to instantiate machinery that don't need to know
 /// the specifics of the runtime. They can then be made to be agnostic over specific formats
@@ -406,6 +476,17 @@ impl pallet_scheduler::Config for Runtime {
 	type WeightInfo = ();
 }
 
+impl orml_authority::Config for Runtime {
+	type Event = Event;
+	type Origin = Origin;
+	type PalletsOrigin = OriginCaller;
+	type Call = Call;
+	type Scheduler = Scheduler;
+	type AsOriginId = AuthoritysOriginId;
+	type AuthorityConfig = AuthorityConfigImpl;
+	type WeightInfo = ();
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -420,6 +501,8 @@ construct_runtime!(
 		Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event},
 		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
 		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
+		// Other
+		Authority: orml_authority::{Module, Call, Event<T>, Origin<T>},
 		Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
 		// Account lookup
 		Indices: pallet_indices::{Module, Call, Storage, Config<T>, Event<T>},

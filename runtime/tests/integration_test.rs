@@ -7,10 +7,13 @@ use frame_support::{
 };
 use frame_system::RawOrigin;
 use reef_runtime::{
-	get_all_module_accounts, AccountId, AuthoritysOriginId, Balance, Balances, BlockNumber, Call, CreateClassDeposit,
-	CreateTokenDeposit, CurrencyId, DSWFModuleId, Event, EvmAccounts, GetNativeCurrencyId,
-	NativeTokenExistentialDeposit, Origin, OriginCaller, Perbill, Proxy, Runtime, SevenDays, System,
-	TokenSymbol, EVM,
+	get_all_module_accounts, AccountId, AuthoritysOriginId,
+	Balance, Balances, BlockNumber, Call, CreateClassDeposit,
+	CreateTokenDeposit, CurrencyId, DSWFModuleId,
+	Event, EvmAccounts, GetNativeCurrencyId,
+	NativeTokenExistentialDeposit, Origin, OriginCaller,
+	Perbill, Proxy, Runtime, System,
+	TokenSymbol, EVM, DAYS,
 };
 use module_support::{Price, Rate, Ratio};
 use orml_authority::DelayedOrigin;
@@ -23,6 +26,7 @@ use sp_runtime::{
 
 const ALICE: [u8; 32] = [4u8; 32];
 const BOB: [u8; 32] = [5u8; 32];
+const SevenDays: BlockNumber = 7 * DAYS;
 
 pub type SystemModule = frame_system::Module<Runtime>;
 pub type AuctionManagerModule = module_auction_manager::Module<Runtime>;

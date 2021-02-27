@@ -50,6 +50,6 @@ std = [
 	"orml-traits/std",
 	"module-support/std",
 	"primitives/std",
-	# "module-transaction-payment/std",
+	"module-transaction-payment/std",
 ]
 with-ethereum-compatibility = []

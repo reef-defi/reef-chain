@@ -1,5 +1,6 @@
 //! A set of constant values used in dev runtime.
 
+
 /// Money matters.
 pub mod currency {
 	use primitives::Balance;
