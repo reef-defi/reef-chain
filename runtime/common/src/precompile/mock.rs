@@ -379,7 +379,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		assert_ok!(Currencies::update_balance(
 			Origin::root(),
 			MockAddressMapping::get_account_id(&alice()),
-			REEF,
+			RUSD,
 			1_000
 		));
 	});
