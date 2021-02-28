@@ -21,11 +21,11 @@ package = 'parity-scale-codec'
 version = '2.0.0'
 
 [dependencies]
+smallvec = "1.4.0"
 hex-literal = { optional = true, version = '0.3.1' }
 serde = { features = ['derive'], optional = true, version = '1.0.119' }
-
-# local dependencies
-pallet-template = { path = '../pallets/template', default-features = false, version = '3.0.0' }
+serde_json = "1.0.60"
+evm = { version = "0.24.0", optional = true, default-features = false }
 
 # Substrate dependencies
 frame-benchmarking = { default-features = false, optional = true, version = '3.0.0' }
@@ -37,22 +37,56 @@ frame-system-rpc-runtime-api = { default-features = false, version = '3.0.0' }
 pallet-aura = { default-features = false, version = '3.0.0' }
 pallet-balances = { default-features = false, version = '3.0.0' }
 pallet-grandpa = { default-features = false, version = '3.0.0' }
+pallet-indices = { version = "3.0.0", default-features = false }
 pallet-randomness-collective-flip = { default-features = false, version = '3.0.0' }
+pallet-scheduler = { version = "3.0.0", default-features = false }
 pallet-sudo = { default-features = false, version = '3.0.0' }
 pallet-timestamp = { default-features = false, version = '3.0.0' }
 pallet-transaction-payment = { default-features = false, version = '3.0.0' }
 pallet-transaction-payment-rpc-runtime-api = { default-features = false, version = '3.0.0' }
-sp-api = { default-features = false, version = '3.0.0' }
-sp-block-builder = { default-features = false, version = '3.0.0' }
 sp-consensus-aura = { default-features = false, version = '0.9.0' }
-sp-core = { default-features = false, version = '3.0.0' }
-sp-inherents = { default-features = false, version = '3.0.0' }
-sp-offchain = { default-features = false, version = '3.0.0' }
-sp-runtime = { default-features = false, version = '3.0.0' }
-sp-session = { default-features = false, version = '3.0.0' }
-sp-std = { default-features = false, version = '3.0.0' }
-sp-transaction-pool = { default-features = false, version = '3.0.0' }
-sp-version = { default-features = false, version = '3.0.0' }
+sp-api = { version = "3.0.0", default-features = false }
+sp-application-crypto = { version = "3.0.0", default-features = false }
+sp-block-builder = { version = "3.0.0", default-features = false }
+sp-core = { version = "3.0.0", default-features = false }
+sp-inherents = { version = "3.0.0", default-features = false }
+sp-io = { version = "3.0.0", default-features = false }
+sp-offchain = { version = "3.0.0", default-features = false }
+sp-runtime = { version = "3.0.0", default-features = false }
+sp-session = { version = "3.0.0", default-features = false }
+sp-staking = { version = "3.0.0", default-features = false }
+sp-std = { version = "3.0.0", default-features = false }
+sp-transaction-pool = { version = "3.0.0", default-features = false }
+sp-version = { version = "3.0.0", default-features = false }
+libsecp256k1 = { version = "0.3.4", default-features = false, optional = true }
+
+# local dependencies
+orml-traits = { path = "../orml/traits", default-features = false }
+orml-tokens = { path = "../orml/tokens", default-features = false }
+orml-authority = { path = "../orml/authority", default-features = false }
+orml-benchmarking = { path = "../orml/benchmarking", default-features = false, optional = true }
+orml-gradually-update = { path = "../orml/gradually-update", default-features = false }
+# orml-vesting = { path = "../orml/vesting", default-features = false }
+# orml-rewards = { path = "../orml/rewards", default-features = false }
+
+module-currencies = { path = "../modules/currencies", default-features = false }
+module-evm = { path = "../modules/evm", default-features = false }
+module-evm-accounts = { path = "../modules/evm-accounts", default-features = false }
+module-evm-bridge = { path = "../modules/evm-bridge", default-features = false }
+
+module-evm-rpc-runtime-api = { path = "../modules/evm/rpc/runtime_api",  default-features = false }
+
+module-transaction-payment = { path = "../modules/transaction_payment", default-features = false }
+module-support = { path = "../modules/support", default-features = false }
+
+primitives = { package = "reef-primitives", path = "../primitives", default-features = false }
+runtime-common = { path = "common", default-features = false }
+
+
+[dev-dependencies]
+libsecp256k1 = "0.3.4"
+hex = "0.4.0"
+hex-literal = "0.2.1"
 
 
 [features]
@@ -77,21 +111,45 @@ std = [
     'pallet-aura/std',
     'pallet-balances/std',
     'pallet-grandpa/std',
+	"pallet-indices/std",
     'pallet-randomness-collective-flip/std',
     'pallet-sudo/std',
-    'pallet-template/std',
+	"pallet-scheduler/std",
     'pallet-timestamp/std',
     'pallet-transaction-payment/std',
     'pallet-transaction-payment-rpc-runtime-api/std',
-    'sp-api/std',
-    'sp-block-builder/std',
+
     'sp-consensus-aura/std',
-    'sp-core/std',
-    'sp-inherents/std',
-    'sp-offchain/std',
-    'sp-runtime/std',
-    'sp-session/std',
-    'sp-std/std',
-    'sp-transaction-pool/std',
-    'sp-version/std',
+	"sp-api/std",
+	"sp-block-builder/std",
+	"sp-core/std",
+	"sp-offchain/std",
+	"sp-runtime/std",
+	"sp-session/std",
+	"sp-staking/std",
+	"sp-std/std",
+	"sp-transaction-pool/std",
+	"sp-version/std",
+
+	"orml-traits/std",
+	"orml-tokens/std",
+	"orml-authority/std",
+	"orml-benchmarking/std",
+	"orml-gradually-update/std",
+
+	"module-currencies/std",
+	"module-evm/std",
+	"module-evm-accounts/std",
+	"module-evm-bridge/std",
+	"module-transaction-payment/std",
+	"module-support/std",
+	"primitives/std",
+	"runtime-common/std",
+
+	"module-evm-rpc-runtime-api/std",
+]
+with-ethereum-compatibility = [
+	"evm",
+	"module-evm/with-ethereum-compatibility",
+	"runtime-common/with-ethereum-compatibility",
 ]

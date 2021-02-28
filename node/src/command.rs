@@ -43,7 +43,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn copyright_start_year() -> i32 {
-		2017
+		2021
 	}
 
 	fn load_spec(&self, id: &str) -> Result<Box<dyn sc_service::ChainSpec>, String> {
@@ -62,12 +62,34 @@ impl SubstrateCli for Cli {
 	}
 }
 
+/// override
+fn set_default_ss58_version(version: u16) {
+	use sp_core::crypto::Ss58AddressFormat;
+	// TOOO: add to https://substrate.dev/rustdocs/v3.0.0/sp_core/crypto/enum.Ss58AddressFormat.html
+	let ss58_version = Ss58AddressFormat::Custom(version);
+	sp_core::crypto::set_default_ss58_version(ss58_version);
+}
+
 /// Parse and run command line arguments
 pub fn run() -> sc_cli::Result<()> {
 	let cli = Cli::from_args();
 
 	match &cli.subcommand {
 		Some(Subcommand::Key(cmd)) => cmd.run(&cli),
+		// Some(Subcommand::Inspect(cmd)) => {
+		// 	let runner = cli.create_runner(cmd)?;
+		// 	let chain_spec = &runner.config().chain_spec;
+        //
+		// 	set_default_ss58_version(42);
+        //
+		// 	runner.sync_run(|config| {
+		// 		let (client, _, _) = service::build_full(config, false, false)?;
+		// 		cmd.run(client)
+		// 	})
+		// }
+		Some(Subcommand::Sign(cmd)) => cmd.run(),
+		Some(Subcommand::Verify(cmd)) => cmd.run(),
+		Some(Subcommand::Vanity(cmd)) => cmd.run(),
 		Some(Subcommand::BuildSpec(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.sync_run(|config| cmd.run(config.chain_spec, config.network))
