@@ -36,7 +36,7 @@ pub type WithSystemContractFilter = AllPrecompiles<
 >;
 
 #[test]
-fn precompile_filter_works_on_acala_precompiles() {
+fn precompile_filter_works_on_core_precompiles() {
 	let precompile = H160::from_low_u64_be(PRECOMPILE_ADDRESS_START);
 
 	let mut non_system = [0u8; 20];

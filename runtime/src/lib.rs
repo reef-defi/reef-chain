@@ -327,7 +327,7 @@ parameter_type_with_key! {
 }
 
 // parameter_types! {
-// 	pub TreasuryModuleAccount: AccountId = AcalaTreasuryModuleId::get().into_account();
+// 	pub TreasuryModuleAccount: AccountId = ReefTreasuryModuleId::get().into_account();
 // }
 
 impl orml_tokens::Config for Runtime {
@@ -363,7 +363,7 @@ impl module_transaction_payment::Config for Runtime {
 	type MultiCurrency = Currencies;
 	// TODO implement pallet_treasury
 	type OnTransactionPayment = ();
-	// type OnTransactionPayment = AcalaTreasury;
+	// type OnTransactionPayment = ReefTreasury;
 	type TransactionByteFee = TransactionByteFee;
 	type WeightToFee = WeightToFee;
 	type FeeMultiplierUpdate = TargetedFeeAdjustment<Self, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;

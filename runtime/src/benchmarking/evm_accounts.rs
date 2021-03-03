@@ -1,6 +1,6 @@
 use crate::{AccountId, Balance, EvmAccounts, Runtime, DOLLARS};
 
-use super::utils::set_aca_balance;
+use super::utils::set_reef_balance;
 use codec::Encode;
 use frame_benchmarking::{account, whitelisted_caller};
 use frame_system::RawOrigin;
@@ -39,7 +39,7 @@ runtime_benchmarks! {
 	claim_account {
 		let caller: AccountId = account("caller", 0, SEED);
 		let eth: AccountId = account("eth", 0, SEED);
-		set_aca_balance(&bob_account_id(), dollar(1000));
+		set_reef_balance(&bob_account_id(), dollar(1000));
 	}: _(RawOrigin::Signed(caller), EvmAccounts::eth_address(&alice()), EvmAccounts::eth_sign(&alice(), &caller.encode(), &[][..]))
 
 	claim_default_account {

@@ -1,6 +1,6 @@
-use super::utils::{dollars, lookup_of_account, set_aca_balance};
+use super::utils::{dollars, lookup_of_account, set_reef_balance};
 use crate::{
-	AcalaTreasuryModuleId, AccountId, AccountIdConversion, Balance, BlockNumber, Currencies, CurrencyId,
+	ReefTreasuryModuleId, AccountId, AccountIdConversion, Balance, BlockNumber, Currencies, CurrencyId,
 	MinVestedTransfer, Runtime, System, TokenSymbol, Vesting,
 };
 
@@ -31,8 +31,8 @@ runtime_benchmarks! {
 		};
 
 		// extra 1 dollar to pay fees
-		let from: AccountId = AcalaTreasuryModuleId::get().into_account();
-		set_aca_balance(&from, schedule.total_amount().unwrap() + dollars(1u32));
+		let from: AccountId = ReefTreasuryModuleId::get().into_account();
+		set_reef_balance(&from, schedule.total_amount().unwrap() + dollars(1u32));
 
 		let to: AccountId = account("to", 0, SEED);
 		let to_lookup = lookup_of_account(to.clone());
@@ -54,9 +54,9 @@ runtime_benchmarks! {
 			per_period: MinVestedTransfer::get(),
 		};
 
-		let from: AccountId = AcalaTreasuryModuleId::get().into_account();
+		let from: AccountId = ReefTreasuryModuleId::get().into_account();
 		// extra 1 dollar to pay fees
-		set_aca_balance(&from, schedule.total_amount().unwrap() * i as u128 + dollars(1u32));
+		set_reef_balance(&from, schedule.total_amount().unwrap() * i as u128 + dollars(1u32));
 
 		let to: AccountId = account("to", 0, SEED);
 		let to_lookup = lookup_of_account(to.clone());
@@ -85,7 +85,7 @@ runtime_benchmarks! {
 		};
 
 		let to: AccountId = account("to", 0, SEED);
-		set_aca_balance(&to, schedule.total_amount().unwrap() * i as u128);
+		set_reef_balance(&to, schedule.total_amount().unwrap() * i as u128);
 		let to_lookup = lookup_of_account(to.clone());
 
 		let mut schedules = vec![];

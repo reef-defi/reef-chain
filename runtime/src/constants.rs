@@ -71,8 +71,7 @@ pub mod fee {
 	impl WeightToFeePolynomial for WeightToFee {
 		type Balance = Balance;
 		fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
-			// in Acala, extrinsic base weight (smallest non-zero weight) is mapped to 1/10
-			// CENT:
+			// extrinsic base weight (smallest non-zero weight) is mapped to 1/10 CENT:
 			let p = CENTS / 10; // 1_000_000_000_000_000
 			let q = Balance::from(ExtrinsicBaseWeight::get()); // 125_000_000
 			smallvec![WeightToFeeCoefficient {

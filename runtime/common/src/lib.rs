@@ -1,4 +1,4 @@
-//! Common runtime code for Acala, Karura and Mandala.
+//! Common runtime code
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -44,7 +44,7 @@ pub fn is_system_contract(address: H160) -> bool {
 	address[..SYSTEM_CONTRACT_LEADING_ZERO_BYTES] == [0u8; SYSTEM_CONTRACT_LEADING_ZERO_BYTES]
 }
 
-pub fn is_acala_precompile(address: H160) -> bool {
+pub fn is_core_precompile(address: H160) -> bool {
 	address >= H160::from_low_u64_be(PRECOMPILE_ADDRESS_START)
 		&& address < H160::from_low_u64_be(PREDEPLOY_ADDRESS_START)
 }
@@ -146,14 +146,14 @@ mod tests {
 	}
 
 	#[test]
-	fn is_acala_precompile_works() {
-		assert!(!is_acala_precompile(H160::from_low_u64_be(0)));
-		assert!(!is_acala_precompile(H160::from_low_u64_be(
+	fn is_core_precompile_works() {
+		assert!(!is_core_precompile(H160::from_low_u64_be(0)));
+		assert!(!is_core_precompile(H160::from_low_u64_be(
 			PRECOMPILE_ADDRESS_START - 1
 		)));
-		assert!(is_acala_precompile(H160::from_low_u64_be(PRECOMPILE_ADDRESS_START)));
-		assert!(is_acala_precompile(H160::from_low_u64_be(PREDEPLOY_ADDRESS_START - 1)));
-		assert!(!is_acala_precompile(H160::from_low_u64_be(PREDEPLOY_ADDRESS_START)));
-		assert!(!is_acala_precompile([1u8; 20].into()));
+		assert!(is_core_precompile(H160::from_low_u64_be(PRECOMPILE_ADDRESS_START)));
+		assert!(is_core_precompile(H160::from_low_u64_be(PREDEPLOY_ADDRESS_START - 1)));
+		assert!(!is_core_precompile(H160::from_low_u64_be(PREDEPLOY_ADDRESS_START)));
+		assert!(!is_core_precompile([1u8; 20].into()));
 	}
 }

@@ -19,7 +19,7 @@ pub fn set_ausd_balance(who: &AccountId, balance: Balance) {
 	set_balance(CurrencyId::Token(TokenSymbol::RUSD), who, balance)
 }
 
-pub fn set_aca_balance(who: &AccountId, balance: Balance) {
+pub fn set_reef_balance(who: &AccountId, balance: Balance) {
 	set_balance(CurrencyId::Token(TokenSymbol::REEF), who, balance)
 }
 

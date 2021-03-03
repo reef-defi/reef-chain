@@ -1,4 +1,4 @@
-//! Tests to make sure that Acala's weights and fees match what we
+//! Tests to make sure that weights and fees match what we
 //! expect from Substrate or ORML.
 //!
 //! These test are not meant to be exhaustive, as it is inevitable that
