@@ -10,6 +10,10 @@ check:
 test:
 	SKIP_WASM_BUILD=1 cargo test --all
 
+.PHONY: debug
+debug:
+	cargo build && gdb --tui --args target/debug/reef-node --dev --tmp
+
 .PHONY: run
 run:
 	cargo run -- --dev --tmp
