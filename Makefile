@@ -12,11 +12,11 @@ test:
 
 .PHONY: debug
 debug:
-	cargo build && gdb --tui --args target/debug/reef-node --dev --tmp
+	cargo build && RUST_LOG=debug RUST_BACKTRACE=1 gdb --args target/debug/reef-node --dev --tmp -lruntime=debug
 
 .PHONY: run
 run:
-	cargo run -- --dev --tmp
+	RUST_BACKTRACE=1 cargo run -- --dev --tmp
 
 .PHONY: build
 build:
