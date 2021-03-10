@@ -209,8 +209,6 @@ parameter_types! {
 	pub const SS58Prefix: u8 = 42;
 }
 
-// Configure FRAME pallets to include in runtime.
-
 impl frame_system::Config for Runtime {
 	/// The basic call filter to use in dispatchable.
 	type BaseCallFilter = ();
@@ -361,9 +359,7 @@ impl module_transaction_payment::Config for Runtime {
 	type StableCurrencyId = GetStableCurrencyId;
 	type Currency = Balances;
 	type MultiCurrency = Currencies;
-	// TODO implement pallet_treasury
-	type OnTransactionPayment = ();
-	// type OnTransactionPayment = ReefTreasury;
+	type OnTransactionPayment = (); // burn fees
 	type TransactionByteFee = TransactionByteFee;
 	type WeightToFee = WeightToFee;
 	type FeeMultiplierUpdate = TargetedFeeAdjustment<Self, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
@@ -414,7 +410,6 @@ impl module_evm::Config for Runtime {
 	type StorageDepositPerByte = StorageDepositPerByte;
 	type MaxCodeSize = MaxCodeSize;
 	type Event = Event;
-	// type Precompiles = ();
 	type Precompiles = runtime_common::AllPrecompiles<
 		SystemContractsFilter,
 		MultiCurrencyPrecompile,
@@ -424,15 +419,12 @@ impl module_evm::Config for Runtime {
 	type ChainId = ChainId;
 	type GasToWeight = GasToWeight;
 	type ChargeTransactionPayment = module_transaction_payment::ChargeTransactionPayment<Runtime>;
-	type NetworkContractOrigin = EnsureRoot<AccountId>;
-	// type NetworkContractOrigin = EnsureRootOrTwoThirdsTechnicalCommittee;
+	type NetworkContractOrigin = EnsureRoot<AccountId>; // todo: EnsureRootOrTwoThirdsTechnicalCommittee
 	type NetworkContractSource = NetworkContractSource;
 	type DeveloperDeposit = DeveloperDeposit;
 	type DeploymentFee = DeploymentFee;
-	type TreasuryAccount = ();
-	// type TreasuryAccount = TreasuryModuleAccount;
-	type FreeDeploymentOrigin = EnsureRoot<AccountId>;
-	// type FreeDeploymentOrigin = EnsureRootOrHalfGeneralCouncil;
+	type TreasuryAccount = (); // todo: TreasuryModuleAccount;
+	type FreeDeploymentOrigin = EnsureRoot<AccountId>; // todo: EnsureRootOrHalfGeneralCouncil
 	type WeightInfo = weights::evm::WeightInfo<Runtime>;
 
 	#[cfg(feature = "with-ethereum-compatibility")]
@@ -456,7 +448,7 @@ impl pallet_balances::Config for Runtime {
 	type MaxLocks = MaxLocks;
 	/// The type for recording an account's balance.
 	type Balance = Balance;
-	type DustRemoval = (); // TODO: pallet_treasury
+	type DustRemoval = (); // todo: pallet_treasury
 	type ExistentialDeposit = NativeTokenExistentialDeposit;
 	type AccountStore = frame_system::Module<Runtime>;
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
@@ -504,19 +496,25 @@ construct_runtime!(
 		System: frame_system::{Module, Call, Config, Storage, Event<T>},
 		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Call, Storage},
 		Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
-		Aura: pallet_aura::{Module, Config<T>},
 		Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event},
 		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
 		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
+
+		// Consensus
+		Aura: pallet_aura::{Module, Config<T>},
+
 		// Other
 		Authority: orml_authority::{Module, Call, Event<T>, Origin<T>},
 		Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
+
 		// Account lookup
 		Indices: pallet_indices::{Module, Call, Storage, Config<T>, Event<T>},
+
 		// Tokens & Fees
 		Currencies: module_currencies::{Module, Call, Event<T>},
 		Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
 		TransactionPayment: module_transaction_payment::{Module, Call, Storage},
+
 		// Smart contracts
 		EvmAccounts: module_evm_accounts::{Module, Call, Storage, Event<T>},
 		EVM: module_evm::{Module, Config<T>, Call, Storage, Event<T>},
