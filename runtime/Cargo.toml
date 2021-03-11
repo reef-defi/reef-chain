@@ -34,7 +34,6 @@ frame-support = { default-features = false, version = '3.0.0' }
 frame-system = { default-features = false, version = '3.0.0' }
 frame-system-benchmarking = { default-features = false, optional = true, version = '3.0.0' }
 frame-system-rpc-runtime-api = { default-features = false, version = '3.0.0' }
-pallet-aura = { default-features = false, version = '3.0.0' }
 pallet-balances = { default-features = false, version = '3.0.0' }
 pallet-grandpa = { default-features = false, version = '3.0.0' }
 pallet-indices = { version = "3.0.0", default-features = false }
@@ -44,7 +43,6 @@ pallet-sudo = { default-features = false, version = '3.0.0' }
 pallet-timestamp = { default-features = false, version = '3.0.0' }
 pallet-transaction-payment = { default-features = false, version = '3.0.0' }
 pallet-transaction-payment-rpc-runtime-api = { default-features = false, version = '3.0.0' }
-sp-consensus-aura = { default-features = false, version = '0.9.0' }
 sp-api = { version = "3.0.0", default-features = false }
 sp-application-crypto = { version = "3.0.0", default-features = false }
 sp-block-builder = { version = "3.0.0", default-features = false }
@@ -59,6 +57,14 @@ sp-std = { version = "3.0.0", default-features = false }
 sp-transaction-pool = { version = "3.0.0", default-features = false }
 sp-version = { version = "3.0.0", default-features = false }
 libsecp256k1 = { version = "0.3.4", default-features = false, optional = true }
+
+# NPoS
+pallet-session = { version = "3.0.0", features = ["historical"], default-features = false }
+pallet-staking = { version = "3.0.0", default-features = false }
+pallet-staking-reward-curve = { version = "3.0.0", default-features = false }
+pallet-authorship = { version = "3.0.0", default-features = false }
+pallet-babe = { version = "3.0.0", default-features = false }
+sp-consensus-babe = { version = "0.9.0", default-features = false }
 
 # local dependencies
 orml-traits = { path = "../orml/traits", default-features = false }
@@ -108,7 +114,6 @@ std = [
     'frame-support/std',
     'frame-system/std',
     'frame-system-rpc-runtime-api/std',
-    'pallet-aura/std',
     'pallet-balances/std',
     'pallet-grandpa/std',
 	"pallet-indices/std",
@@ -119,7 +124,12 @@ std = [
     'pallet-transaction-payment/std',
     'pallet-transaction-payment-rpc-runtime-api/std',
 
-    'sp-consensus-aura/std',
+	"pallet-session/std",
+	"pallet-staking/std",
+	"pallet-authorship/std",
+    "pallet-babe/std",
+    "sp-consensus-babe/std",
+
 	"sp-api/std",
 	"sp-block-builder/std",
 	"sp-core/std",

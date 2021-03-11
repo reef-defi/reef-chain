@@ -50,7 +50,7 @@ impl SubstrateCli for Cli {
 		Ok(match id {
 			"dev" => Box::new(chain_spec::development_config()?),
 			"local" => Box::new(chain_spec::local_testnet_config()?),
-			"aura" => Box::new(chain_spec::aura_testnet_config()?),
+			"testnet" => Box::new(chain_spec::public_testnet_config()?),
 			path => Box::new(chain_spec::ChainSpec::from_json_file(
 				std::path::PathBuf::from(path),
 			)?),
@@ -62,13 +62,13 @@ impl SubstrateCli for Cli {
 	}
 }
 
-/// override
-fn set_default_ss58_version(version: u16) {
-	use sp_core::crypto::Ss58AddressFormat;
-	// TOOO: add to https://substrate.dev/rustdocs/v3.0.0/sp_core/crypto/enum.Ss58AddressFormat.html
-	let ss58_version = Ss58AddressFormat::Custom(version);
-	sp_core::crypto::set_default_ss58_version(ss58_version);
-}
+// /// override
+// fn set_default_ss58_version(version: u16) {
+// 	use sp_core::crypto::Ss58AddressFormat;
+// 	// TOOO: add to https://substrate.dev/rustdocs/v3.0.0/sp_core/crypto/enum.Ss58AddressFormat.html
+// 	let ss58_version = Ss58AddressFormat::Custom(version);
+// 	sp_core::crypto::set_default_ss58_version(ss58_version);
+// }
 
 /// Parse and run command line arguments
 pub fn run() -> sc_cli::Result<()> {
