@@ -25,13 +25,6 @@ use module_evm::GenesisAccount;
 // The URL for the telemetry server.
 const TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
 
-/// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
-pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
-
-fn get_session_keys(grandpa: GrandpaId, babe: BabeId) -> SessionKeys {
-	SessionKeys { grandpa, babe }
-}
-
 /// Node `ChainSpec` extensions.
 ///
 /// Additional parameters for some Substrate core modules,
@@ -43,6 +36,13 @@ pub struct Extensions {
 	pub fork_blocks: sc_client_api::ForkBlocks<reef_primitives::Block>,
 	/// Known bad block hashes.
 	pub bad_blocks: sc_client_api::BadBlocks<reef_primitives::Block>,
+}
+
+/// Specialized `ChainSpec`. This is a specialization of the general Substrate ChainSpec type.
+pub type ChainSpec = sc_service::GenericChainSpec<GenesisConfig, Extensions>;
+
+fn get_session_keys(grandpa: GrandpaId, babe: BabeId) -> SessionKeys {
+	SessionKeys { grandpa, babe }
 }
 
 /// Helper function to generate a crypto pair from seed
@@ -60,10 +60,9 @@ where
 	AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
 }
 
-/// Generate an authority key.
+/// Generate an authority keys.
 pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AccountId, GrandpaId, BabeId) {
 	(
-		// NOTE the stash key
 		get_account_id_from_seed::<sr25519::Public>(&format!("{}//stash", seed)),
 		get_account_id_from_seed::<sr25519::Public>(seed),
 		get_from_seed::<GrandpaId>(seed),
@@ -72,7 +71,7 @@ pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AccountId, Grandp
 }
 
 pub fn development_config() -> Result<ChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm binary not available".to_string())?;
+	let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
 
 	Ok(ChainSpec::from_genesis(
 		// Name
@@ -111,7 +110,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 }
 
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
-	let wasm_binary = WASM_BINARY.ok_or_else(|| "Development wasm binary not available".to_string())?;
+	let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
 
 	Ok(ChainSpec::from_genesis(
 		// Name
@@ -159,12 +158,53 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 	))
 }
 
-// pub fn aura_testnet_config() -> Result<ChainSpec, String> {
-// 	Ok(ChainSpec::from_genesis(
-// 		"Reef Testnet",
-// 		"reef_testnet",
-// 		ChainType::Live,
-// }
+pub fn public_testnet_config() -> Result<ChainSpec, String> {
+	let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
+
+	Ok(ChainSpec::from_genesis(
+		// Name
+		"Reef Testnet",
+		// ID
+		"reef_testnet",
+		ChainType::Live,
+		move || testnet_genesis(
+			wasm_binary,
+			// Initial PoA authorities
+			vec![
+				get_authority_keys_from_seed("Alice"),
+				get_authority_keys_from_seed("Bob"),
+			],
+			// Sudo account
+			get_account_id_from_seed::<sr25519::Public>("Alice"),
+			// Pre-funded accounts
+			vec![
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
+				get_account_id_from_seed::<sr25519::Public>("Bob"),
+				get_account_id_from_seed::<sr25519::Public>("Charlie"),
+				get_account_id_from_seed::<sr25519::Public>("Dave"),
+				get_account_id_from_seed::<sr25519::Public>("Eve"),
+				get_account_id_from_seed::<sr25519::Public>("Ferdie"),
+				get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
+				get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
+				get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
+				get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
+				get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
+				get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+			],
+			true,
+		),
+		// Bootnodes
+		vec![],
+		// Telemetry
+		TelemetryEndpoints::new(vec![(TELEMETRY_URL.into(), 0)]).ok(),
+		// Protocol ID
+		Some("reef_testnet"),
+		// Properties
+		Some(reef_properties()),
+		// Extensions
+		Default::default(),
+	))
+}
 
 /// Configure initial storage state for FRAME modules.
 fn testnet_genesis(
@@ -178,7 +218,32 @@ fn testnet_genesis(
 	let (evm_genesis_accounts, network_contract_index) = evm_genesis();
 
 	const INITIAL_BALANCE: u128 = 1_000_000 * DOLLARS;
-	const INITIAL_STAKING: u128 = 100_000 * DOLLARS;
+	const INITIAL_STAKING: u128 =   100_000 * DOLLARS;
+
+	let balances = initial_authorities
+		.iter()
+		.map(|x| (x.0.clone(), INITIAL_STAKING + 10 * DOLLARS)) // bit more for fee
+		.chain(endowed_accounts.iter().cloned().map(|k| (k, INITIAL_BALANCE)))
+		// .chain(
+		// 	get_all_module_accounts()
+		// 		.iter()
+		// 		.map(|x| (x.clone(), existential_deposit)),
+		// )
+		.fold(
+			BTreeMap::<AccountId, Balance>::new(),
+			|mut acc, (account_id, amount)| {
+				if let Some(balance) = acc.get_mut(&account_id) {
+					*balance = balance
+						.checked_add(amount)
+						.expect("balance cannot overflow when building genesis");
+				} else {
+					acc.insert(account_id.clone(), amount);
+				}
+				acc
+			},
+		)
+		.into_iter()
+		.collect::<Vec<(AccountId, Balance)>>();
 
 	GenesisConfig {
 		frame_system: Some(SystemConfig {
@@ -187,9 +252,7 @@ fn testnet_genesis(
 			changes_trie_config: Default::default(),
 		}),
 		pallet_indices: Some(IndicesConfig { indices: vec![] }),
-		pallet_balances: Some(BalancesConfig {
-			balances: endowed_accounts.iter().cloned().map(|k|(k, INITIAL_BALANCE)).collect(),
-		}),
+		pallet_balances: Some(BalancesConfig { balances }),
 		pallet_session: Some(SessionConfig {
 			keys: initial_authorities
 				.iter()
@@ -197,8 +260,8 @@ fn testnet_genesis(
 				.collect::<Vec<_>>(),
 		}),
 		pallet_staking: Some(StakingConfig {
-			validator_count: 5,
-			minimum_validator_count: 1,
+			validator_count: initial_authorities.len() as u32 * 2,
+			minimum_validator_count: initial_authorities.len() as u32,
 			stakers: initial_authorities
 				.iter()
 				.map(|x| (x.0.clone(), x.1.clone(), INITIAL_STAKING, StakerStatus::Validator))
@@ -209,9 +272,7 @@ fn testnet_genesis(
 		}),
 		pallet_babe: Some(BabeConfig { authorities: vec![] }),
 		pallet_grandpa: Some(GrandpaConfig { authorities: vec![] }),
-		pallet_sudo: Some(SudoConfig {
-			key: root_key,
-		}),
+		pallet_sudo: Some(SudoConfig { key: root_key }),
 		orml_tokens: Some(TokensConfig {
 			endowed_accounts: endowed_accounts
 				.iter()

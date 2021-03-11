@@ -52,7 +52,6 @@ pub use frame_support::{
 		// Get,
 		// IsType,
 		// LockIdentifier,
-
 		KeyOwnerProofSystem, Randomness, EnsureOrigin, OriginTrait, U128CurrencyToVote,
 		schedule::Priority,
 	},
