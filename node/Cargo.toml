@@ -78,3 +78,6 @@ reef-runtime = { path = '../runtime', version = '3.0.0' }
 [features]
 default = []
 runtime-benchmarks = ['reef-runtime/runtime-benchmarks']
+with-ethereum-compatibility = [
+	"reef-runtime/with-ethereum-compatibility"
+]

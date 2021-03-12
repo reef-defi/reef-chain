@@ -18,6 +18,10 @@ debug:
 run:
 	RUST_BACKTRACE=1 cargo run -- --dev --tmp
 
+.PHONY: eth
+eth:
+	RUST_BACKTRACE=1 cargo run --manifest-path node/Cargo.toml --features with-ethereum-compatibility  -- --dev --tmp
+
 .PHONY: build
 build:
 	cargo build --release
