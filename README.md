@@ -1,36 +1,32 @@
-## Getting Started
+## Reef Chain
 
 This repository contains Substrate based runtime for Reef Chain.
 
-### Makefile
+### Install
 
-This project uses a [Makefile](Makefile) to document helpful commands and make it easier to execute them.
+You can install the compiler and the toolchain with:
+```bash
+make init
+```
 
-1. `make init` - Run the [init script](scripts/init.sh) to configure the Rust toolchain for
-   [WebAssembly compilation](https://substrate.dev/docs/en/knowledgebase/getting-started/#webassembly-compilation).
-1. `make run` - Build and launch this project in development mode.
+### Start a development node
 
-### Build
+The `make run` command will launch a temporary node and its state will be discarded after you terminate the process.
+```bash
+make run
+```
+To run the temporary node with ethereum compatibility enabled run:
+```bash
+make eth
+```
 
-The `make run` command will perform an initial build. Use the following command to build the node without launching it:
+### Run a persistent single-node chain
 
-```sh
+Use the following command to build the node without launching it:
+
+```bash
 make build
 ```
-
-### Embedded Docs
-
-Once the project has been built, the following command can be used to explore all parameters and subcommands:
-
-```sh
-./target/release/reef-node -h
-```
-
-## Run
-
-The `make run` command will launch a temporary node and its state will be discarded after you terminate the process. After the project has been built, there are other ways to launch the node.
-
-### Single-Node Development Chain
 
 This command will start the single-node development chain with persistent state:
 
@@ -50,23 +46,22 @@ Start the development chain with detailed logging:
 RUST_LOG=debug RUST_BACKTRACE=1 ./target/release/reef-node -lruntime=debug --dev
 ```
 
-### Run in Docker
-
-Then run the following command to start a single node development chain.
+### Run tests
 
 ```bash
-./scripts/docker_run.sh
+make test
 ```
 
-This command will firstly compile your code, and then start a local development network. You can also replace the default command (`cargo build --release && ./target/release/reef-node --dev --ws-external`) by appending your own. A few useful ones are as follow.
+### Run in debugger
 
 ```bash
-# Run Substrate node without re-compiling
-./scripts/docker_run.sh ./target/release/reef-node --dev --ws-external
+make debug
+```
 
-# Purge the local dev chain
-./scripts/docker_run.sh ./target/release/reef-node purge-chain --dev
+### Embedded docs
 
-# Check whether the code is compilable
-./scripts/docker_run.sh cargo check
+Once the project has been built, the following command can be used to explore all parameters and subcommands:
+
+```bash
+./target/release/reef-node -h
 ```
