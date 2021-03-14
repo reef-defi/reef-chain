@@ -19,6 +19,9 @@ use sc_chain_spec::ChainSpecExtension;
 
 use serde::{Deserialize, Serialize};
 
+use hex_literal::hex;
+use sp_core::crypto::UncheckedInto;
+
 use reef_primitives::{AccountPublic, Balance, Nonce, PREDEPLOY_ADDRESS_START};
 use module_evm::GenesisAccount;
 
@@ -169,32 +172,39 @@ pub fn public_testnet_config() -> Result<ChainSpec, String> {
 		ChainType::Live,
 		move || testnet_genesis(
 			wasm_binary,
-			// Initial PoA authorities
+			// Initial authorities
 			vec![
-				get_authority_keys_from_seed("Alice"),
-				get_authority_keys_from_seed("Bob"),
+				(
+					hex!["067c7587d55a283a8b758b39b0b2fed726003df5c7741129b1f30fea9ab0c873"].into(),
+					hex!["067c7587d55a283a8b758b39b0b2fed726003df5c7741129b1f30fea9ab0c873"].into(),
+					hex!["ba630d2df03743a6441ab9221a25fc00a62e6f3b56c6920634eebb72a15fc90f"].unchecked_into(),
+					hex!["607712f6581e191b69046427a7e33c4713e96b4ae4654e2467c74279dc20beb2"].unchecked_into(),
+				),
+				(
+					hex!["5a5f3544f46e25d1b154958a1a1d4d14228c173c42ec1d4676884672cb53cf77"].into(),
+					hex!["5a5f3544f46e25d1b154958a1a1d4d14228c173c42ec1d4676884672cb53cf77"].into(),
+					hex!["d09f879b3273d2cedab83fa741cdac328679c98914dc8dc07e359e19f0379844"].unchecked_into(),
+					hex!["db6d2cb33abebdc024a14ef7bfbc68823660be8d1acac66770e406e484de3184"].unchecked_into(),
+				),
+				(
+					hex!["6ac893cf1ecee6153205a76a4ce2bac5159bfdccb933897cd161b785c9bdb733"].into(),
+					hex!["6ac893cf1ecee6153205a76a4ce2bac5159bfdccb933897cd161b785c9bdb733"].into(),
+					hex!["568c17ce5ef308bd9544e7b16f34089a2c2329193f31577a830ffe8a023a6874"].unchecked_into(),
+					hex!["c8996b17688cab9bcda8dafb4dde9bab4d9b1dc81c71419fca46fedcba74a14e"].unchecked_into(),
+				),
 			],
-			// Sudo account
-			get_account_id_from_seed::<sr25519::Public>("Alice"),
-			// Pre-funded accounts
+			// Sudo
+			hex!["0c994e7589709a85128a6695254af16227f7873816ae0269aa705861c315ba1e"].into(),
+			// Endowment Accounts
 			vec![
-				get_account_id_from_seed::<sr25519::Public>("Alice"),
-				get_account_id_from_seed::<sr25519::Public>("Bob"),
-				get_account_id_from_seed::<sr25519::Public>("Charlie"),
-				get_account_id_from_seed::<sr25519::Public>("Dave"),
-				get_account_id_from_seed::<sr25519::Public>("Eve"),
-				get_account_id_from_seed::<sr25519::Public>("Ferdie"),
-				get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
-				get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
-				get_account_id_from_seed::<sr25519::Public>("Charlie//stash"),
-				get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
-				get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
-				get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+				hex!["0c994e7589709a85128a6695254af16227f7873816ae0269aa705861c315ba1e"].into(),
+				hex!["9e42365c1a43fe7bd886118f49a2247aabda7079c3e4c5288f41afadd7bb1963"].into(),
+				hex!["6c1371ce4b06b8d191d6f552d716c00da31aca08a291ccbdeaf0f7aeae51201b"].into(),
 			],
 			true,
 		),
 		// Bootnodes
-		vec![],
+		vec!["/dns/bootnode1-reef-testnet.paralink.network/tcp/30333/p2p/12D3KooWKmFtS7BFtkkKWrP5ZcCpPFokmST2JFXFSsVBNeW5SXWg".parse().unwrap(),],
 		// Telemetry
 		TelemetryEndpoints::new(vec![(TELEMETRY_URL.into(), 0)]).ok(),
 		// Protocol ID

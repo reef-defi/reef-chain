@@ -5334,6 +5334,7 @@ dependencies = [
  "evm-rpc",
  "frame-benchmarking",
  "frame-benchmarking-cli",
+ "hex-literal 0.3.1",
  "jsonrpc-core",
  "module-evm",
  "module-evm-rpc-runtime-api",
