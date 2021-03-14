@@ -1,6 +1,6 @@
 .PHONY: init
 init:
-	./scripts/init.sh
+	./init.sh
 
 .PHONY: check
 check:
