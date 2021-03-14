@@ -19,8 +19,8 @@ pub mod currency {
 pub mod time {
 	use primitives::{BlockNumber, Moment};
 
-	/// 5 second block times
-	pub const SECS_PER_BLOCK: Moment = 5;
+	/// 10 second block times
+	pub const SECS_PER_BLOCK: Moment = 10;
 	pub const MILLISECS_PER_BLOCK: Moment = SECS_PER_BLOCK * 1000;
 
 	// These time units are defined in number of blocks.
