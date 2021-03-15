@@ -204,7 +204,7 @@ pub fn public_testnet_config() -> Result<ChainSpec, String> {
 			true,
 		),
 		// Bootnodes
-		vec!["/dns/bootnode1-reef-testnet.paralink.network/tcp/30333/p2p/12D3KooWKmFtS7BFtkkKWrP5ZcCpPFokmST2JFXFSsVBNeW5SXWg".parse().unwrap(),],
+		vec!["/dns/bootnode1-reef-testnet.paralink.network/tcp/30334/p2p/12D3KooWKmFtS7BFtkkKWrP5ZcCpPFokmST2JFXFSsVBNeW5SXWg".parse().unwrap()],
 		// Telemetry
 		TelemetryEndpoints::new(vec![(TELEMETRY_URL.into(), 0)]).ok(),
 		// Protocol ID
