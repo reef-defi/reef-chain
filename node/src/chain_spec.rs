@@ -175,22 +175,22 @@ pub fn public_testnet_config() -> Result<ChainSpec, String> {
 			// Initial authorities
 			vec![
 				(
-					hex!["067c7587d55a283a8b758b39b0b2fed726003df5c7741129b1f30fea9ab0c873"].into(),
-					hex!["067c7587d55a283a8b758b39b0b2fed726003df5c7741129b1f30fea9ab0c873"].into(),
-					hex!["ba630d2df03743a6441ab9221a25fc00a62e6f3b56c6920634eebb72a15fc90f"].unchecked_into(),
+					hex!["b2902b07056f7365bc22bf7e69c4e4fdba03e6af9c73ca6eb1703ccbc0248857"].into(),
+					hex!["cc2ea454844cc1a2e821198d9e0ce1de1aee7d014af5dd3404fc8199df89f821"].into(),
 					hex!["607712f6581e191b69046427a7e33c4713e96b4ae4654e2467c74279dc20beb2"].unchecked_into(),
+					hex!["ba630d2df03743a6441ab9221a25fc00a62e6f3b56c6920634eebb72a15fc90f"].unchecked_into(),
 				),
 				(
-					hex!["5a5f3544f46e25d1b154958a1a1d4d14228c173c42ec1d4676884672cb53cf77"].into(),
-					hex!["5a5f3544f46e25d1b154958a1a1d4d14228c173c42ec1d4676884672cb53cf77"].into(),
-					hex!["d09f879b3273d2cedab83fa741cdac328679c98914dc8dc07e359e19f0379844"].unchecked_into(),
+					hex!["06ee8fc0e34e40f6f2c98328d70874c6dd7d7989159634c8c87301efbcbe4470"].into(),
+					hex!["9cf9f939c16ef458e677472ff113af53e7fb9139244fcfa6fccb765aa8831019"].into(),
 					hex!["db6d2cb33abebdc024a14ef7bfbc68823660be8d1acac66770e406e484de3184"].unchecked_into(),
+					hex!["d09f879b3273d2cedab83fa741cdac328679c98914dc8dc07e359e19f0379844"].unchecked_into(),
 				),
 				(
-					hex!["6ac893cf1ecee6153205a76a4ce2bac5159bfdccb933897cd161b785c9bdb733"].into(),
-					hex!["6ac893cf1ecee6153205a76a4ce2bac5159bfdccb933897cd161b785c9bdb733"].into(),
-					hex!["568c17ce5ef308bd9544e7b16f34089a2c2329193f31577a830ffe8a023a6874"].unchecked_into(),
+					hex!["48267bffea5e524f1c0e06cce77f0ef920be7ed9a7dd47705e181edad64f532a"].into(),
+					hex!["38594d7640612c49337f3a0bc7b39232b86f9c9c4fedec3f8b00e45d3f073a2d"].into(),
 					hex!["c8996b17688cab9bcda8dafb4dde9bab4d9b1dc81c71419fca46fedcba74a14e"].unchecked_into(),
+					hex!["568c17ce5ef308bd9544e7b16f34089a2c2329193f31577a830ffe8a023a6874"].unchecked_into(),
 				),
 			],
 			// Sudo
