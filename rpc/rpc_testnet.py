@@ -1,7 +1,7 @@
 from substrateinterface import SubstrateInterface
 
 s = SubstrateInterface(
-    url=f"https://rpc-testnet.reef.finance",
+    url=f"https://rpc-testnet.reefscan.com",
     ss58_format=42,
     type_registry_preset='substrate-node-template'
 )
