@@ -24,7 +24,7 @@ eth:
 
 .PHONY: build
 build:
-	cargo build --release
+	cargo build --manifest-path node/Cargo.toml --features with-ethereum-compatibility --release
 
 .PHONY: watch
 watch:
