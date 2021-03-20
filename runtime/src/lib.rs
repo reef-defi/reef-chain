@@ -646,6 +646,15 @@ impl orml_authority::Config for Runtime {
 	type WeightInfo = ();
 }
 
+
+// parameter_types!(
+// );
+
+impl module_poc::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+}
+
 // Create the runtime by composing the FRAME pallets that were previously configured.
 
 // workaround for a weird bug in macro
@@ -684,6 +693,9 @@ construct_runtime!(
 		Staking: pallet_staking::{Module, Call, Config<T>, Storage, Event<T>},
 		Session: pallet_session::{Module, Call, Storage, Event, Config<T>},
 		Historical: pallet_session_historical::{Module},
+
+		// Proof of Commitment
+		Poc: module_poc::{Module, Call, Storage, Event<T>},
 
 		// Other
 		Authority: orml_authority::{Module, Call, Event<T>, Origin<T>},

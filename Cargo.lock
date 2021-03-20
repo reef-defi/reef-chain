@@ -3708,6 +3708,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "module-poc"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "parity-scale-codec",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+]
+
+[[package]]
 name = "module-support"
 version = "0.7.3"
 dependencies = [
@@ -5397,6 +5411,7 @@ dependencies = [
  "module-evm-accounts",
  "module-evm-bridge",
  "module-evm-rpc-runtime-api",
+ "module-poc",
  "module-support",
  "module-transaction-payment",
  "orml-authority",

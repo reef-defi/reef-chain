@@ -75,11 +75,13 @@ orml-gradually-update = { path = "../orml/gradually-update", default-features = 
 # orml-vesting = { path = "../orml/vesting", default-features = false }
 # orml-rewards = { path = "../orml/rewards", default-features = false }
 
+module-poc = { path = "../modules/poc", default-features = false }
+
 module-currencies = { path = "../modules/currencies", default-features = false }
+
 module-evm = { path = "../modules/evm", default-features = false }
 module-evm-accounts = { path = "../modules/evm-accounts", default-features = false }
 module-evm-bridge = { path = "../modules/evm-bridge", default-features = false }
-
 module-evm-rpc-runtime-api = { path = "../modules/evm/rpc/runtime_api",  default-features = false }
 
 module-transaction-payment = { path = "../modules/transaction_payment", default-features = false }
@@ -147,6 +149,7 @@ std = [
 	"orml-benchmarking/std",
 	"orml-gradually-update/std",
 
+	"module-poc/std",
 	"module-currencies/std",
 	"module-evm/std",
 	"module-evm-accounts/std",
