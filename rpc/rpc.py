@@ -14,3 +14,5 @@ s.token_symbol, s.token_decimals
 
 s.get_chain_head()
 
+# for becoming a validator
+# s.rpc_request('author_rotateKeys', None)
