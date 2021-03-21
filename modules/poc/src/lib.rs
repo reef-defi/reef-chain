@@ -8,11 +8,12 @@
 
 use frame_support::{
 	pallet_prelude::*,
-	traits::{Currency, ReservableCurrency, IsType, },
+	traits::{Currency, ReservableCurrency, IsType, WithdrawReasons, ExistenceRequirement},
 	weights::Weight,
 	ensure,
 	transactional,
 };
+use frame_support::sp_runtime::traits::CheckedAdd;
 use frame_system::pallet_prelude::*;
 
 #[cfg(feature = "std")]
@@ -24,19 +25,18 @@ mod tests;
 pub use module::*;
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Clone)]
+#[derive(Encode, Decode, Clone, PartialEq)]
 pub enum LockState<BlockNumber> {
 	Committed,
 	Unbonding(BlockNumber),
-	Free
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Clone)]
+#[derive(Encode, Decode, Clone, Debug, PartialEq)]
 pub enum LockDuration {
-	TenYears,
-	OneYear,
 	OneMonth,
+	OneYear,
+	TenYears,
 }
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -93,16 +93,22 @@ pub mod module {
 
 	#[pallet::error]
 	pub enum Error<T> {
-		/// Some wrong behavior
-		Wrong,
+		/// Account already has an active commitment
+		AlreadyCommitted,
+		/// Cannot operate on a non existing commitment
+		CommitmentNotFound,
+		/// The commitment is not active
+		NotCommitted,
 	}
 
 	#[pallet::event]
 	#[pallet::generate_deposit(fn deposit_event)]
 	#[pallet::metadata(T::AccountId = "AccountId")]
 	pub enum Event<T: Config> {
-		/// Dummy event, just here so there's a generic type that's used.
-		Dummy(T::AccountId),
+		/// Created a new committment
+		Committed(T::AccountId),
+		/// Add more funds to existing commitment
+		FundsAdded(T::AccountId),
 	}
 
 	#[pallet::storage]
@@ -115,30 +121,137 @@ pub mod module {
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<T::BlockNumber> for Pallet<T> {
-		fn on_initialize(_n: T::BlockNumber) -> Weight {
-			// Dummy::<T>::put(T::Balance::from(10));
-			10
-		}
-
 		fn on_finalize(_n: T::BlockNumber) {
-			// Dummy::<T>::put(T::Balance::from(11));
+			// TODO set winners at the end of era
 		}
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		// #[pallet::weight(<T::Balance as Into<Weight>>::into(new_value.clone()))]
+
 		#[pallet::weight(10_000)]
-		pub fn commit(origin: OriginFor<T>, #[pallet::compact] amount: BalanceOf<T>) -> DispatchResultWithPostInfo {
+		pub fn commit(
+			origin: OriginFor<T>,
+			#[pallet::compact] amount: BalanceOf<T>,
+			duration: LockDuration,
+			candidate: T::AccountId,
+			) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
+
+			ensure!(!<Commitments<T>>::contains_key(&origin), Error::<T>::AlreadyCommitted);
+
+			// TODO check if at totalSupply capacity
+
+			T::Currency::withdraw(
+				&origin, amount,
+				WithdrawReasons::RESERVE,
+				ExistenceRequirement::KeepAlive)?;
+
+			// create a new commitment
+			<Commitments<T>>::insert(&origin, Commitment {
+				amount: amount,
+				duration: duration,
+				candidate: candidate,
+				..Default::default()
+			});
+			Self::deposit_event(Event::Committed(origin));
+			Ok(().into())
+		}
+
+
+		#[pallet::weight(10_000)]
+		pub fn add_funds(origin: OriginFor<T>, #[pallet::compact] amount: BalanceOf<T>) -> DispatchResultWithPostInfo {
+			let origin = ensure_signed(origin)?;
+
+			ensure!(<Commitments<T>>::contains_key(&origin), Error::<T>::CommitmentNotFound);
+			let mut commitment = <Commitments<T>>::get(&origin);
+
+			// TODO check if at totalSupply capacity
+
+			T::Currency::withdraw(
+				&origin, amount,
+				WithdrawReasons::RESERVE,
+				ExistenceRequirement::KeepAlive)?;
+			commitment.amount = commitment.amount.checked_add(&amount).ok_or("currency overflow")?;
+
+			// always re-commit
+			commitment.state = LockState::Committed;
+
+			// save the commitment
+			<Commitments<T>>::insert(&origin, commitment);
+
 
 			Ok(().into())
 		}
+
+
+		#[pallet::weight(10_000)]
+		pub fn unbond(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+			let origin = ensure_signed(origin)?;
+
+			ensure!(<Commitments<T>>::contains_key(&origin), Error::<T>::CommitmentNotFound);
+			let mut commitment = <Commitments<T>>::get(&origin);
+			ensure!(commitment.state == LockState::Committed, Error::<T>::NotCommitted);
+
+			// TODO
+			// calculate block number from lock duration
+
+			<Commitments<T>>::insert(&origin, commitment);
+			Ok(().into())
+		}
+
+
+		#[pallet::weight(10_000)]
+		pub fn withdraw(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+			let origin = ensure_signed(origin)?;
+
+			ensure!(<Commitments<T>>::contains_key(&origin), Error::<T>::CommitmentNotFound);
+			let commitment = <Commitments<T>>::get(&origin);
+
+			// TODO check if Unbonding period is over
+
+			// credit the user his funds
+
+			// delete the commitment
+			<Commitments<T>>::remove(&origin);
+
+			Ok(().into())
+		}
+
+
+		#[pallet::weight(10_000)]
+		pub fn set_candidate(
+			origin: OriginFor<T>,
+			candidate: T::AccountId,
+			) -> DispatchResultWithPostInfo {
+			let origin = ensure_signed(origin)?;
+
+			ensure!(<Commitments<T>>::contains_key(&origin), Error::<T>::CommitmentNotFound);
+			let mut commitment = <Commitments<T>>::get(&origin);
+			ensure!(commitment.state == LockState::Committed, Error::<T>::NotCommitted);
+
+			commitment.candidate = candidate;
+			<Commitments<T>>::insert(&origin, commitment);
+
+			Ok(().into())
+		}
+
+		// TODO claim reward
+
+
 	}
 }
 
-// impl<T: Config> Pallet<T> {
-// 	pub fn do_set_bar(who: &T::AccountId, amount: T::Balance) {
-// 		Bar::<T>::insert(who, amount);
-// 	}
-// }
+impl<T: Config> Pallet<T> {
+	pub fn voting_weight(commitment: &Commitment<T::AccountId, BalanceOf<T>, T::BlockNumber>) -> BalanceOf<T> {
+		if commitment.state != LockState::Committed {
+			return BalanceOf::<T>::from(0 as u32);
+		}
+		let multiplier = match commitment.duration {
+			LockDuration::OneMonth => 1,
+			LockDuration::OneYear  => 10,
+			LockDuration::TenYears => 100,
+		};
+		commitment.amount * BalanceOf::<T>::from(multiplier as u32)
+	}
+}
