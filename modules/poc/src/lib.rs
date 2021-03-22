@@ -27,7 +27,9 @@ pub use module::*;
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
 #[derive(Encode, Decode, Clone, PartialEq)]
 pub enum LockState<BlockNumber> {
+	/// Locked /w voting power
 	Committed,
+	/// BlockNumber when Unbonding period started
 	Unbonding(BlockNumber),
 }
 
@@ -99,6 +101,10 @@ pub mod module {
 		CommitmentNotFound,
 		/// The commitment is not active
 		NotCommitted,
+		/// Funds are still locked and cannot be withdrawn
+		CannotWithdrawLocked,
+		/// Bonded amount is too small
+		InsufficientAmount,
 	}
 
 	#[pallet::event]
@@ -140,7 +146,12 @@ pub mod module {
 
 			ensure!(!<Commitments<T>>::contains_key(&origin), Error::<T>::AlreadyCommitted);
 
+			// TODO: consider imposing a minimum bond size
+			ensure!(amount >= BalanceOf::<T>::from(0 as u32), Error::<T>::InsufficientAmount);
+
 			// TODO check if at totalSupply capacity
+			// ensure!(T::Currency::free_balance(&origin) >= amount &&
+			// 		T::Currency::total_issuance() * 0.1 < Self::totalBonded.checked_add(amount).unwrap(), Error::<T>::OverQuota);
 
 			T::Currency::withdraw(
 				&origin, amount,
@@ -166,6 +177,7 @@ pub mod module {
 			ensure!(<Commitments<T>>::contains_key(&origin), Error::<T>::CommitmentNotFound);
 			let mut commitment = <Commitments<T>>::get(&origin);
 
+			ensure!(amount >= BalanceOf::<T>::from(0 as u32), Error::<T>::InsufficientAmount);
 			// TODO check if at totalSupply capacity
 
 			T::Currency::withdraw(
@@ -193,8 +205,9 @@ pub mod module {
 			let mut commitment = <Commitments<T>>::get(&origin);
 			ensure!(commitment.state == LockState::Committed, Error::<T>::NotCommitted);
 
-			// TODO
-			// calculate block number from lock duration
+			// record the unbonding block number
+			let current_block: T::BlockNumber = frame_system::Module::<T>::block_number();
+			commitment.state = LockState::Unbonding(current_block);
 
 			<Commitments<T>>::insert(&origin, commitment);
 			Ok(().into())
@@ -207,15 +220,31 @@ pub mod module {
 
 			ensure!(<Commitments<T>>::contains_key(&origin), Error::<T>::CommitmentNotFound);
 			let commitment = <Commitments<T>>::get(&origin);
+			ensure!(commitment.state != LockState::Committed, Error::<T>::AlreadyCommitted);
 
-			// TODO check if Unbonding period is over
+			// check if Unbonding period is over
+			// WARN: if block times are altered, this calculation will become invalid
+			if let LockState::Unbonding(start_block) = commitment.state {
 
-			// credit the user his funds
+				let lock_period = match commitment.duration {
+					LockDuration::OneMonth => 30,
+					LockDuration::OneYear  => 365,
+					LockDuration::TenYears => 3650,
+				} * primitives::time::DAYS;
+				let lock_period: T::BlockNumber = lock_period.into();
+				let current_block: T::BlockNumber = frame_system::Module::<T>::block_number();
 
-			// delete the commitment
-			<Commitments<T>>::remove(&origin);
+				if start_block + lock_period <= current_block {
+					// credit the user his funds
+					T::Currency::deposit_into_existing(&origin, commitment.amount)?;
 
-			Ok(().into())
+					// delete the commitment
+					<Commitments<T>>::remove(&origin);
+
+					return Ok(().into());
+				}
+			}
+			Err(Error::<T>::CannotWithdrawLocked.into())
 		}
 
 
@@ -236,7 +265,7 @@ pub mod module {
 			Ok(().into())
 		}
 
-		// TODO claim reward
+		// TODO claim reward fn
 
 
 	}
