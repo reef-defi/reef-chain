@@ -45,6 +45,7 @@ pub mod currency {
 pub mod time {
 	use super::{BlockNumber, Moment};
 
+	/// 10 second block times
 	pub const SECS_PER_BLOCK: Moment = 10;
 	pub const MILLISECS_PER_BLOCK: Moment = SECS_PER_BLOCK * 1000;
 
@@ -55,8 +56,7 @@ pub mod time {
 
 	pub const SLOT_DURATION: Moment = MILLISECS_PER_BLOCK;
 
-	// 1 in 4 blocks (on average, not counting collisions) will be primary BABE
-	// blocks.
+	// 1 in 4 blocks (on average, not counting collisions) will be primary BABE blocks.
 	pub const PRIMARY_PROBABILITY: (u64, u64) = (1, 4);
 
 	pub const EPOCH_DURATION_IN_BLOCKS: BlockNumber = HOURS;
