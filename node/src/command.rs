@@ -76,17 +76,6 @@ pub fn run() -> sc_cli::Result<()> {
 
 	match &cli.subcommand {
 		Some(Subcommand::Key(cmd)) => cmd.run(&cli),
-		// Some(Subcommand::Inspect(cmd)) => {
-		// 	let runner = cli.create_runner(cmd)?;
-		// 	let chain_spec = &runner.config().chain_spec;
-        //
-		// 	set_default_ss58_version(42);
-        //
-		// 	runner.sync_run(|config| {
-		// 		let (client, _, _) = service::build_full(config, false, false)?;
-		// 		cmd.run(client)
-		// 	})
-		// }
 		Some(Subcommand::Sign(cmd)) => cmd.run(),
 		Some(Subcommand::Verify(cmd)) => cmd.run(),
 		Some(Subcommand::Vanity(cmd)) => cmd.run(),

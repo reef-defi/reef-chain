@@ -71,7 +71,6 @@ module-evm-rpc-runtime-api = { path = "../modules/evm/rpc/runtime_api" }
 evm-rpc = { path = "../modules/evm/rpc" }
 
 reef-primitives = { path = "../primitives" }
-inspect = { package = "reef-inspect", path = "../inspect" }
 
 # runtime
 reef-runtime = { path = '../runtime', version = '3.0.0' }
