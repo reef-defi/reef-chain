@@ -8,7 +8,10 @@
 
 use frame_support::{
 	pallet_prelude::*,
-	traits::{Currency, ReservableCurrency, IsType, WithdrawReasons, ExistenceRequirement},
+	traits::{
+		Currency, ReservableCurrency, IsType, WithdrawReasons, ExistenceRequirement,
+		InitializeMembers, ChangeMembers,
+	},
 	weights::Weight,
 	ensure,
 	transactional,
@@ -104,6 +107,9 @@ pub mod module {
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
+		/// The receiver of the signal for when the membership has changed.
+		type MembershipChanged: ChangeMembers<Self::AccountId>;
 	}
 
 	#[pallet::error]
@@ -144,8 +150,10 @@ pub mod module {
 
 	#[pallet::storage]
 	#[pallet::getter(fn current_era)]
-	pub(super) type CurrentEra<T: Config> =
-		StorageValue<_, Era<T::BlockNumber>, ValueQuery, FirstEra<T>>;
+	pub(super) type CurrentEra<T: Config> = StorageValue<_,
+		Era<T::BlockNumber>,
+		ValueQuery,
+		FirstEra<T>>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn voter_rewards)]
@@ -157,7 +165,14 @@ pub mod module {
 	#[pallet::storage]
 	#[pallet::getter(fn commitments)]
 	pub(crate) type Commitments<T: Config> = StorageMap<_,
-		Blake2_128Concat, T::AccountId, CommitmentOf<T>, ValueQuery>;
+		Blake2_128Concat, T::AccountId, CommitmentOf<T>,
+		ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn members)]
+	pub type Members<T: Config> = StorageValue<_,
+		Vec<T::AccountId>,
+		ValueQuery>;
 
 	#[pallet::pallet]
 	pub struct Pallet<T>(PhantomData<T>);
@@ -194,17 +209,24 @@ pub mod module {
 				for (candidate, _weight) in sorted.iter().take(COUNCIL_SIZE) {
 					winners.push(candidate.to_owned());
 				}
+				// pallet-collective expects sorted list
+				winners.sort();
 
-				// TODO: assign winners to the quorum
+				if !winners.is_empty() {
+					// assign winners as new members in both collective and Self
+					let old_members = Members::<T>::get();
+					T::MembershipChanged::set_members_sorted(&winners[..], &old_members);
+					Members::<T>::put(winners.clone());
 
-				// distribute winners rewards
-				let zero = BalanceOf::<T>::from(0 as u32);
-				let rewards = BalanceOf::<T>::from(ERA_COUNCIL_REWARDS);
-				let reward = rewards.checked_div(&BalanceOf::<T>::from(COUNCIL_SIZE as u32)).unwrap_or(zero);
-				if reward > zero {
-					for winner in winners.iter() {
-						// ignore failed cases
-						T::Currency::deposit_into_existing(&winner, reward).ok();
+					// distribute winners rewards
+					let zero = BalanceOf::<T>::from(0 as u32);
+					let rewards = BalanceOf::<T>::from(ERA_COUNCIL_REWARDS);
+					let reward = rewards.checked_div(&BalanceOf::<T>::from(winners.len() as u32)).unwrap_or(zero);
+					if reward > zero {
+						for winner in winners.iter() {
+							// ignore failed cases
+							T::Currency::deposit_into_existing(&winner, reward).ok();
+						}
 					}
 				}
 
@@ -400,6 +422,4 @@ impl<T: Config> Pallet<T> {
 			}
 		}
 	}
-
-
 }

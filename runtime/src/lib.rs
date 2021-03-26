@@ -653,8 +653,7 @@ impl pallet_sudo::Config for Runtime {
 }
 
 
-type TechCouncilInstance           = pallet_collective::Instance1;
-type TechCouncilMembershipInstance = pallet_membership::Instance1;
+type TechCouncilInstance = pallet_collective::Instance1;
 
 type EnsureRootOrTwoThridsTechCouncil = EnsureOneOf<
 	AccountId,
@@ -685,22 +684,13 @@ impl pallet_collective::Config<TechCouncilInstance> for Runtime {
 	type WeightInfo = ();
 }
 
-impl pallet_membership::Config<TechCouncilMembershipInstance> for Runtime {
-	type Event = Event;
-	type AddOrigin = EnsureRootOrThreeFourthsTechCouncil;
-	type RemoveOrigin = EnsureRootOrThreeFourthsTechCouncil;
-	type SwapOrigin = EnsureRootOrThreeFourthsTechCouncil;
-	type ResetOrigin = EnsureRootOrThreeFourthsTechCouncil;
-	type PrimeOrigin = EnsureRootOrThreeFourthsTechCouncil;
-	type MembershipInitialized = TechCouncil;
-	type MembershipChanged = TechCouncil;
-}
-
 impl module_poc::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
+
 	// TODO
 	// type MaxMembers = TechCouncilMaxMembers;
+	type MembershipChanged = TechCouncil;
 }
 
 
@@ -745,7 +735,6 @@ construct_runtime!(
 
 		// Proof of Commitment
 		TechCouncil: pallet_collective::<Instance1>::{Module, Call, Storage, Origin<T>, Event<T>, Config<T>},
-		TechCouncilMembership: pallet_membership::<Instance1>::{Module, Call, Storage, Event<T>, Config<T>},
 		Poc: module_poc::{Module, Call, Storage, Event<T>},
 
 		// Other

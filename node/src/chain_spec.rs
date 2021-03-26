@@ -3,7 +3,6 @@ use reef_runtime::{
 	AccountId, CurrencyId,
 	BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
 	IndicesConfig, EVMConfig, StakingConfig, SessionConfig,
-	TechCouncilMembershipConfig,
 	WASM_BINARY, Signature,
 	TokenSymbol, TokensConfig, DOLLARS,
 	StakerStatus,
@@ -299,10 +298,6 @@ fn testnet_genesis(
 		}),
 		pallet_sudo: Some(SudoConfig { key: root_key }),
 		pallet_collective_Instance1: Some(Default::default()),
-		pallet_membership_Instance1: Some(TechCouncilMembershipConfig {
-			members: vec![],
-			phantom: Default::default(),
-		}),
 	}
 }
 
