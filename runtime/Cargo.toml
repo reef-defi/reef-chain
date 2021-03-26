@@ -66,6 +66,11 @@ pallet-authorship = { version = "3.0.0", default-features = false }
 pallet-babe = { version = "3.0.0", default-features = false }
 sp-consensus-babe = { version = "0.9.0", default-features = false }
 
+# PoC
+pallet-membership = { version = "3.0.0", default-features = false }
+pallet-collective = { version = "3.0.0", default-features = false }
+module-poc = { path = "../modules/poc", default-features = false }
+
 # local dependencies
 orml-traits = { path = "../orml/traits", default-features = false }
 orml-tokens = { path = "../orml/tokens", default-features = false }
@@ -74,8 +79,6 @@ orml-benchmarking = { path = "../orml/benchmarking", default-features = false, o
 orml-gradually-update = { path = "../orml/gradually-update", default-features = false }
 # orml-vesting = { path = "../orml/vesting", default-features = false }
 # orml-rewards = { path = "../orml/rewards", default-features = false }
-
-module-poc = { path = "../modules/poc", default-features = false }
 
 module-currencies = { path = "../modules/currencies", default-features = false }
 
@@ -125,6 +128,9 @@ std = [
     'pallet-timestamp/std',
     'pallet-transaction-payment/std',
     'pallet-transaction-payment-rpc-runtime-api/std',
+
+	"pallet-membership/std",
+	"pallet-collective/std",
 
 	"pallet-session/std",
 	"pallet-staking/std",

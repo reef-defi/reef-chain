@@ -9,7 +9,11 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 use codec::Encode;
 
 use sp_std::prelude::*;
-use sp_core::{H160, crypto::KeyTypeId, OpaqueMetadata};
+use sp_core::{
+	crypto::KeyTypeId,
+	u32_trait::{_2, _3, _4},
+	H160, OpaqueMetadata,
+};
 use sp_runtime::{
 	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
 	transaction_validity::{TransactionValidity, TransactionSource, TransactionPriority},
@@ -614,10 +618,6 @@ impl pallet_balances::Config for Runtime {
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
 }
 
-impl pallet_sudo::Config for Runtime {
-	type Event = Event;
-	type Call = Call;
-}
 
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(10) * BlockWeights::get().max_block;
@@ -647,13 +647,62 @@ impl orml_authority::Config for Runtime {
 }
 
 
-// parameter_types!(
-// );
+impl pallet_sudo::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+}
+
+
+type TechCouncilInstance           = pallet_collective::Instance1;
+type TechCouncilMembershipInstance = pallet_membership::Instance1;
+
+type EnsureRootOrTwoThridsTechCouncil = EnsureOneOf<
+	AccountId,
+	EnsureRoot<AccountId>,
+	pallet_collective::EnsureProportionMoreThan<_2, _3, AccountId, TechCouncilInstance>,
+>;
+
+type EnsureRootOrThreeFourthsTechCouncil = EnsureOneOf<
+	AccountId,
+	EnsureRoot<AccountId>,
+	pallet_collective::EnsureProportionMoreThan<_3, _4, AccountId, TechCouncilInstance>,
+>;
+
+parameter_types! {
+	pub const TechCouncilMotionDuration: BlockNumber = 7 * DAYS;
+	pub const TechCouncilMaxProposals: u32 = 100;
+	pub const TechCouncilMaxMembers: u32 = 21;
+}
+
+impl pallet_collective::Config<TechCouncilInstance> for Runtime {
+	type Origin = Origin;
+	type Proposal = Call;
+	type Event = Event;
+	type MotionDuration = TechCouncilMotionDuration;
+	type MaxProposals = TechCouncilMaxProposals;
+	type MaxMembers = TechCouncilMaxMembers;
+	type DefaultVote = pallet_collective::MoreThanMajorityThenPrimeDefaultVote;
+	type WeightInfo = ();
+}
+
+impl pallet_membership::Config<TechCouncilMembershipInstance> for Runtime {
+	type Event = Event;
+	type AddOrigin = EnsureRootOrThreeFourthsTechCouncil;
+	type RemoveOrigin = EnsureRootOrThreeFourthsTechCouncil;
+	type SwapOrigin = EnsureRootOrThreeFourthsTechCouncil;
+	type ResetOrigin = EnsureRootOrThreeFourthsTechCouncil;
+	type PrimeOrigin = EnsureRootOrThreeFourthsTechCouncil;
+	type MembershipInitialized = TechCouncil;
+	type MembershipChanged = TechCouncil;
+}
 
 impl module_poc::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
+	// TODO
+	// type MaxMembers = TechCouncilMaxMembers;
 }
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 
@@ -695,6 +744,8 @@ construct_runtime!(
 		Historical: pallet_session_historical::{Module},
 
 		// Proof of Commitment
+		TechCouncil: pallet_collective::<Instance1>::{Module, Call, Storage, Origin<T>, Event<T>, Config<T>},
+		TechCouncilMembership: pallet_membership::<Instance1>::{Module, Call, Storage, Event<T>, Config<T>},
 		Poc: module_poc::{Module, Call, Storage, Event<T>},
 
 		// Other
