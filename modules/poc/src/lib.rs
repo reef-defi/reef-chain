@@ -9,7 +9,7 @@
 use frame_support::{
 	pallet_prelude::*,
 	traits::{
-		Currency, ReservableCurrency, IsType, WithdrawReasons, ExistenceRequirement,
+		Currency, IsType, WithdrawReasons, ExistenceRequirement,
 		InitializeMembers, ChangeMembers,
 	},
 	weights::Weight,
@@ -27,8 +27,6 @@ mod tests;
 
 pub use module::*;
 
-/// How many members does the technical council have?
-pub const COUNCIL_SIZE: usize = 3;
 /// How long (in block count) is the era
 pub const ERA_DURATION: u32 = 7 * primitives::time::DAYS;
 /// How many eras per year there are (roughly)?
@@ -37,7 +35,6 @@ pub const ERAS_PER_YEAR: u32 = 52;
 pub const YEARLY_RETURNS_DENOM: u32 = 10;
 /// Fixed rate per-era rewards for Council members
 pub const ERA_COUNCIL_REWARDS: u32 = 100; //TODO: * primitives::currency::DOLLARS;
-
 
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -99,15 +96,15 @@ pub type CommitmentOf<T> =
 #[frame_support::pallet]
 pub mod module {
 	use super::*;
-	// TODO: is std use allowed?
-	use std::iter::FromIterator;
-	use std::collections::BTreeMap;
+	use sp_std::iter::FromIterator;
+	use sp_std::collections::btree_map::BTreeMap;
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
-
+		type Currency: Currency<Self::AccountId>;
+		/// How many tech council members are we voting in.
+		type MaxMembers: Get<u32>;
 		/// The receiver of the signal for when the membership has changed.
 		type MembershipChanged: ChangeMembers<Self::AccountId>;
 	}
@@ -206,7 +203,7 @@ pub mod module {
 				sorted.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
 
 				let mut winners: Vec<T::AccountId> = Vec::new();
-				for (candidate, _weight) in sorted.iter().take(COUNCIL_SIZE) {
+				for (candidate, _weight) in sorted.iter().take(T::MaxMembers::get() as usize) {
 					winners.push(candidate.to_owned());
 				}
 				// pallet-collective expects sorted list

@@ -688,8 +688,7 @@ impl module_poc::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
 
-	// TODO
-	// type MaxMembers = TechCouncilMaxMembers;
+	type MaxMembers = TechCouncilMaxMembers;
 	type MembershipChanged = TechCouncil;
 }
 
