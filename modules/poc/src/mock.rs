@@ -6,7 +6,10 @@ use crate as module_poc;
 use frame_support::pallet_prelude::GenesisBuild;
 use frame_support::{construct_runtime, parameter_types};
 
+pub use primitives::{BlockNumber, currency::*, time::*};
+
 type Balance = u64;
+type TechCouncilInstance = pallet_collective::Instance1;
 
 parameter_types!(
 	pub const BlockHashCount: u32 = 250;
@@ -50,9 +53,31 @@ impl pallet_balances::Config for Runtime {
 	type WeightInfo = ();
 }
 
+parameter_types! {
+	pub const TechCouncilMotionDuration: BlockNumber = 7 * DAYS;
+	pub const TechCouncilMaxProposals: u32 = 100;
+	pub const TechCouncilMaxMembers: u32 = 21;
+}
+
+impl pallet_collective::Config<TechCouncilInstance> for Runtime {
+	type Origin = Origin;
+	type Proposal = Call;
+	type Event = Event;
+	type MotionDuration = TechCouncilMotionDuration;
+	type MaxProposals = TechCouncilMaxProposals;
+	type MaxMembers = TechCouncilMaxMembers;
+	type DefaultVote = pallet_collective::MoreThanMajorityThenPrimeDefaultVote;
+	type WeightInfo = ();
+}
+
+// parameter_types! {
+// }
+
 impl module_poc::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
+	type MaxMembers = TechCouncilMaxMembers;
+	type MembershipChanged = TechCouncil;
 }
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
@@ -66,6 +91,7 @@ construct_runtime!(
 	{
 		System: frame_system::{Module, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Module, Call, Storage, Event<T>},
+		TechCouncil: pallet_collective::<Instance1>::{Module, Call, Storage, Origin<T>, Event<T>, Config<T>},
 		Poc: module_poc::{Module, Call, Storage, Event<T>},
 	}
 );

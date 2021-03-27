@@ -117,7 +117,7 @@ impl orml_authority::AuthorityConfig<Origin, OriginCaller, BlockNumber> for Auth
 	fn check_fast_track_schedule(
 		origin: Origin,
 		_initial_origin: &OriginCaller,
-		new_delay: BlockNumber,
+		_new_delay: BlockNumber,
 	) -> DispatchResult {
 		ensure_root(origin.clone()).or_else(|_| {
 			Err(BadOrigin.into())
@@ -687,7 +687,6 @@ impl pallet_collective::Config<TechCouncilInstance> for Runtime {
 impl module_poc::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
-
 	type MaxMembers = TechCouncilMaxMembers;
 	type MembershipChanged = TechCouncil;
 }

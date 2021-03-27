@@ -3714,6 +3714,7 @@ dependencies = [
  "frame-support",
  "frame-system",
  "pallet-balances",
+ "pallet-collective",
  "parity-scale-codec",
  "reef-primitives",
  "serde",

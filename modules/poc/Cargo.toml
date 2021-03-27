@@ -17,6 +17,7 @@ primitives = { package = "reef-primitives", path = "../../primitives", default-f
 
 [dev-dependencies]
 pallet-balances = "3.0.0"
+pallet-collective = "3.0.0"
 sp-core = "3.0.0"
 sp-io = "3.0.0"
 
