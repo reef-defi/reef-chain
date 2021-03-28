@@ -70,12 +70,16 @@ impl pallet_collective::Config<TechCouncilInstance> for Runtime {
 	type WeightInfo = ();
 }
 
-// parameter_types! {
-// }
+parameter_types! {
+	pub const CandidacyDeposit: Balance = 100_000;
+	pub const TechCouncilMaxCandidates: u32 = 100;
+}
 
 impl module_poc::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
+	type CandidacyDeposit = CandidacyDeposit;
+	type MaxCandidates = TechCouncilMaxCandidates;
 	type MaxMembers = TechCouncilMaxMembers;
 	type MembershipChanged = TechCouncil;
 }

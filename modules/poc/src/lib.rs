@@ -9,7 +9,7 @@
 use frame_support::{
 	pallet_prelude::*,
 	traits::{
-		Currency, IsType, WithdrawReasons, ExistenceRequirement,
+		Currency, ReservableCurrency, IsType, WithdrawReasons, ExistenceRequirement,
 		InitializeMembers, ChangeMembers,
 	},
 	weights::Weight,
@@ -102,7 +102,11 @@ pub mod module {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type Currency: Currency<Self::AccountId>;
+		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+		/// How much funds need to be reserved for active candidacy
+		type CandidacyDeposit: Get<BalanceOf<Self>>;
+		/// How many tech council candidates can apply at once.
+		type MaxCandidates: Get<u32>;
 		/// How many tech council members are we voting in.
 		type MaxMembers: Get<u32>;
 		/// The receiver of the signal for when the membership has changed.
@@ -111,6 +115,14 @@ pub mod module {
 
 	#[pallet::error]
 	pub enum Error<T> {
+		/// Account is already running as a candidate
+		AlreadyCandidate,
+		/// Candidate not found
+		NotCandidate,
+		/// Candidate is a member and cannot withdraw candidacy
+		CannotLeave,
+		/// Already have maximum allowed number of candidates
+		MaxCandidatesReached,
 		/// Account already has an active commitment
 		AlreadyCommitted,
 		/// Cannot operate on a non existing commitment
@@ -127,6 +139,10 @@ pub mod module {
 	#[pallet::generate_deposit(fn deposit_event)]
 	#[pallet::metadata(T::AccountId = "AccountId", BalanceOf<T> = "BalanceOf")]
 	pub enum Event<T: Config> {
+		/// Start candidacy
+		CandidateAdded(T::AccountId),
+		/// Stop candidacy
+		CandidateRemoved(T::AccountId),
 		/// Created a new committment
 		Committed(T::AccountId),
 		/// Add more funds to existing commitment
@@ -171,12 +187,28 @@ pub mod module {
 		Vec<T::AccountId>,
 		ValueQuery>;
 
+	#[pallet::storage]
+	#[pallet::getter(fn candidates)]
+	pub type Candidates<T: Config> = StorageMap<_,
+		Blake2_128Concat, T::AccountId, BalanceOf<T>,
+		ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn n_candidates)]
+	pub type CandidatesCount<T: Config> = StorageValue<_, u32, ValueQuery, DefaultCandidates<T>>;
+
+	#[pallet::type_value]
+	pub fn DefaultCandidates<T: Config>() -> u32 {
+		0
+	}
+
+
 	#[pallet::pallet]
 	pub struct Pallet<T>(PhantomData<T>);
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<T::BlockNumber> for Pallet<T> {
-		fn on_finalize(n: T::BlockNumber) {
+		fn on_initialize(n: T::BlockNumber) -> Weight {
 			let current_era = <CurrentEra<T>>::get();
 			let era_duration: T::BlockNumber = ERA_DURATION.into();
 
@@ -190,8 +222,10 @@ pub mod module {
 
 				// set winners on new era
 				let mut counter: BTreeMap<T::AccountId, BalanceOf<T>> = BTreeMap::new();
-
 				for (_, c) in <Commitments<T>>::iter() {
+					// check if the candidate is running
+					if !<Candidates<T>>::contains_key(&c.candidate) { continue; }
+					// accumulate the votes by appropriate voting power
 					if counter.contains_key(&c.candidate) {
 						let acc_w = *counter.get(&c.candidate).unwrap();
 						counter.insert(c.candidate.clone(), Self::voting_weight(&c) + acc_w);
@@ -228,6 +262,7 @@ pub mod module {
 				}
 
 			}
+			0
 		}
 	}
 
@@ -235,12 +270,45 @@ pub mod module {
 	impl<T: Config> Pallet<T> {
 
 		#[pallet::weight(10_000)]
+		pub fn start_candidacy(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+			let origin = ensure_signed(origin)?;
+			ensure!(!<Candidates<T>>::contains_key(&origin), Error::<T>::AlreadyCandidate);
+			let n_candidates = T::MaxCandidates::get();
+			ensure!(<CandidatesCount<T>>::get() <= n_candidates, Error::<T>::MaxCandidatesReached);
+
+			let deposit = T::CandidacyDeposit::get();
+			T::Currency::reserve(&origin, deposit)?;
+
+			<Candidates<T>>::insert(&origin, deposit);
+			<CandidatesCount<T>>::set(n_candidates+1);
+
+			Self::deposit_event(Event::CandidateAdded(origin));
+			Ok(().into())
+		}
+
+		#[pallet::weight(10_000)]
+		pub fn stop_candidacy(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+			let origin = ensure_signed(origin)?;
+			ensure!(<Candidates<T>>::contains_key(&origin), Error::<T>::NotCandidate);
+			ensure!(<Members<T>>::get().binary_search(&origin).is_err(), Error::<T>::CannotLeave);
+
+			let deposit = <Candidates<T>>::get(&origin);
+			T::Currency::unreserve(&origin, deposit);
+
+			<Candidates<T>>::remove(&origin);
+			<CandidatesCount<T>>::set(<CandidatesCount<T>>::get().saturating_sub(1));
+
+			Self::deposit_event(Event::CandidateRemoved(origin));
+			Ok(().into())
+		}
+
+		#[pallet::weight(10_000)]
 		pub fn commit(
 			origin: OriginFor<T>,
 			#[pallet::compact] amount: BalanceOf<T>,
 			duration: LockDuration,
 			candidate: T::AccountId,
-			) -> DispatchResultWithPostInfo {
+		) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 
 			ensure!(!<Commitments<T>>::contains_key(&origin), Error::<T>::AlreadyCommitted);
@@ -352,7 +420,7 @@ pub mod module {
 		pub fn set_candidate(
 			origin: OriginFor<T>,
 			candidate: T::AccountId,
-			) -> DispatchResultWithPostInfo {
+		) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 
 			ensure!(<Commitments<T>>::contains_key(&origin), Error::<T>::CommitmentNotFound);
