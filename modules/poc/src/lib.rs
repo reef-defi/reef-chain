@@ -447,7 +447,6 @@ pub mod module {
 					Self::deposit_event(Event::VoterRewarded(current_era.index, origin, era_reward));
 				}
 			}
-
 			Ok(().into())
 		}
 	}
@@ -480,12 +479,12 @@ impl<T: Config> Pallet<T> {
 				Zero::zero()
 			},
 			_ => {
-                T::NominatorAPY::get() * (Self::proportion_of_era_to_year() * commitment.amount)
+				T::NominatorAPY::get() * (Self::proportion_of_era_to_year() * commitment.amount)
 			}
 		}
 	}
 
-    /// Era reward for the whole council. Needs to be divided by n of council members.
+	/// Era reward for the whole council. Needs to be divided by n of council members.
 	pub fn era_council_rewards() -> BalanceOf<T> {
 		let total_supply = T::Currency::total_issuance();
 		let council_apy = T::CouncilInflation::get() * total_supply;
@@ -493,13 +492,11 @@ impl<T: Config> Pallet<T> {
 		era_reward
 	}
 
-    /// example: 7/365
-    pub fn proportion_of_era_to_year() -> Perbill {
-        Perbill::from_rational_approximation(
-            T::EraDuration::get(),
-            365 * primitives::time::DAYS
-        )
-    }
-
-
+	/// example: 7/365
+	pub fn proportion_of_era_to_year() -> Perbill {
+		Perbill::from_rational_approximation(
+			T::EraDuration::get(),
+			365 * primitives::time::DAYS
+		)
+	}
 }
