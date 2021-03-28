@@ -3708,6 +3708,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "module-poc"
+version = "0.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-balances",
+ "pallet-collective",
+ "parity-scale-codec",
+ "reef-primitives",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "module-support"
 version = "0.7.3"
 dependencies = [
@@ -4044,21 +4061,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "orml-gradually-update"
-version = "0.4.1-dev"
-dependencies = [
- "frame-support",
- "frame-system",
- "funty",
- "parity-scale-codec",
- "serde",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "orml-tokens"
 version = "0.4.1-dev"
 dependencies = [
@@ -4169,6 +4171,22 @@ dependencies = [
  "frame-system",
  "parity-scale-codec",
  "serde",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
+name = "pallet-collective"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fe826f3bfb984b3dd8d6675d7d156ba4c0877ee562bf59d86a4e805b7737dcb1"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "serde",
+ "sp-core",
+ "sp-io",
  "sp-runtime",
  "sp-std",
 ]
@@ -5397,16 +5415,17 @@ dependencies = [
  "module-evm-accounts",
  "module-evm-bridge",
  "module-evm-rpc-runtime-api",
+ "module-poc",
  "module-support",
  "module-transaction-payment",
  "orml-authority",
  "orml-benchmarking",
- "orml-gradually-update",
  "orml-tokens",
  "orml-traits",
  "pallet-authorship",
  "pallet-babe",
  "pallet-balances",
+ "pallet-collective",
  "pallet-grandpa",
  "pallet-indices",
  "pallet-randomness-collective-flip",

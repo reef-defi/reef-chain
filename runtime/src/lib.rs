@@ -9,7 +9,11 @@ include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 use codec::Encode;
 
 use sp_std::prelude::*;
-use sp_core::{H160, crypto::KeyTypeId, OpaqueMetadata};
+use sp_core::{
+	crypto::KeyTypeId,
+	u32_trait::{_2, _3, _4},
+	H160, OpaqueMetadata,
+};
 use sp_runtime::{
 	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
 	transaction_validity::{TransactionValidity, TransactionSource, TransactionPriority},
@@ -113,7 +117,7 @@ impl orml_authority::AuthorityConfig<Origin, OriginCaller, BlockNumber> for Auth
 	fn check_fast_track_schedule(
 		origin: Origin,
 		_initial_origin: &OriginCaller,
-		new_delay: BlockNumber,
+		_new_delay: BlockNumber,
 	) -> DispatchResult {
 		ensure_root(origin.clone()).or_else(|_| {
 			Err(BadOrigin.into())
@@ -236,6 +240,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	transaction_version: 1,
 };
 
+// TODO: duplicate of primitives?
 // 10 second block time
 pub const MILLISECS_PER_BLOCK: u64 = 10_000;
 
@@ -614,10 +619,6 @@ impl pallet_balances::Config for Runtime {
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
 }
 
-impl pallet_sudo::Config for Runtime {
-	type Event = Event;
-	type Call = Call;
-}
 
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(10) * BlockWeights::get().max_block;
@@ -645,6 +646,69 @@ impl orml_authority::Config for Runtime {
 	type AuthorityConfig = AuthorityConfigImpl;
 	type WeightInfo = ();
 }
+
+
+impl pallet_sudo::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+}
+
+
+type TechCouncilInstance = pallet_collective::Instance1;
+
+type EnsureRootOrTwoThridsTechCouncil = EnsureOneOf<
+	AccountId,
+	EnsureRoot<AccountId>,
+	pallet_collective::EnsureProportionMoreThan<_2, _3, AccountId, TechCouncilInstance>,
+>;
+
+type EnsureRootOrThreeFourthsTechCouncil = EnsureOneOf<
+	AccountId,
+	EnsureRoot<AccountId>,
+	pallet_collective::EnsureProportionMoreThan<_3, _4, AccountId, TechCouncilInstance>,
+>;
+
+parameter_types! {
+	pub const TechCouncilMotionDuration: BlockNumber = 7 * DAYS;
+	pub const TechCouncilMaxProposals: u32 = 100;
+	pub const TechCouncilMaxMembers: u32 = 21;
+	pub const TechCouncilMaxCandidates: u32 = 100;
+}
+
+impl pallet_collective::Config<TechCouncilInstance> for Runtime {
+	type Origin = Origin;
+	type Proposal = Call;
+	type Event = Event;
+	type MotionDuration = TechCouncilMotionDuration;
+	type MaxProposals = TechCouncilMaxProposals;
+	type MaxMembers = TechCouncilMaxMembers;
+	type DefaultVote = pallet_collective::MoreThanMajorityThenPrimeDefaultVote;
+	type WeightInfo = ();
+}
+
+parameter_types! {
+	pub const EraDuration: BlockNumber = 7 * DAYS;
+	pub const NominatorAPY: Perbill = Perbill::from_percent(10);
+	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
+	pub const CandidacyDeposit: Balance = 100 * primitives::currency::DOLLARS;
+	pub const MinLockAmount: Balance = 100 * primitives::currency::DOLLARS;
+	pub const TotalLockedCap: Balance = 2_000_000_000 * primitives::currency::DOLLARS;
+}
+
+impl module_poc::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type EraDuration = EraDuration;
+	type NominatorAPY = NominatorAPY;
+	type CouncilInflation = CouncilInflation;
+	type CandidacyDeposit = CandidacyDeposit;
+	type MinLockAmount = MinLockAmount;
+	type TotalLockedCap = TotalLockedCap;
+	type MaxCandidates = TechCouncilMaxCandidates;
+	type MaxMembers = TechCouncilMaxMembers;
+	type MembershipChanged = TechCouncil;
+}
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 
@@ -684,6 +748,10 @@ construct_runtime!(
 		Staking: pallet_staking::{Module, Call, Config<T>, Storage, Event<T>},
 		Session: pallet_session::{Module, Call, Storage, Event, Config<T>},
 		Historical: pallet_session_historical::{Module},
+
+		// Proof of Commitment
+		TechCouncil: pallet_collective::<Instance1>::{Module, Call, Storage, Origin<T>, Event<T>, Config<T>},
+		Poc: module_poc::{Module, Call, Storage, Event<T>},
 
 		// Other
 		Authority: orml_authority::{Module, Call, Event<T>, Origin<T>},

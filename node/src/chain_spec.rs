@@ -282,7 +282,6 @@ fn testnet_genesis(
 		}),
 		pallet_babe: Some(BabeConfig { authorities: vec![] }),
 		pallet_grandpa: Some(GrandpaConfig { authorities: vec![] }),
-		pallet_sudo: Some(SudoConfig { key: root_key }),
 		orml_tokens: Some(TokensConfig {
 			endowed_accounts: endowed_accounts
 				.iter()
@@ -297,6 +296,8 @@ fn testnet_genesis(
 			accounts: evm_genesis_accounts,
 			network_contract_index,
 		}),
+		pallet_sudo: Some(SudoConfig { key: root_key }),
+		pallet_collective_Instance1: Some(Default::default()),
 	}
 }
 
