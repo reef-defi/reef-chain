@@ -16,8 +16,10 @@ use frame_support::{
 	ensure,
 	transactional,
 };
-use frame_support::sp_runtime::traits::{CheckedAdd, CheckedDiv};
+use sp_runtime::Perbill;
+use frame_support::sp_runtime::traits::{Zero, CheckedAdd, CheckedMul, CheckedDiv};
 use frame_system::pallet_prelude::*;
+use sp_std::prelude::*;
 
 #[cfg(feature = "std")]
 pub use serde::{Deserialize, Serialize};
@@ -27,14 +29,15 @@ mod tests;
 
 pub use module::*;
 
-/// How long (in block count) is the era
-pub const ERA_DURATION: u32 = 7 * primitives::time::DAYS;
-/// How many eras per year there are (roughly)?
-pub const ERAS_PER_YEAR: u32 = 52;
-/// Yearly returns: notional / YEARLY_RETURNS_DENOM
-pub const YEARLY_RETURNS_DENOM: u32 = 10;
-/// Fixed rate per-era rewards for Council members
-pub const ERA_COUNCIL_REWARDS: u32 = 100; //TODO: * primitives::currency::DOLLARS;
+
+pub type EraIndex = u32;
+pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+pub type CommitmentOf<T> =
+	Commitment<
+		<T as frame_system::Config>::AccountId,
+		BalanceOf<T>,
+		<T as frame_system::Config>::BlockNumber,
+	>;
 
 
 #[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
@@ -63,6 +66,13 @@ pub struct Commitment<AccountId, BalanceOf, BlockNumber> {
 	pub candidate: AccountId,
 }
 
+#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
+#[derive(Encode, Decode, Clone, Default)]
+pub struct Era<BlockNumber> {
+	pub index: EraIndex,
+	pub start: BlockNumber,
+}
+
 impl<BlockNumber> Default for LockState<BlockNumber> {
 	fn default() -> Self {
 		Self::Committed
@@ -76,23 +86,6 @@ impl Default for LockDuration {
 }
 
 
-#[cfg_attr(feature = "std", derive(Serialize, Deserialize))]
-#[derive(Encode, Decode, Clone, Default)]
-pub struct Era<BlockNumber> {
-	pub index: EraIndex,
-	pub start: BlockNumber,
-}
-
-
-pub type EraIndex = u32;
-pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-pub type CommitmentOf<T> =
-	Commitment<
-		<T as frame_system::Config>::AccountId,
-		BalanceOf<T>,
-		<T as frame_system::Config>::BlockNumber,
-	>;
-
 #[frame_support::pallet]
 pub mod module {
 	use super::*;
@@ -102,7 +95,14 @@ pub mod module {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+		/// Reservable currency for Candidacy bonds
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+		/// How long (in block count) is the era
+		type EraDuration: Get<primitives::BlockNumber>;
+		/// Yearly nominator returns in % APY
+		type NominatorAPY: Get<Perbill>;
+		/// Yearly inflation rate to pay for council rewards
+		type CouncilInflation: Get<Perbill>;
 		/// How much funds need to be reserved for active candidacy
 		type CandidacyDeposit: Get<BalanceOf<Self>>;
 		/// How many tech council candidates can apply at once.
@@ -214,9 +214,9 @@ pub mod module {
 	impl<T: Config> Hooks<T::BlockNumber> for Pallet<T> {
 		fn on_initialize(n: T::BlockNumber) -> Weight {
 			let current_era = <CurrentEra<T>>::get();
-			let era_duration: T::BlockNumber = ERA_DURATION.into();
+			let era_duration: T::BlockNumber = T::BlockNumber::from(T::EraDuration::get());
 
-			if current_era.start + era_duration >= n {
+			if current_era.start + era_duration == n {
 				// move the era forward
 				let new_era = Era{index: current_era.index, start: n};
 				<CurrentEra<T>>::set(new_era);
@@ -242,7 +242,7 @@ pub mod module {
 
 				let mut winners: Vec<T::AccountId> = Vec::new();
 				for (candidate, _weight) in sorted.iter().take(T::MaxMembers::get() as usize) {
-					winners.push(candidate.to_owned());
+					winners.push(candidate.clone());
 				}
 				// pallet-collective expects sorted list
 				winners.sort();
@@ -255,7 +255,7 @@ pub mod module {
 
 					// distribute winners rewards
 					let zero = BalanceOf::<T>::from(0 as u32);
-					let rewards = BalanceOf::<T>::from(ERA_COUNCIL_REWARDS);
+					let rewards = Self::era_council_rewards();
 					let reward = rewards.checked_div(&BalanceOf::<T>::from(winners.len() as u32)).unwrap_or(zero);
 					if reward > zero {
 						for winner in winners.iter() {
@@ -264,7 +264,6 @@ pub mod module {
 						}
 					}
 				}
-
 			}
 			0
 		}
@@ -439,22 +438,18 @@ pub mod module {
 				Self::deposit_event(Event::Voted(origin.clone(), candidate, Self::voting_weight(&commitment)));
 			}
 
-			let apy = Self::apy_reward(&commitment);
-			let zero = BalanceOf::<T>::from(0 as u32);
-			let reward = apy.checked_div(&BalanceOf::<T>::from(ERAS_PER_YEAR)).unwrap_or(zero);
-			if reward > zero {
+			let era_reward = Self::era_voter_reward(&commitment);
+			if era_reward > Zero::zero() {
 				// check if nominator has been rewarded already for this era
 				let current_era = <CurrentEra<T>>::get();
 				if !<VoterRewards<T>>::contains_key(&current_era.index, &origin) {
-					<VoterRewards<T>>::insert(&current_era.index, &origin, &reward);
-					Self::deposit_event(Event::VoterRewarded(current_era.index, origin, reward));
+					<VoterRewards<T>>::insert(&current_era.index, &origin, &era_reward);
+					Self::deposit_event(Event::VoterRewarded(current_era.index, origin, era_reward));
 				}
 			}
 
 			Ok(().into())
 		}
-
-
 	}
 }
 
@@ -473,24 +468,38 @@ impl<T: Config> Pallet<T> {
 		commitment.amount * BalanceOf::<T>::from(multiplier as u32)
 	}
 
-	/// Yearly reward amount based on currently committed amount.
-	/// Montly locks yield 0% APY. Yearly and 10 Year locks yield 10% APY.
-	pub fn apy_reward(commitment: &Commitment<T::AccountId, BalanceOf<T>, T::BlockNumber>) -> BalanceOf<T> {
-		let zero = BalanceOf::<T>::from(0 as u32);
-
+	/// Era reward amount based on currently committed amount.
+	/// Montly locks yield 0% APY. Longer locks yield fixed 10% APY.
+	pub fn era_voter_reward(commitment: &Commitment<T::AccountId, BalanceOf<T>, T::BlockNumber>) -> BalanceOf<T> {
 		if commitment.state != LockState::Committed {
-			return zero;
+			return Zero::zero();
 		}
 
 		match commitment.duration {
 			LockDuration::OneMonth => {
-				zero
+				Zero::zero()
 			},
 			_ => {
-				commitment.amount
-					.checked_div(&BalanceOf::<T>::from(YEARLY_RETURNS_DENOM))
-					.unwrap_or(zero)
+                T::NominatorAPY::get() * (Self::proportion_of_era_to_year() * commitment.amount)
 			}
 		}
 	}
+
+    /// Era reward for the whole council. Needs to be divided by n of council members.
+	pub fn era_council_rewards() -> BalanceOf<T> {
+		let total_supply = T::Currency::total_issuance();
+		let council_apy = T::CouncilInflation::get() * total_supply;
+		let era_reward = Self::proportion_of_era_to_year() * council_apy;
+		era_reward
+	}
+
+    /// example: 7/365
+    pub fn proportion_of_era_to_year() -> Perbill {
+        Perbill::from_rational_approximation(
+            T::EraDuration::get(),
+            365 * primitives::time::DAYS
+        )
+    }
+
+
 }

@@ -6,6 +6,7 @@ use crate as module_poc;
 use frame_support::pallet_prelude::GenesisBuild;
 use frame_support::{construct_runtime, parameter_types};
 
+use sp_runtime::Perbill;
 pub use primitives::{BlockNumber, currency::*, time::*};
 
 type Balance = u64;
@@ -57,6 +58,7 @@ parameter_types! {
 	pub const TechCouncilMotionDuration: BlockNumber = 7 * DAYS;
 	pub const TechCouncilMaxProposals: u32 = 100;
 	pub const TechCouncilMaxMembers: u32 = 21;
+	pub const TechCouncilMaxCandidates: u32 = 100;
 }
 
 impl pallet_collective::Config<TechCouncilInstance> for Runtime {
@@ -71,13 +73,18 @@ impl pallet_collective::Config<TechCouncilInstance> for Runtime {
 }
 
 parameter_types! {
+	pub const EraDuration: BlockNumber = 7 * DAYS;
+	pub const NominatorAPY: Perbill = Perbill::from_percent(10);
+	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
 	pub const CandidacyDeposit: Balance = 100_000;
-	pub const TechCouncilMaxCandidates: u32 = 100;
 }
 
 impl module_poc::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
+	type EraDuration = EraDuration;
+	type NominatorAPY = NominatorAPY;
+	type CouncilInflation = CouncilInflation;
 	type CandidacyDeposit = CandidacyDeposit;
 	type MaxCandidates = TechCouncilMaxCandidates;
 	type MaxMembers = TechCouncilMaxMembers;

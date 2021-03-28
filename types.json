@@ -200,5 +200,29 @@
             "Sudo": "Null",
             "TransactionPayment": "Null"
         }
+    },
+    "LockState": {
+        "_enum": {
+            "Committed": "None",
+            "Unbonding": "BlockNumber"
+        }
+    },
+    "LockDuration": {
+        "_enum": [
+            "OneMonth",
+            "OneYear",
+            "TenYears"
+        ]
+    },
+    "EraIndex": "u32",
+    "Era": {
+        "index": "EraIndex",
+        "start": "BlockNumber"
+    },
+    "Commitment": {
+        "state": "LockState",
+        "duration": "LockDuration",
+        "amount": "Balance",
+        "candidate": "AccountId"
     }
 }

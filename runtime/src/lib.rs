@@ -240,6 +240,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	transaction_version: 1,
 };
 
+// TODO: duplicate of primitives?
 // 10 second block time
 pub const MILLISECS_PER_BLOCK: u64 = 10_000;
 
@@ -671,6 +672,7 @@ parameter_types! {
 	pub const TechCouncilMotionDuration: BlockNumber = 7 * DAYS;
 	pub const TechCouncilMaxProposals: u32 = 100;
 	pub const TechCouncilMaxMembers: u32 = 21;
+	pub const TechCouncilMaxCandidates: u32 = 100;
 }
 
 impl pallet_collective::Config<TechCouncilInstance> for Runtime {
@@ -685,13 +687,18 @@ impl pallet_collective::Config<TechCouncilInstance> for Runtime {
 }
 
 parameter_types! {
+	pub const EraDuration: BlockNumber = 7 * DAYS;
+	pub const NominatorAPY: Perbill = Perbill::from_percent(10);
+	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
 	pub const CandidacyDeposit: Balance = 100 * primitives::currency::DOLLARS;
-	pub const TechCouncilMaxCandidates: u32 = 100;
 }
 
 impl module_poc::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
+	type EraDuration = EraDuration;
+	type NominatorAPY = NominatorAPY;
+	type CouncilInflation = CouncilInflation;
 	type CandidacyDeposit = CandidacyDeposit;
 	type MaxCandidates = TechCouncilMaxCandidates;
 	type MaxMembers = TechCouncilMaxMembers;
