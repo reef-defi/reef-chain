@@ -17,7 +17,10 @@ use frame_support::{
 	transactional,
 };
 use sp_runtime::Perbill;
-use frame_support::sp_runtime::traits::{Zero, CheckedAdd, CheckedMul, CheckedDiv};
+use frame_support::sp_runtime::traits::{
+	Zero, Saturating,
+	CheckedAdd, CheckedMul, CheckedDiv
+};
 use frame_system::pallet_prelude::*;
 use sp_std::prelude::*;
 
@@ -105,6 +108,10 @@ pub mod module {
 		type CouncilInflation: Get<Perbill>;
 		/// How much funds need to be reserved for active candidacy
 		type CandidacyDeposit: Get<BalanceOf<Self>>;
+		/// Minimum amount of currency needed to create a commitment
+		type MinLockAmount: Get<BalanceOf<Self>>;
+		/// Total amount of currency that can be locked
+		type TotalLockedCap: Get<BalanceOf<Self>>;
 		/// How many tech council candidates can apply at once.
 		type MaxCandidates: Get<u32>;
 		/// How many tech council members are we voting in.
@@ -133,6 +140,8 @@ pub mod module {
 		CannotWithdrawLocked,
 		/// Bonded amount is too small
 		InsufficientAmount,
+		/// The PoC system already has maximum amount committed
+		OverSubscribed,
 	}
 
 	#[pallet::event]
@@ -199,11 +208,22 @@ pub mod module {
 
 	#[pallet::storage]
 	#[pallet::getter(fn n_candidates)]
-	pub type CandidatesCount<T: Config> = StorageValue<_, u32, ValueQuery, DefaultCandidates<T>>;
+	pub type CandidatesCount<T: Config> = StorageValue<_,
+		u32, ValueQuery, DefaultCandidates<T>>;
 
 	#[pallet::type_value]
 	pub fn DefaultCandidates<T: Config>() -> u32 {
 		0
+	}
+
+	#[pallet::storage]
+	#[pallet::getter(fn locked_amount)]
+	pub type LockedAmount<T: Config> = StorageValue<_,
+		BalanceOf<T>, ValueQuery, DefaultLockedAmount<T>>;
+
+	#[pallet::type_value]
+	pub fn DefaultLockedAmount<T: Config>() -> BalanceOf<T> {
+		Zero::zero()
 	}
 
 
@@ -306,6 +326,7 @@ pub mod module {
 		}
 
 		#[pallet::weight(10_000)]
+		#[transactional]
 		pub fn commit(
 			origin: OriginFor<T>,
 			#[pallet::compact] amount: BalanceOf<T>,
@@ -316,17 +337,20 @@ pub mod module {
 
 			ensure!(!<Commitments<T>>::contains_key(&origin), Error::<T>::AlreadyCommitted);
 
-			// TODO: consider imposing a minimum bond size (to make on_finalize faster)
-			ensure!(amount >= BalanceOf::<T>::from(0 as u32), Error::<T>::InsufficientAmount);
+			// impose a minimum bond size (to make election computation faster)
+			ensure!(amount >= T::MinLockAmount::get(), Error::<T>::InsufficientAmount);
 
-			// TODO check if at totalSupply capacity
-			// ensure!(T::Currency::free_balance(&origin) >= amount &&
-			// 		T::Currency::total_issuance() * 0.1 < Self::totalBonded.checked_add(amount).unwrap(), Error::<T>::OverQuota);
+			// check if at total locking capacity
+			let locked_total = <LockedAmount<T>>::get().saturating_add(amount);
+			ensure!(locked_total < T::TotalLockedCap::get(), Error::<T>::OverSubscribed);
 
 			T::Currency::withdraw(
 				&origin, amount,
 				WithdrawReasons::RESERVE,
 				ExistenceRequirement::KeepAlive)?;
+
+			// increase total locked amt
+			<LockedAmount<T>>::set(locked_total);
 
 			// create a new commitment
 			<Commitments<T>>::insert(&origin, Commitment {
@@ -341,20 +365,27 @@ pub mod module {
 
 
 		#[pallet::weight(10_000)]
+		#[transactional]
 		pub fn add_funds(origin: OriginFor<T>, #[pallet::compact] amount: BalanceOf<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 
 			ensure!(<Commitments<T>>::contains_key(&origin), Error::<T>::CommitmentNotFound);
 			let mut commitment = <Commitments<T>>::get(&origin);
 
-			ensure!(amount >= BalanceOf::<T>::from(0 as u32), Error::<T>::InsufficientAmount);
-			// TODO check if at totalSupply capacity
+			ensure!(amount >= Zero::zero(), Error::<T>::InsufficientAmount);
+
+			// check if at total locking capacity
+			let locked_total = <LockedAmount<T>>::get().saturating_add(amount);
+			ensure!(locked_total < T::TotalLockedCap::get(), Error::<T>::OverSubscribed);
 
 			T::Currency::withdraw(
 				&origin, amount,
 				WithdrawReasons::RESERVE,
 				ExistenceRequirement::KeepAlive)?;
 			commitment.amount = commitment.amount.checked_add(&amount).ok_or("currency overflow")?;
+
+			// increase total locked amt
+			<LockedAmount<T>>::set(locked_total);
 
 			// always re-commit
 			commitment.state = LockState::Committed;
@@ -386,6 +417,7 @@ pub mod module {
 
 
 		#[pallet::weight(10_000)]
+		#[transactional]
 		pub fn withdraw(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 
@@ -411,6 +443,10 @@ pub mod module {
 
 					// delete the commitment
 					<Commitments<T>>::remove(&origin);
+
+					// decrease the total locked amt after currency is released
+					let locked_total = <LockedAmount<T>>::get().saturating_sub(commitment.amount);
+					<LockedAmount<T>>::set(locked_total);
 
 					Self::deposit_event(Event::BondWithdrawn(origin, commitment.amount));
 					return Ok(().into());

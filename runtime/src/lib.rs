@@ -691,6 +691,8 @@ parameter_types! {
 	pub const NominatorAPY: Perbill = Perbill::from_percent(10);
 	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
 	pub const CandidacyDeposit: Balance = 100 * primitives::currency::DOLLARS;
+	pub const MinLockAmount: Balance = 100 * primitives::currency::DOLLARS;
+	pub const TotalLockedCap: Balance = 2_000_000_000 * primitives::currency::DOLLARS;
 }
 
 impl module_poc::Config for Runtime {
@@ -700,6 +702,8 @@ impl module_poc::Config for Runtime {
 	type NominatorAPY = NominatorAPY;
 	type CouncilInflation = CouncilInflation;
 	type CandidacyDeposit = CandidacyDeposit;
+	type MinLockAmount = MinLockAmount;
+	type TotalLockedCap = TotalLockedCap;
 	type MaxCandidates = TechCouncilMaxCandidates;
 	type MaxMembers = TechCouncilMaxMembers;
 	type MembershipChanged = TechCouncil;
