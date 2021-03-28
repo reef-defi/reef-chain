@@ -144,9 +144,13 @@ pub mod module {
 		/// Stop candidacy
 		CandidateRemoved(T::AccountId),
 		/// Created a new committment
-		Committed(T::AccountId),
+		Committed(T::AccountId, BalanceOf<T>),
 		/// Add more funds to existing commitment
-		FundsAdded(T::AccountId),
+		FundsAdded(T::AccountId, BalanceOf<T>),
+		/// The user has started the unbonding process
+		UnbondingStarted(T::AccountId, BalanceOf<T>),
+		/// Bond has been withdrawn
+		BondWithdrawn(T::AccountId, BalanceOf<T>),
 		/// Voter,Candidate,VotingPower
 		Voted(T::AccountId, T::AccountId, BalanceOf<T>),
 		/// Voter,Reward
@@ -332,7 +336,7 @@ pub mod module {
 				candidate: candidate,
 				..Default::default()
 			});
-			Self::deposit_event(Event::Committed(origin));
+			Self::deposit_event(Event::Committed(origin, amount));
 			Ok(().into())
 		}
 
@@ -359,7 +363,7 @@ pub mod module {
 			// save the commitment
 			<Commitments<T>>::insert(&origin, commitment);
 
-
+			Self::deposit_event(Event::FundsAdded(origin, amount));
 			Ok(().into())
 		}
 
@@ -376,7 +380,8 @@ pub mod module {
 			let current_block: T::BlockNumber = frame_system::Module::<T>::block_number();
 			commitment.state = LockState::Unbonding(current_block);
 
-			<Commitments<T>>::insert(&origin, commitment);
+			<Commitments<T>>::insert(&origin, commitment.clone());
+			Self::deposit_event(Event::UnbondingStarted(origin, commitment.amount));
 			Ok(().into())
 		}
 
@@ -408,6 +413,7 @@ pub mod module {
 					// delete the commitment
 					<Commitments<T>>::remove(&origin);
 
+					Self::deposit_event(Event::BondWithdrawn(origin, commitment.amount));
 					return Ok(().into());
 				}
 			}
@@ -417,7 +423,7 @@ pub mod module {
 
 		#[pallet::weight(10_000)]
 		#[transactional]
-		pub fn set_candidate(
+		pub fn vote_candidate(
 			origin: OriginFor<T>,
 			candidate: T::AccountId,
 		) -> DispatchResultWithPostInfo {
