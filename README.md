@@ -65,3 +65,20 @@ Once the project has been built, the following command can be used to explore al
 ```bash
 ./target/release/reef-node -h
 ```
+
+### Release builds
+
+To list all available release builds run:
+```bash
+git tag
+```
+
+To create a corresponding production build, first checkout the tag:
+```bash
+git checkout testnet-1
+```
+
+Then run this command to install appropriate compiler version and produce a binary.
+```bash
+make release
+```
