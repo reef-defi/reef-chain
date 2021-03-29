@@ -4,7 +4,7 @@ use reef_runtime::{
 	BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
 	IndicesConfig, EVMConfig, StakingConfig, SessionConfig,
 	WASM_BINARY, Signature,
-	TokenSymbol, TokensConfig, DOLLARS,
+	TokenSymbol, TokensConfig, REEF,
 	StakerStatus,
 	opaque::SessionKeys,
 };
@@ -227,12 +227,12 @@ fn testnet_genesis(
 
 	let (evm_genesis_accounts, network_contract_index) = evm_genesis();
 
-	const INITIAL_BALANCE: u128 = 1_000_000 * DOLLARS;
-	const INITIAL_STAKING: u128 =   100_000 * DOLLARS;
+	const INITIAL_BALANCE: u128 = 100_000_000 * REEF;
+	const INITIAL_STAKING: u128 =   1_000_000 * REEF;
 
 	let balances = initial_authorities
 		.iter()
-		.map(|x| (x.0.clone(), INITIAL_STAKING + 10 * DOLLARS)) // bit more for fee
+		.map(|x| (x.0.clone(), INITIAL_STAKING + 10 * REEF)) // bit more for fee
 		.chain(endowed_accounts.iter().cloned().map(|k| (k, INITIAL_BALANCE)))
 		// .chain(
 		// 	get_all_module_accounts()
@@ -305,7 +305,7 @@ fn testnet_genesis(
 pub fn reef_properties() -> Properties {
 	let mut p = Properties::new();
 	p.insert("ss58format".into(), 42.into());
-	p.insert("tokenDecimals".into(), 10.into());
+	p.insert("tokenDecimals".into(), 18.into());
 	p.insert("tokenSymbol".into(), "REEF".into());
 	p
 }

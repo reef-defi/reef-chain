@@ -538,8 +538,8 @@ parameter_types! {
 	pub const StorageDepositPerByte: Balance = primitives::currency::MICROCENTS;
 	pub const MaxCodeSize: u32 = 60 * 1024;
 	pub NetworkContractSource: H160 = H160::from_low_u64_be(0);
-	pub const DeveloperDeposit: Balance = primitives::currency::DOLLARS;
-	pub const DeploymentFee: Balance = primitives::currency::DOLLARS;
+	pub const DeveloperDeposit: Balance = 100 * REEF;
+	pub const DeploymentFee: Balance    = 100 * REEF;
 }
 
 pub type MultiCurrencyPrecompile =
@@ -679,9 +679,9 @@ parameter_types! {
 	pub const EraDuration: BlockNumber = 7 * DAYS;
 	pub const NominatorAPY: Perbill = Perbill::from_percent(10);
 	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
-	pub const CandidacyDeposit: Balance = 100 * primitives::currency::DOLLARS;
-	pub const MinLockAmount: Balance = 100 * primitives::currency::DOLLARS;
-	pub const TotalLockedCap: Balance = 2_000_000_000 * primitives::currency::DOLLARS;
+	pub const CandidacyDeposit: Balance = 1_000_000 * primitives::currency::REEF;
+	pub const MinLockAmount: Balance = 100_000 * primitives::currency::REEF;
+	pub const TotalLockedCap: Balance = 2_000_000_000 * primitives::currency::REEF;
 }
 
 impl module_poc::Config for Runtime {
