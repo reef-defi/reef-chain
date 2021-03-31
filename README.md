@@ -1,10 +1,17 @@
 ## Reef Chain
+Reef chain is written in [Rust](https://www.rust-lang.org/). A basic familiarity with Rust tooling is required.
 
-This repository contains Substrate based runtime for Reef Chain.
+To learn more about Reef chain, please refer to **[Documentation](https://docs.reef.finance/)**.
+
+### Clone
+To clone the repo with its submodules run:
+```bash
+git clone --recursive https://github.com/reef-defi/reef-chain
+```
 
 ### Install
 
-You can install the compiler and the toolchain with:
+You can install the latest compiler and the toolchain with:
 ```bash
 make init
 ```
