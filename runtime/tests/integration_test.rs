@@ -25,6 +25,8 @@ use sp_runtime::{
 	DispatchError, DispatchResult, FixedPointNumber, MultiAddress,
 };
 
+use primitives::currency::*;
+
 const ALICE: [u8; 32] = [4u8; 32];
 const BOB: [u8; 32] = [5u8; 32];
 
@@ -441,13 +443,13 @@ fn test_evm_accounts_module() {
 fn test_evm_module() {
 	ExtBuilder::default()
 		.balances(vec![
-			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1000)),
-			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1000)),
+			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * mREEF)),
+			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * mREEF)),
 		])
 		.build()
 		.execute_with(|| {
-			assert_eq!(Balances::free_balance(alice_account_id()), amount(1000));
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1000));
+			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * mREEF));
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * mREEF));
 
 			let _alice_address = EvmAccounts::eth_address(&alice());
 			let bob_address = EvmAccounts::eth_address(&bob());
@@ -465,17 +467,17 @@ fn test_evm_module() {
 			assert_eq!(last_event(), event);
 
 			// test EvmAccounts Lookup
-			assert_eq!(Balances::free_balance(alice_account_id()), 999999896330000000000);
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1000));
+			assert_eq!(Balances::free_balance(alice_account_id()), 999999999999989633000000000000000);
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * mREEF));
 			let to = EvmAccounts::eth_address(&alice());
 			assert_ok!(Currencies::transfer(
 				Origin::signed(bob_account_id()),
 				MultiAddress::Address20(to.0),
 				CurrencyId::Token(TokenSymbol::REEF),
-				amount(10)
+				amount(10 * uREEF)
 			));
-			assert_eq!(Balances::free_balance(alice_account_id()), 1009999896330000000000);
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1000) - amount(10));
+			assert_eq!(Balances::free_balance(alice_account_id()), 1009999999999989633000000000000000);
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * mREEF) - amount(10 * uREEF));
 		});
 }
 
@@ -484,13 +486,13 @@ fn test_evm_module() {
 fn test_evm_module() {
 	ExtBuilder::default()
 		.balances(vec![
-			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1000)),
-			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1000)),
+			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * mREEF)),
+			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * mREEF)),
 		])
 		.build()
 		.execute_with(|| {
-			assert_eq!(Balances::free_balance(alice_account_id()), amount(1000));
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1000));
+			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * mREEF));
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * mREEF));
 
 			use std::fs::{self, File};
 			use std::io::Read;
