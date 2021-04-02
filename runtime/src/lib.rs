@@ -198,7 +198,7 @@ pub mod fee {
 	use smallvec::smallvec;
 	use sp_runtime::Perbill;
 
-	/// The block saturation level. Fees will be updates based on this value.
+	/// The block saturation level. Fees will be updated based on this value.
 	pub const TARGET_BLOCK_FULLNESS: Perbill = Perbill::from_percent(25);
 
 	/// Handles converting a weight scalar to a fee value, based on the scale
@@ -501,7 +501,7 @@ parameter_types! {
 }
 
 parameter_types! {
-	pub const TransactionByteFee: Balance = 10 * MILLICENTS;
+	pub const TransactionByteFee: Balance = 10 * mREEF;
 	pub const TargetBlockFullness: Perquintill = Perquintill::from_percent(25);
 	pub AdjustmentVariable: Multiplier = Multiplier::saturating_from_rational(1, 100_000);
 	pub MinimumMultiplier: Multiplier = Multiplier::saturating_from_rational(1, 1_000_000_000u128);
@@ -513,7 +513,7 @@ impl module_transaction_payment::Config for Runtime {
 	type StableCurrencyId = GetStableCurrencyId;
 	type Currency = Balances;
 	type MultiCurrency = Currencies;
-	type OnTransactionPayment = (); // burn fees
+	type OnTransactionPayment = (); // TODO: verify burn fees
 	type TransactionByteFee = TransactionByteFee;
 	type WeightToFee = fee::WeightToFee;
 	type FeeMultiplierUpdate = TargetedFeeAdjustment<Self, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
@@ -534,11 +534,12 @@ static ISTANBUL_CONFIG: evm::Config = evm::Config::istanbul();
 parameter_types! {
 	// TODO: update
 	pub const ChainId: u64 = 123;
+	// 10 REEF minimum storage deposit
 	pub const NewContractExtraBytes: u32 = 10_000;
-	pub const StorageDepositPerByte: Balance = primitives::currency::MICROCENTS;
+	pub const StorageDepositPerByte: Balance = 1 * mREEF;
 	pub const MaxCodeSize: u32 = 60 * 1024;
 	pub NetworkContractSource: H160 = H160::from_low_u64_be(0);
-	pub const DeveloperDeposit: Balance = 100 * REEF;
+	pub const DeveloperDeposit: Balance = 1_000 * REEF;
 	pub const DeploymentFee: Balance    = 100 * REEF;
 }
 

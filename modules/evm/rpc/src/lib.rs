@@ -25,6 +25,12 @@ pub use crate::evm_api::{EVMApi as EVMApiT, EVMApiServer};
 mod call_request;
 mod evm_api;
 
+// default gas and storage limits:
+// limits only apply to call() API
+// create() API takes values from the caller and is unlimited
+pub const GAS_LIMIT:     u32 = 100_000_000;
+pub const STORAGE_LIMIT: u32 =   1_000_000;
+
 fn internal_err<T: ToString>(message: T) -> Error {
 	Error {
 		code: ErrorCode::InternalError,
@@ -111,8 +117,8 @@ where
 			data,
 		} = request;
 
-		let gas_limit = gas_limit.unwrap_or_else(u32::max_value); // TODO: set a limit
-		let storage_limit = storage_limit.unwrap_or_else(u32::max_value); // TODO: set a limit
+		let gas_limit = gas_limit.unwrap_or(GAS_LIMIT).min(GAS_LIMIT);
+		let storage_limit = storage_limit.unwrap_or(STORAGE_LIMIT).min(STORAGE_LIMIT);
 		let data = data.map(|d| d.0).unwrap_or_default();
 
 		let api = self.client.runtime_api();
@@ -183,8 +189,8 @@ where
 				data,
 			} = request;
 
-			let gas_limit = gas_limit.unwrap_or_else(u32::max_value); // TODO: set a limit
-			let storage_limit = storage_limit.unwrap_or_else(u32::max_value); // TODO: set a limit
+			let gas_limit = gas_limit.unwrap_or(GAS_LIMIT).min(GAS_LIMIT);
+			let storage_limit = storage_limit.unwrap_or(STORAGE_LIMIT).min(STORAGE_LIMIT);
 			let data = data.map(|d| d.0).unwrap_or_default();
 
 			let balance_value = if let Some(value) = value {
@@ -248,8 +254,8 @@ where
 
 		if cfg!(feature = "rpc_binary_search_estimate") {
 			let mut lower = U256::from(21_000);
-			// TODO: get a good upper limit, but below U64::max to operation overflow
-			let mut upper = U256::from(1_000_000_000);
+			// get a good upper limit, but below U64::max to operation overflow
+			let mut upper = U256::from(GAS_LIMIT);
 			let mut mid = upper;
 			let mut best = mid;
 			let mut old_best: U256;
