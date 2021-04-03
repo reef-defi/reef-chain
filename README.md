@@ -22,10 +22,6 @@ The `make run` command will launch a temporary node and its state will be discar
 ```bash
 make run
 ```
-To run the temporary node with ethereum compatibility enabled run:
-```bash
-make eth
-```
 
 ### Run a persistent single-node chain
 
