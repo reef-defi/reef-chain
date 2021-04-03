@@ -14,13 +14,17 @@ test:
 debug:
 	cargo build && RUST_LOG=debug RUST_BACKTRACE=1 gdb --args target/debug/reef-node --dev --tmp -lruntime=debug
 
-.PHONY: run
-run:
+.PHONY: noeth
+noeth:
 	RUST_BACKTRACE=1 cargo run -- --dev --tmp
 
-.PHONY: eth
-eth:
+.PHONY: run
+run:
 	RUST_BACKTRACE=1 cargo run --manifest-path node/Cargo.toml --features with-ethereum-compatibility  -- --dev --tmp
+
+.PHONY: log
+log:
+	RUST_BACKTRACE=1 RUST_LOG=debug cargo run --manifest-path node/Cargo.toml --features with-ethereum-compatibility  -- --dev --tmp
 
 .PHONY: build
 build:
