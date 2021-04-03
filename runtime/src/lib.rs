@@ -98,12 +98,12 @@ mod weights;
 //
 parameter_types! {
 	pub const SevenDays: BlockNumber = 7 * DAYS;
-	pub ZeroAccountId: AccountId = AccountId::from([0u8; 32]);
+	pub BurnAccount: AccountId = AccountId::from([0u8; 32]);
 }
 
 pub fn get_all_module_accounts() -> Vec<AccountId> {
 	vec![
-		ZeroAccountId::get(),
+		BurnAccount::get(),
 	]
 }
 
@@ -191,15 +191,12 @@ pub mod opaque {
 
 /// Fee-related
 pub mod fee {
-	use super::{Balance, CENTS};
+	use super::{Balance, mREEF};
 	use frame_support::weights::{
 		constants::ExtrinsicBaseWeight, WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
 	};
 	use smallvec::smallvec;
 	use sp_runtime::Perbill;
-
-	/// The block saturation level. Fees will be updated based on this value.
-	pub const TARGET_BLOCK_FULLNESS: Perbill = Perbill::from_percent(25);
 
 	/// Handles converting a weight scalar to a fee value, based on the scale
 	/// and granularity of the node's balance type.
@@ -217,14 +214,13 @@ pub mod fee {
 	impl WeightToFeePolynomial for WeightToFee {
 		type Balance = Balance;
 		fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
-			// extrinsic base weight (smallest non-zero weight) is mapped to 1/10 CENT:
-			let p = CENTS / 10; // 1_000_000_000_000_000
+			let p = mREEF;
 			let q = Balance::from(ExtrinsicBaseWeight::get()); // 125_000_000
 			smallvec![WeightToFeeCoefficient {
 				degree: 1,
 				negative: false,
-				coeff_frac: Perbill::from_rational_approximation(p % q, q), // zero
-				coeff_integer: p / q,                                       // 8_000_000
+				coeff_frac: Perbill::from_rational_approximation(p % q, q),
+				coeff_integer: p / q,
 			}]
 		}
 	}
@@ -359,7 +355,7 @@ parameter_types! {
 	pub const ElectionLookahead: BlockNumber = EPOCH_DURATION_IN_BLOCKS / 4;
 	pub const MaxIterations: u32 = 5;
 	// 0.05%. The higher the value, the more strict solution acceptance becomes.
-	pub MinSolutionScoreBump: Perbill = Perbill::from_rational_approximation(5u32, 10_000);
+	pub MinSolutionScoreBump: Perbill = Perbill::from_rational_approximation(5 as u32, 10_000);
 
 	// offchain tx signing
 	pub const StakingUnsignedPriority: TransactionPriority = TransactionPriority::max_value() / 2;
@@ -504,7 +500,7 @@ parameter_types! {
 	pub const TransactionByteFee: Balance = 10 * mREEF;
 	pub const TargetBlockFullness: Perquintill = Perquintill::from_percent(25);
 	pub AdjustmentVariable: Multiplier = Multiplier::saturating_from_rational(1, 100_000);
-	pub MinimumMultiplier: Multiplier = Multiplier::saturating_from_rational(1, 1_000_000_000u128);
+	pub MinimumMultiplier:  Multiplier = Multiplier::saturating_from_rational(1, 1_000_000_000 as u128);
 }
 
 impl module_transaction_payment::Config for Runtime {
@@ -578,7 +574,7 @@ impl module_evm::Config for Runtime {
 	type NetworkContractSource = NetworkContractSource;
 	type DeveloperDeposit = DeveloperDeposit;
 	type DeploymentFee = DeploymentFee;
-	type TreasuryAccount = (); // todo: TreasuryModuleAccount;
+	type TreasuryAccount = BurnAccount;
 	type FreeDeploymentOrigin = EnsureRoot<AccountId>; // todo: EnsureRootOrHalfGeneralCouncil
 	type WeightInfo = weights::evm::WeightInfo<Runtime>;
 
@@ -603,7 +599,7 @@ impl pallet_balances::Config for Runtime {
 	type MaxLocks = MaxLocks;
 	/// The type for recording an account's balance.
 	type Balance = Balance;
-	type DustRemoval = (); // todo: pallet_treasury
+	type DustRemoval = (); // todo: pallet_burn
 	type ExistentialDeposit = NativeTokenExistentialDeposit;
 	type AccountStore = frame_system::Module<Runtime>;
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
