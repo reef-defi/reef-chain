@@ -22,6 +22,9 @@ s.get_chain_head()
 ## for becoming a validator
 # s.rpc_request('author_rotateKeys', None)
 
+## totalSupply
+s.query('Balances', 'TotalIssuance')
+
 ## send 100 REEF from Alice -> Bob
 from substrateinterface import Keypair
 alice = Keypair.create_from_uri('//Alice')

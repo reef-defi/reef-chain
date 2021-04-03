@@ -509,7 +509,7 @@ impl module_transaction_payment::Config for Runtime {
 	type StableCurrencyId = GetStableCurrencyId;
 	type Currency = Balances;
 	type MultiCurrency = Currencies;
-	type OnTransactionPayment = (); // TODO: verify burn fees
+	type OnTransactionPayment = (); // fees get burned
 	type TransactionByteFee = TransactionByteFee;
 	type WeightToFee = fee::WeightToFee;
 	type FeeMultiplierUpdate = TargetedFeeAdjustment<Self, TargetBlockFullness, AdjustmentVariable, MinimumMultiplier>;
