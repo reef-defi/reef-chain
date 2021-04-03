@@ -166,7 +166,7 @@ pub fn public_testnet_config() -> Result<ChainSpec, String> {
 
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Reef Testnet",
+		"Reef Testnet 2",
 		// ID
 		"reef_testnet",
 		ChainType::Live,
