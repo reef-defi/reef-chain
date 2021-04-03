@@ -1,6 +1,8 @@
 .PHONY: init
 init:
-	./init.sh
+	rustup update stable
+	rustup update nightly
+	rustup target add wasm32-unknown-unknown --toolchain nightly
 
 .PHONY: check
 check:
