@@ -8,6 +8,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::unused_unit)]
 
+use frame_support::debug;
 use frame_support::{
 	dispatch::{DispatchResult, Dispatchable},
 	pallet_prelude::*,
@@ -623,6 +624,7 @@ where
 			WithdrawReasons::TRANSACTION_PAYMENT | WithdrawReasons::TIP
 		};
 
+		debug::debug!(target: "fee", "who: {:?}, fee: {:?}", who, fee);
 		Module::<T>::ensure_can_charge_fee(who, fee, reason);
 
 		// withdraw native currency as fee
