@@ -674,10 +674,10 @@ impl pallet_collective::Config<TechCouncilInstance> for Runtime {
 
 parameter_types! {
 	pub const EraDuration: BlockNumber = 7 * DAYS;
-	pub const NominatorAPY: Perbill = Perbill::from_percent(10);
+	pub const NominatorAPY: Perbill =     Perbill::from_percent(10);
 	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
-	pub const CandidacyDeposit: Balance = 1_000_000 * primitives::currency::REEF;
-	pub const MinLockAmount: Balance = 100_000 * primitives::currency::REEF;
+	pub const CandidacyDeposit: Balance =   1_000_000 * primitives::currency::REEF;
+	pub const MinLockAmount: Balance =        100_000 * primitives::currency::REEF;
 	pub const TotalLockedCap: Balance = 2_000_000_000 * primitives::currency::REEF;
 }
 

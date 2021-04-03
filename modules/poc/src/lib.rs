@@ -296,8 +296,8 @@ pub mod module {
 		pub fn start_candidacy(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 			ensure!(!<Candidates<T>>::contains_key(&origin), Error::<T>::AlreadyCandidate);
-			let n_candidates = T::MaxCandidates::get();
-			ensure!(<CandidatesCount<T>>::get() <= n_candidates, Error::<T>::MaxCandidatesReached);
+			let n_candidates = <CandidatesCount<T>>::get();
+			ensure!(n_candidates < T::MaxCandidates::get(), Error::<T>::MaxCandidatesReached);
 
 			let deposit = T::CandidacyDeposit::get();
 			T::Currency::reserve(&origin, deposit)?;
