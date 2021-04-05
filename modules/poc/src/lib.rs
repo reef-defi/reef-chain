@@ -32,7 +32,6 @@ mod tests;
 
 pub use module::*;
 
-
 pub type EraIndex = u32;
 pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 pub type CommitmentOf<T> =
@@ -172,6 +171,8 @@ pub mod module {
 		Voted(T::AccountId, T::AccountId, BalanceOf<T>),
 		/// Voter,Reward
 		VoterRewarded(EraIndex, T::AccountId, BalanceOf<T>),
+		/// Era, Winner,Weight
+		Elected(EraIndex, T::AccountId, BalanceOf<T>),
 	}
 
 	#[pallet::type_value]
@@ -246,7 +247,7 @@ pub mod module {
 
 			if current_era.start + era_duration == n {
 				// move the era forward
-				let new_era = Era{index: current_era.index, start: n};
+				let new_era = Era{index: current_era.index + 1, start: n};
 				<CurrentEra<T>>::set(new_era);
 
 				// clear old voter rewards (to save space)
@@ -269,12 +270,19 @@ pub mod module {
 				sorted.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
 
 				let mut winners: Vec<T::AccountId> = Vec::new();
-				for (candidate, _weight) in sorted.iter().take(T::MaxMembers::get() as usize) {
+				for (candidate, weight) in sorted.iter().take(T::MaxMembers::get() as usize) {
 					winners.push(candidate.clone());
+					Self::deposit_event(Event::Elected(
+							current_era.index + 1,
+							candidate.clone(),
+							*weight
+					));
 				}
 				// pallet-collective expects sorted list
 				winners.sort();
 
+				// TODO: ensure minimum winner quorum size
+				// TODO: test if empty membership quorum can vote
 				if !winners.is_empty() {
 					// assign winners as new members in both collective and Self
 					let old_members = Members::<T>::get();
@@ -490,6 +498,7 @@ pub mod module {
 				let current_era = <CurrentEra<T>>::get();
 				if !<VoterRewards<T>>::contains_key(&current_era.index, &origin) {
 					<VoterRewards<T>>::insert(&current_era.index, &origin, &era_reward);
+					T::Currency::deposit_into_existing(&origin, era_reward)?;
 					Self::deposit_event(Event::VoterRewarded(current_era.index, origin, era_reward));
 				}
 			}
