@@ -55,9 +55,9 @@ impl pallet_balances::Config for Runtime {
 }
 
 parameter_types! {
-	pub const TechCouncilMotionDuration: BlockNumber = 7 * DAYS;
+	pub const TechCouncilMotionDuration: BlockNumber = 7 * HOURS;
 	pub const TechCouncilMaxProposals: u32 = 100;
-	pub const TechCouncilMaxMembers: u32 = 21;
+	pub const TechCouncilMaxMembers: u32 = 3;
 	pub const TechCouncilMaxCandidates: u32 = 100;
 }
 
@@ -73,12 +73,12 @@ impl pallet_collective::Config<TechCouncilInstance> for Runtime {
 }
 
 parameter_types! {
-	pub const EraDuration: BlockNumber = 7 * DAYS;
+	pub const EraDuration: BlockNumber = 7 * HOURS;
 	pub const NominatorAPY: Perbill = Perbill::from_percent(10);
 	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
-	pub const CandidacyDeposit: Balance = 100_000;
+	pub const CandidacyDeposit: Balance = 250_000;
 	pub const MinLockAmount: Balance = 100;
-	pub const TotalLockedCap: Balance = 1_000_000;
+	pub const TotalLockedCap: Balance = 10_000_000;
 }
 
 impl module_poc::Config for Runtime {
@@ -115,13 +115,19 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default()
 		.build_storage::<Runtime>()
 		.unwrap();
-	// module_poc::GenesisConfig::<Runtime> {
-	// 	bar: vec![(1, 100), (2, 200)],
-	// 	..Default::default()
-	// }
-	// .assimilate_storage(&mut t)
-	// .unwrap();
+
+	// inject test balances
+	pallet_balances::GenesisConfig::<Runtime>{
+		balances: vec![
+			(0, 1_000_000), // alice
+			(1, 1_000_000), // bob
+			(2, 1_000_000), // charlie
+			(3, 1_000_000), // eve
+		],
+	}.assimilate_storage(&mut t).unwrap();
+
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(1));
+
 	ext
 }

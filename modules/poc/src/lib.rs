@@ -32,7 +32,6 @@ mod tests;
 
 pub use module::*;
 
-
 pub type EraIndex = u32;
 pub type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 pub type CommitmentOf<T> =
@@ -101,20 +100,28 @@ pub mod module {
 		/// Reservable currency for Candidacy bonds
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 		/// How long (in block count) is the era
+		#[pallet::constant]
 		type EraDuration: Get<primitives::BlockNumber>;
 		/// Yearly nominator returns in % APY
+		#[pallet::constant]
 		type NominatorAPY: Get<Perbill>;
 		/// Yearly inflation rate to pay for council rewards
+		#[pallet::constant]
 		type CouncilInflation: Get<Perbill>;
 		/// How much funds need to be reserved for active candidacy
+		#[pallet::constant]
 		type CandidacyDeposit: Get<BalanceOf<Self>>;
 		/// Minimum amount of currency needed to create a commitment
+		#[pallet::constant]
 		type MinLockAmount: Get<BalanceOf<Self>>;
 		/// Total amount of currency that can be locked
+		#[pallet::constant]
 		type TotalLockedCap: Get<BalanceOf<Self>>;
 		/// How many tech council candidates can apply at once.
+		#[pallet::constant]
 		type MaxCandidates: Get<u32>;
 		/// How many tech council members are we voting in.
+		#[pallet::constant]
 		type MaxMembers: Get<u32>;
 		/// The receiver of the signal for when the membership has changed.
 		type MembershipChanged: ChangeMembers<Self::AccountId>;
@@ -164,6 +171,8 @@ pub mod module {
 		Voted(T::AccountId, T::AccountId, BalanceOf<T>),
 		/// Voter,Reward
 		VoterRewarded(EraIndex, T::AccountId, BalanceOf<T>),
+		/// Era, Winner,Weight
+		Elected(EraIndex, T::AccountId, BalanceOf<T>),
 	}
 
 	#[pallet::type_value]
@@ -238,7 +247,7 @@ pub mod module {
 
 			if current_era.start + era_duration == n {
 				// move the era forward
-				let new_era = Era{index: current_era.index, start: n};
+				let new_era = Era{index: current_era.index + 1, start: n};
 				<CurrentEra<T>>::set(new_era);
 
 				// clear old voter rewards (to save space)
@@ -261,12 +270,19 @@ pub mod module {
 				sorted.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
 
 				let mut winners: Vec<T::AccountId> = Vec::new();
-				for (candidate, _weight) in sorted.iter().take(T::MaxMembers::get() as usize) {
+				for (candidate, weight) in sorted.iter().take(T::MaxMembers::get() as usize) {
 					winners.push(candidate.clone());
+					Self::deposit_event(Event::Elected(
+							current_era.index + 1,
+							candidate.clone(),
+							*weight
+					));
 				}
 				// pallet-collective expects sorted list
 				winners.sort();
 
+				// TODO: ensure minimum winner quorum size
+				// TODO: test if empty membership quorum can vote
 				if !winners.is_empty() {
 					// assign winners as new members in both collective and Self
 					let old_members = Members::<T>::get();
@@ -366,7 +382,9 @@ pub mod module {
 
 		#[pallet::weight(10_000)]
 		#[transactional]
-		pub fn add_funds(origin: OriginFor<T>, #[pallet::compact] amount: BalanceOf<T>) -> DispatchResultWithPostInfo {
+		pub fn add_funds(
+			origin: OriginFor<T>,
+			#[pallet::compact] amount: BalanceOf<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 
 			ensure!(<Commitments<T>>::contains_key(&origin), Error::<T>::CommitmentNotFound);
@@ -480,6 +498,7 @@ pub mod module {
 				let current_era = <CurrentEra<T>>::get();
 				if !<VoterRewards<T>>::contains_key(&current_era.index, &origin) {
 					<VoterRewards<T>>::insert(&current_era.index, &origin, &era_reward);
+					T::Currency::deposit_into_existing(&origin, era_reward)?;
 					Self::deposit_event(Event::VoterRewarded(current_era.index, origin, era_reward));
 				}
 			}
