@@ -101,20 +101,28 @@ pub mod module {
 		/// Reservable currency for Candidacy bonds
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 		/// How long (in block count) is the era
+		#[pallet::constant]
 		type EraDuration: Get<primitives::BlockNumber>;
 		/// Yearly nominator returns in % APY
+		#[pallet::constant]
 		type NominatorAPY: Get<Perbill>;
 		/// Yearly inflation rate to pay for council rewards
+		#[pallet::constant]
 		type CouncilInflation: Get<Perbill>;
 		/// How much funds need to be reserved for active candidacy
+		#[pallet::constant]
 		type CandidacyDeposit: Get<BalanceOf<Self>>;
 		/// Minimum amount of currency needed to create a commitment
+		#[pallet::constant]
 		type MinLockAmount: Get<BalanceOf<Self>>;
 		/// Total amount of currency that can be locked
+		#[pallet::constant]
 		type TotalLockedCap: Get<BalanceOf<Self>>;
 		/// How many tech council candidates can apply at once.
+		#[pallet::constant]
 		type MaxCandidates: Get<u32>;
 		/// How many tech council members are we voting in.
+		#[pallet::constant]
 		type MaxMembers: Get<u32>;
 		/// The receiver of the signal for when the membership has changed.
 		type MembershipChanged: ChangeMembers<Self::AccountId>;
@@ -366,7 +374,9 @@ pub mod module {
 
 		#[pallet::weight(10_000)]
 		#[transactional]
-		pub fn add_funds(origin: OriginFor<T>, #[pallet::compact] amount: BalanceOf<T>) -> DispatchResultWithPostInfo {
+		pub fn add_funds(
+			origin: OriginFor<T>,
+			#[pallet::compact] amount: BalanceOf<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 
 			ensure!(<Commitments<T>>::contains_key(&origin), Error::<T>::CommitmentNotFound);
