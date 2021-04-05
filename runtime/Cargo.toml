@@ -75,9 +75,6 @@ orml-traits = { path = "../orml/traits", default-features = false }
 orml-tokens = { path = "../orml/tokens", default-features = false }
 orml-authority = { path = "../orml/authority", default-features = false }
 orml-benchmarking = { path = "../orml/benchmarking", default-features = false, optional = true }
-# orml-gradually-update = { path = "../orml/gradually-update", default-features = false }
-# orml-vesting = { path = "../orml/vesting", default-features = false }
-# orml-rewards = { path = "../orml/rewards", default-features = false }
 
 module-currencies = { path = "../modules/currencies", default-features = false }
 
@@ -96,43 +93,33 @@ runtime-common = { path = "common", default-features = false }
 [dev-dependencies]
 libsecp256k1 = "0.3.4"
 hex = "0.4.0"
-hex-literal = "0.2.1"
 
 
 [features]
 default = ['std']
-runtime-benchmarks = [
-    'hex-literal',
-    'frame-benchmarking',
-    'frame-support/runtime-benchmarks',
-    'frame-system-benchmarking',
-    'frame-system/runtime-benchmarks',
-    'pallet-balances/runtime-benchmarks',
-    'pallet-timestamp/runtime-benchmarks',
-    'sp-runtime/runtime-benchmarks',
-]
 std = [
-    'codec/std',
-    'serde',
-    'frame-executive/std',
-    'frame-support/std',
-    'frame-system/std',
-    'frame-system-rpc-runtime-api/std',
-    'pallet-balances/std',
-    'pallet-grandpa/std',
+	'codec/std',
+	'serde',
+	'frame-executive/std',
+	'frame-support/std',
+	'frame-system/std',
+	'frame-system-rpc-runtime-api/std',
+	"frame-benchmarking/std",
+	'pallet-balances/std',
+	'pallet-grandpa/std',
 	"pallet-indices/std",
-    'pallet-randomness-collective-flip/std',
-    'pallet-sudo/std',
+	'pallet-randomness-collective-flip/std',
+	'pallet-sudo/std',
 	"pallet-scheduler/std",
-    'pallet-timestamp/std',
-    'pallet-transaction-payment/std',
-    'pallet-transaction-payment-rpc-runtime-api/std',
+	'pallet-timestamp/std',
+	'pallet-transaction-payment/std',
+	'pallet-transaction-payment-rpc-runtime-api/std',
 	"pallet-collective/std",
 	"pallet-session/std",
 	"pallet-staking/std",
 	"pallet-authorship/std",
-    "pallet-babe/std",
-    "sp-consensus-babe/std",
+	"pallet-babe/std",
+	"sp-consensus-babe/std",
 
 	"sp-api/std",
 	"sp-block-builder/std",
@@ -149,7 +136,6 @@ std = [
 	"orml-tokens/std",
 	"orml-authority/std",
 	"orml-benchmarking/std",
-	# "orml-gradually-update/std",
 
 	"module-poc/std",
 	"module-currencies/std",
@@ -169,4 +155,21 @@ with-ethereum-compatibility = [
 	"evm",
 	"module-evm/with-ethereum-compatibility",
 	"runtime-common/with-ethereum-compatibility",
+]
+runtime-benchmarks = [
+	'hex-literal',
+	"libsecp256k1/hmac",
+
+	'frame-benchmarking',
+	'frame-support/runtime-benchmarks',
+	'frame-system-benchmarking',
+	'frame-system/runtime-benchmarks',
+	'pallet-balances/runtime-benchmarks',
+	'pallet-timestamp/runtime-benchmarks',
+	'sp-runtime/runtime-benchmarks',
+
+	"orml-benchmarking",
+	"orml-authority/runtime-benchmarks",
+
+	"pallet-collective/runtime-benchmarks",
 ]

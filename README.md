@@ -55,6 +55,12 @@ RUST_LOG=debug RUST_BACKTRACE=1 ./target/release/reef-node -lruntime=debug --dev
 make test
 ```
 
+### Run benchmarks
+
+```bash
+make bench
+```
+
 ### Run in debugger
 
 ```bash
