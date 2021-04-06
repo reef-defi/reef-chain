@@ -57,8 +57,28 @@ make test
 
 ### Run benchmarks
 
+Run runtime benchmark tests:
 ```bash
 make bench
+```
+
+Run module benchmark tests:
+```bash
+cargo test -p module-poc --all-features
+```
+
+Run the module benchmarks and generate the weights file:
+```
+./target/release/reef-node benchmark \
+    --chain=dev \
+    --steps=50 \
+    --repeat=20 \
+    --pallet=module_poc \
+    --extrinsic='*'  \
+    --execution=wasm \
+    --wasm-execution=compiled \
+    --heap-pages=4096 \
+    --output=./modules/poc/src/weights.rs
 ```
 
 ### Run in debugger

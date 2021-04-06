@@ -27,8 +27,10 @@ use sp_std::prelude::*;
 #[cfg(feature = "std")]
 pub use serde::{Deserialize, Serialize};
 
+mod benchmarking;
 mod mock;
 mod tests;
+pub mod weights;
 
 pub use module::*;
 

@@ -28,7 +28,7 @@ serde_json = "1.0.60"
 evm = { version = "0.24.0", optional = true, default-features = false }
 
 # Substrate dependencies
-frame-benchmarking = { default-features = false, optional = true, version = '3.0.0' }
+frame-benchmarking = { default-features = false, optional = true, version = '3.1.0' }
 frame-executive = { default-features = false, version = '3.0.0' }
 frame-support = { default-features = false, version = '3.0.0' }
 frame-system = { default-features = false, version = '3.0.0' }
@@ -93,6 +93,7 @@ runtime-common = { path = "common", default-features = false }
 [dev-dependencies]
 libsecp256k1 = "0.3.4"
 hex = "0.4.0"
+hex-literal = "0.3.1"
 
 
 [features]
@@ -172,4 +173,5 @@ runtime-benchmarks = [
 	"orml-authority/runtime-benchmarks",
 
 	"pallet-collective/runtime-benchmarks",
+	"module-poc/runtime-benchmarks"
 ]
