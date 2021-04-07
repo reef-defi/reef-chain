@@ -258,9 +258,10 @@ pub mod module {
 			let current_era = <CurrentEra<T>>::get();
 			let era_duration: T::BlockNumber = T::BlockNumber::from(T::EraDuration::get());
 
-			if current_era.start + era_duration == n {
+			if current_era.start + era_duration >= n {
 				// move the era forward
-				let new_era = Era{index: current_era.index + 1, start: n};
+				let new_era_index = current_era.index.saturating_add(1);
+				let new_era = Era{index: new_era_index, start: n};
 				<CurrentEra<T>>::set(new_era);
 
 				// clear old voter rewards (to save space)
@@ -274,7 +275,7 @@ pub mod module {
 					// accumulate the votes by appropriate voting power
 					if counter.contains_key(&c.candidate) {
 						let acc_w = *counter.get(&c.candidate).unwrap();
-						counter.insert(c.candidate.clone(), Self::voting_weight(&c) + acc_w);
+						counter.insert(c.candidate.clone(), Self::voting_weight(&c).saturating_add(acc_w));
 					} else {
 						counter.insert(c.candidate.clone(), Self::voting_weight(&c));
 					}
@@ -286,7 +287,7 @@ pub mod module {
 				for (candidate, weight) in sorted.iter().take(T::MaxMembers::get() as usize) {
 					winners.push(candidate.clone());
 					Self::deposit_event(Event::Elected(
-							current_era.index + 1,
+							new_era_index,
 							candidate.clone(),
 							*weight
 					));
@@ -332,7 +333,7 @@ pub mod module {
 			T::Currency::reserve(&origin, deposit)?;
 
 			<Candidates<T>>::insert(&origin, deposit);
-			<CandidatesCount<T>>::set(n_candidates+1);
+			<CandidatesCount<T>>::set(n_candidates.saturating_add(1));
 
 			Self::deposit_event(Event::CandidateAdded(origin));
 			Ok(().into())
