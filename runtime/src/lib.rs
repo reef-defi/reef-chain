@@ -100,7 +100,6 @@ mod benchmarking;
 // formerly authority.rs
 //
 parameter_types! {
-	pub const SevenDays: BlockNumber = 7 * DAYS;
 	pub BurnAccount: AccountId = AccountId::from([0u8; 32]);
 }
 
@@ -155,7 +154,7 @@ impl orml_authority::AsOriginId<Origin, OriginCaller> for AuthoritysOriginId {
 		ensure_root(origin.clone()).or_else(|_| {
 			match self {
 			AuthoritysOriginId::Root => <EnsureDelayed<
-				SevenDays,
+				7 * DAYS,
 				EnsureRoot<AccountId>,
 				BlockNumber,
 				OriginCaller,
@@ -532,8 +531,9 @@ impl module_evm_accounts::Config for Runtime {
 static ISTANBUL_CONFIG: evm::Config = evm::Config::istanbul();
 
 parameter_types! {
-	// TODO: update
-	pub const ChainId: u64 = 123;
+    //In [3]: random.randint(1000, 100_000)
+    //Out[3]: 13939
+	pub const ChainId: u64 = 13939;
 	// 10 REEF minimum storage deposit
 	pub const NewContractExtraBytes: u32 = 10_000;
 	pub const StorageDepositPerByte: Balance = 1 * mREEF;
@@ -593,8 +593,9 @@ impl module_evm_bridge::Config for Runtime {
 }
 
 parameter_types! {
-	pub const ExistentialDeposit: u128 = 500;
-	pub const NativeTokenExistentialDeposit: Balance = 0;
+    // note: if we add other native tokens (RUSD) we have to set native
+    // existential deposit to 0 or check for other tokens on account pruning
+	pub const NativeTokenExistentialDeposit: Balance = 1 * REEF;
 	pub const MaxLocks: u32 = 50;
 }
 
@@ -626,6 +627,7 @@ impl pallet_scheduler::Config for Runtime {
 	type WeightInfo = ();
 }
 
+// TODO: inspect this
 impl orml_authority::Config for Runtime {
 	type Event = Event;
 	type Origin = Origin;
@@ -663,6 +665,13 @@ parameter_types! {
 	pub const TechCouncilMaxProposals: u32 = 100;
 	pub const TechCouncilMaxMembers: u32 = 21;
 	pub const TechCouncilMaxCandidates: u32 = 100;
+
+	pub const EraDuration: BlockNumber = 7 * DAYS;
+	pub const NominatorAPY: Perbill =     Perbill::from_percent(10);
+	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
+	pub const CandidacyDeposit: Balance =   1_000_000 * primitives::currency::REEF;
+	pub const MinLockAmount: Balance =        100_000 * primitives::currency::REEF;
+	pub const TotalLockedCap: Balance = 2_000_000_000 * primitives::currency::REEF;
 }
 
 impl pallet_collective::Config<TechCouncilInstance> for Runtime {
@@ -674,15 +683,6 @@ impl pallet_collective::Config<TechCouncilInstance> for Runtime {
 	type MaxMembers = TechCouncilMaxMembers;
 	type DefaultVote = pallet_collective::MoreThanMajorityThenPrimeDefaultVote;
 	type WeightInfo = ();
-}
-
-parameter_types! {
-	pub const EraDuration: BlockNumber = 1 * DAYS;
-	pub const NominatorAPY: Perbill =     Perbill::from_percent(10);
-	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
-	pub const CandidacyDeposit: Balance =   1_000_000 * primitives::currency::REEF;
-	pub const MinLockAmount: Balance =        100_000 * primitives::currency::REEF;
-	pub const TotalLockedCap: Balance = 2_000_000_000 * primitives::currency::REEF;
 }
 
 impl module_poc::Config for Runtime {
