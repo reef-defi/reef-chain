@@ -97,6 +97,8 @@ pub trait WeightInfo {
 	fn unbond() -> Weight;
 	fn withdraw() -> Weight;
 	fn vote_candidate() -> Weight;
+	fn on_initialize_era(c: u32) -> Weight;
+	fn on_initialize_empty() -> Weight;
 }
 
 
@@ -258,6 +260,9 @@ pub mod module {
 			let current_era = <CurrentEra<T>>::get();
 			let era_duration: T::BlockNumber = T::BlockNumber::from(T::EraDuration::get());
 
+			// baseline weight for execution without era change
+			let mut weight: Weight = T::WeightInfo::on_initialize_empty();
+
 			if current_era.start + era_duration >= n {
 				// move the era forward
 				let new_era_index = current_era.index.saturating_add(1);
@@ -269,6 +274,7 @@ pub mod module {
 
 				// set winners on new era
 				let mut counter: BTreeMap<T::AccountId, BalanceOf<T>> = BTreeMap::new();
+				let mut commitment_count: u32 = 0;
 				for (_, c) in <Commitments<T>>::iter() {
 					// check if the candidate is running
 					if !<Candidates<T>>::contains_key(&c.candidate) { continue; }
@@ -279,6 +285,8 @@ pub mod module {
 					} else {
 						counter.insert(c.candidate.clone(), Self::voting_weight(&c));
 					}
+					// used for weight calc
+					commitment_count += 1;
 				}
 				let mut sorted = Vec::from_iter(counter);
 				sorted.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
@@ -314,8 +322,11 @@ pub mod module {
 						}
 					}
 				}
+
+				// accumulate the worst-case weights
+				weight = T::WeightInfo::on_initialize_era(commitment_count);
 			}
-			0
+			weight
 		}
 	}
 

@@ -28,6 +28,18 @@ use sp_std::marker::PhantomData;
 /// Weight functions for module_poc.
 pub struct WeightInfo<T>(PhantomData<T>);
 impl<T: frame_system::Config> crate::WeightInfo for WeightInfo<T> {
+	fn on_initialize_empty() -> Weight {
+		(19_557_000 as Weight)
+			.saturating_add(T::DbWeight::get().reads(2 as Weight))
+			.saturating_add(T::DbWeight::get().writes(1 as Weight))
+	}
+	fn on_initialize_era(c: u32, ) -> Weight {
+		(21_538_473_000 as Weight)
+			// Standard Error: 27_000
+			.saturating_add((63_000 as Weight).saturating_mul(c as Weight))
+			.saturating_add(T::DbWeight::get().reads(2025 as Weight))
+			.saturating_add(T::DbWeight::get().writes(25 as Weight))
+	}
 	fn start_candidacy() -> Weight {
 		(66_356_000 as Weight)
 			.saturating_add(T::DbWeight::get().reads(3 as Weight))
@@ -67,6 +79,18 @@ impl<T: frame_system::Config> crate::WeightInfo for WeightInfo<T> {
 
 use frame_support::weights::{constants::RocksDbWeight as DbWeight};
 impl crate::WeightInfo for () {
+	fn on_initialize_empty() -> Weight {
+		(19_557_000 as Weight)
+			.saturating_add(DbWeight::get().reads(2 as Weight))
+			.saturating_add(DbWeight::get().writes(1 as Weight))
+	}
+	fn on_initialize_era(c: u32, ) -> Weight {
+		(21_538_473_000 as Weight)
+			// Standard Error: 27_000
+			.saturating_add((63_000 as Weight).saturating_mul(c as Weight))
+			.saturating_add(DbWeight::get().reads(2025 as Weight))
+			.saturating_add(DbWeight::get().writes(25 as Weight))
+	}
 	fn start_candidacy() -> Weight {
 		(66_356_000 as Weight)
 			.saturating_add(DbWeight::get().reads(3 as Weight))
