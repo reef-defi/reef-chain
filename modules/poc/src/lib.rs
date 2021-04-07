@@ -263,7 +263,7 @@ pub mod module {
 			// baseline weight for execution without era change
 			let mut weight: Weight = T::WeightInfo::on_initialize_empty();
 
-			if current_era.start + era_duration >= n {
+			if n >= current_era.start + era_duration {
 				// move the era forward
 				let new_era_index = current_era.index.saturating_add(1);
 				let new_era = Era{index: new_era_index, start: n};
