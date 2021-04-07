@@ -83,33 +83,33 @@ benchmarks! {
 
 	}: _(RawOrigin::Signed(alice))
 
-	// withdraw {
-	// 	let alice: T::AccountId = account("alice", 0, 0);
-	// 	let bob: T::AccountId = account("bob", 0, 0);
-    //
-	// 	// alice needs funds
-	// 	let deposit: BalanceOf<T> = BalanceOf::<T>::from(200_001 * REEF);
-	// 	T::Currency::deposit_creating(&alice, deposit);
-    //
-	// 	let amount: BalanceOf<T> = BalanceOf::<T>::from(100_000 * REEF);
-    //
-	// 	// she makes initial commitment
-	// 	Pallet::<T>::commit(
-	// 		RawOrigin::Signed(alice.clone()).into(),
-	// 		amount,
-	// 		LockDuration::OneMonth,
-	// 		bob
-	// 	);
-    //
-	// 	// she unbonds
-	// 	Pallet::<T>::unbond(
-	// 		RawOrigin::Signed(alice.clone()).into(),
-	// 	);
-    //
-	// 	// TODO: skip 1 month
-	// 	// Pallet::<T>::set_block_number(31 * DAYS);
-    //
-	// }: _(RawOrigin::Signed(alice))
+	withdraw {
+		let alice: T::AccountId = account("alice", 0, 0);
+		let bob: T::AccountId = account("bob", 0, 0);
+
+		// alice needs funds
+		let deposit: BalanceOf<T> = BalanceOf::<T>::from(200_001 * REEF);
+		T::Currency::deposit_creating(&alice, deposit);
+
+		let amount: BalanceOf<T> = BalanceOf::<T>::from(100_000 * REEF);
+
+		// she makes initial commitment
+		Pallet::<T>::commit(
+			RawOrigin::Signed(alice.clone()).into(),
+			amount,
+			LockDuration::OneMonth,
+			bob
+		);
+
+		// she unbonds
+		Pallet::<T>::unbond(
+			RawOrigin::Signed(alice.clone()).into(),
+		);
+
+		// skip 1 month
+		frame_system::Module::<T>::set_block_number((31 * DAYS).into());
+
+	}: _(RawOrigin::Signed(alice))
 
 	vote_candidate {
 		let alice: T::AccountId = account("alice", 0, 0);

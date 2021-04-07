@@ -89,6 +89,16 @@ impl Default for LockDuration {
 	}
 }
 
+pub trait WeightInfo {
+	fn start_candidacy() -> Weight;
+	fn stop_candidacy() -> Weight;
+	fn commit() -> Weight;
+	fn add_funds() -> Weight;
+	fn unbond() -> Weight;
+	fn withdraw() -> Weight;
+	fn vote_candidate() -> Weight;
+}
+
 
 #[frame_support::pallet]
 pub mod module {
@@ -99,6 +109,7 @@ pub mod module {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+        type WeightInfo: WeightInfo;
 		/// Reservable currency for Candidacy bonds
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 		/// How long (in block count) is the era
@@ -310,7 +321,7 @@ pub mod module {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::start_candidacy())]
 		pub fn start_candidacy(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 			ensure!(!<Candidates<T>>::contains_key(&origin), Error::<T>::AlreadyCandidate);
@@ -327,7 +338,7 @@ pub mod module {
 			Ok(().into())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::stop_candidacy())]
 		pub fn stop_candidacy(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 			ensure!(<Candidates<T>>::contains_key(&origin), Error::<T>::NotCandidate);
@@ -343,7 +354,7 @@ pub mod module {
 			Ok(().into())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::commit())]
 		#[transactional]
 		pub fn commit(
 			origin: OriginFor<T>,
@@ -382,7 +393,7 @@ pub mod module {
 		}
 
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::add_funds())]
 		#[transactional]
 		pub fn add_funds(
 			origin: OriginFor<T>,
@@ -418,7 +429,7 @@ pub mod module {
 		}
 
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::unbond())]
 		pub fn unbond(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 
@@ -436,7 +447,7 @@ pub mod module {
 		}
 
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::withdraw())]
 		#[transactional]
 		pub fn withdraw(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
@@ -476,7 +487,7 @@ pub mod module {
 		}
 
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::vote_candidate())]
 		#[transactional]
 		pub fn vote_candidate(
 			origin: OriginFor<T>,

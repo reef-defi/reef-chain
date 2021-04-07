@@ -696,6 +696,7 @@ impl module_poc::Config for Runtime {
 	type MaxCandidates = TechCouncilMaxCandidates;
 	type MaxMembers = TechCouncilMaxMembers;
 	type MembershipChanged = TechCouncil;
+	type WeightInfo = ();
 }
 
 
