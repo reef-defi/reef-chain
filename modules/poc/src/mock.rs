@@ -1,11 +1,7 @@
-//! Mocks for example module.
-
 #![cfg(test)]
 
 use crate as module_poc;
-use frame_support::pallet_prelude::GenesisBuild;
 use frame_support::{construct_runtime, parameter_types};
-
 use sp_runtime::Perbill;
 pub use primitives::{BlockNumber, currency::*, time::*};
 
@@ -93,6 +89,7 @@ impl module_poc::Config for Runtime {
 	type MaxCandidates = TechCouncilMaxCandidates;
 	type MaxMembers = TechCouncilMaxMembers;
 	type MembershipChanged = TechCouncil;
+	type WeightInfo = ();
 }
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;

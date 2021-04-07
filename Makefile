@@ -16,7 +16,7 @@ release:
 
 .PHONY: build
 build:
-	cargo build --manifest-path node/Cargo.toml --features with-ethereum-compatibility --release
+	cargo build --manifest-path node/Cargo.toml --features runtime-benchmarks,with-ethereum-compatibility --release
 
 .PHONY: check
 check:
@@ -45,6 +45,10 @@ log:
 .PHONY: noeth
 noeth:
 	RUST_BACKTRACE=1 cargo run -- --dev --tmp
+
+.PHONY: bench
+bench:
+	SKIP_WASM_BUILD=1 cargo test --manifest-path node/Cargo.toml --features runtime-benchmarks,with-ethereum-compatibility benchmarking
 
 .PHONY: doc
 doc:

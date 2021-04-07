@@ -93,6 +93,9 @@ pub use primitives::{currency::*, time::*};
 
 mod weights;
 
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
+
 //
 // formerly authority.rs
 //
@@ -693,6 +696,7 @@ impl module_poc::Config for Runtime {
 	type MaxCandidates = TechCouncilMaxCandidates;
 	type MaxMembers = TechCouncilMaxMembers;
 	type MembershipChanged = TechCouncil;
+	type WeightInfo = ();
 }
 
 
@@ -1073,6 +1077,7 @@ impl_runtime_apis! {
 			config: frame_benchmarking::BenchmarkConfig
 		) -> Result<Vec<frame_benchmarking::BenchmarkBatch>, sp_runtime::RuntimeString> {
 			use frame_benchmarking::{Benchmarking, BenchmarkBatch, add_benchmark, TrackedStorageKey};
+			use orml_benchmarking::{add_benchmark as orml_add_benchmark};
 
 			use frame_system_benchmarking::Module as SystemBench;
 			impl frame_system_benchmarking::Config for Runtime {}
@@ -1096,19 +1101,10 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, frame_system, SystemBench::<Runtime>);
 			add_benchmark!(params, batches, pallet_balances, Balances);
 			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
+			add_benchmark!(params, batches, module_poc, Poc);
 
 			orml_add_benchmark!(params, batches, evm, benchmarking::evm);
-			orml_add_benchmark!(params, batches, transaction_payment, benchmarking::transaction_payment);
 			orml_add_benchmark!(params, batches, evm_accounts, benchmarking::evm_accounts);
-
-			// orml_add_benchmark!(params, batches, orml_tokens, benchmarking::tokens);
-			// orml_add_benchmark!(params, batches, orml_vesting, benchmarking::vesting);
-			// orml_add_benchmark!(params, batches, module_currencies, benchmarking::currencies);
-
-			// orml_add_benchmark!(params, batches, orml_authority, benchmarking::authority);
-			// orml_add_benchmark!(params, batches, orml_gradually_update, benchmarking::gradually_update);
-			// orml_add_benchmark!(params, batches, orml_rewards, benchmarking::rewards);
-
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)

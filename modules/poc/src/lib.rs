@@ -27,8 +27,10 @@ use sp_std::prelude::*;
 #[cfg(feature = "std")]
 pub use serde::{Deserialize, Serialize};
 
+mod benchmarking;
 mod mock;
 mod tests;
+pub mod weights;
 
 pub use module::*;
 
@@ -87,6 +89,18 @@ impl Default for LockDuration {
 	}
 }
 
+pub trait WeightInfo {
+	fn start_candidacy() -> Weight;
+	fn stop_candidacy() -> Weight;
+	fn commit() -> Weight;
+	fn add_funds() -> Weight;
+	fn unbond() -> Weight;
+	fn withdraw() -> Weight;
+	fn vote_candidate() -> Weight;
+	fn on_initialize_era(c: u32) -> Weight;
+	fn on_initialize_empty() -> Weight;
+}
+
 
 #[frame_support::pallet]
 pub mod module {
@@ -97,6 +111,7 @@ pub mod module {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+        type WeightInfo: WeightInfo;
 		/// Reservable currency for Candidacy bonds
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 		/// How long (in block count) is the era
@@ -245,9 +260,13 @@ pub mod module {
 			let current_era = <CurrentEra<T>>::get();
 			let era_duration: T::BlockNumber = T::BlockNumber::from(T::EraDuration::get());
 
-			if current_era.start + era_duration == n {
+			// baseline weight for execution without era change
+			let mut weight: Weight = T::WeightInfo::on_initialize_empty();
+
+			if n >= current_era.start + era_duration {
 				// move the era forward
-				let new_era = Era{index: current_era.index + 1, start: n};
+				let new_era_index = current_era.index.saturating_add(1);
+				let new_era = Era{index: new_era_index, start: n};
 				<CurrentEra<T>>::set(new_era);
 
 				// clear old voter rewards (to save space)
@@ -255,16 +274,19 @@ pub mod module {
 
 				// set winners on new era
 				let mut counter: BTreeMap<T::AccountId, BalanceOf<T>> = BTreeMap::new();
+				let mut commitment_count: u32 = 0;
 				for (_, c) in <Commitments<T>>::iter() {
 					// check if the candidate is running
 					if !<Candidates<T>>::contains_key(&c.candidate) { continue; }
 					// accumulate the votes by appropriate voting power
 					if counter.contains_key(&c.candidate) {
 						let acc_w = *counter.get(&c.candidate).unwrap();
-						counter.insert(c.candidate.clone(), Self::voting_weight(&c) + acc_w);
+						counter.insert(c.candidate.clone(), Self::voting_weight(&c).saturating_add(acc_w));
 					} else {
 						counter.insert(c.candidate.clone(), Self::voting_weight(&c));
 					}
+					// used for weight calc
+					commitment_count += 1;
 				}
 				let mut sorted = Vec::from_iter(counter);
 				sorted.sort_by(|&(_, a), &(_, b)| b.cmp(&a));
@@ -273,7 +295,7 @@ pub mod module {
 				for (candidate, weight) in sorted.iter().take(T::MaxMembers::get() as usize) {
 					winners.push(candidate.clone());
 					Self::deposit_event(Event::Elected(
-							current_era.index + 1,
+							new_era_index,
 							candidate.clone(),
 							*weight
 					));
@@ -300,15 +322,18 @@ pub mod module {
 						}
 					}
 				}
+
+				// accumulate the worst-case weights
+				weight = T::WeightInfo::on_initialize_era(commitment_count);
 			}
-			0
+			weight
 		}
 	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::start_candidacy())]
 		pub fn start_candidacy(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 			ensure!(!<Candidates<T>>::contains_key(&origin), Error::<T>::AlreadyCandidate);
@@ -319,13 +344,13 @@ pub mod module {
 			T::Currency::reserve(&origin, deposit)?;
 
 			<Candidates<T>>::insert(&origin, deposit);
-			<CandidatesCount<T>>::set(n_candidates+1);
+			<CandidatesCount<T>>::set(n_candidates.saturating_add(1));
 
 			Self::deposit_event(Event::CandidateAdded(origin));
 			Ok(().into())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::stop_candidacy())]
 		pub fn stop_candidacy(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 			ensure!(<Candidates<T>>::contains_key(&origin), Error::<T>::NotCandidate);
@@ -341,7 +366,7 @@ pub mod module {
 			Ok(().into())
 		}
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::commit())]
 		#[transactional]
 		pub fn commit(
 			origin: OriginFor<T>,
@@ -380,7 +405,7 @@ pub mod module {
 		}
 
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::add_funds())]
 		#[transactional]
 		pub fn add_funds(
 			origin: OriginFor<T>,
@@ -416,7 +441,7 @@ pub mod module {
 		}
 
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::unbond())]
 		pub fn unbond(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
 
@@ -434,7 +459,7 @@ pub mod module {
 		}
 
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::withdraw())]
 		#[transactional]
 		pub fn withdraw(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
 			let origin = ensure_signed(origin)?;
@@ -474,7 +499,7 @@ pub mod module {
 		}
 
 
-		#[pallet::weight(10_000)]
+		#[pallet::weight(T::WeightInfo::vote_candidate())]
 		#[transactional]
 		pub fn vote_candidate(
 			origin: OriginFor<T>,

@@ -19,7 +19,7 @@ fn test_setup() {
 
 		// skipping to new era works
 		run_blocks(7 * HOURS + 1);
-		assert!(Poc::current_era().index == 1);
+		assert_eq!(Poc::current_era().index, 1);
 	});
 }
 
