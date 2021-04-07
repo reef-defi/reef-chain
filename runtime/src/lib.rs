@@ -230,11 +230,12 @@ pub mod fee {
 }
 
 pub const VERSION: RuntimeVersion = RuntimeVersion {
+	// TODO: rename to reef-chain
 	spec_name: create_runtime_str!("reef-finance"),
 	impl_name: create_runtime_str!("reef-finance"),
 	authoring_version: 1,
-	spec_version: 1,
-	impl_version: 1,
+	spec_version: 2,
+	impl_version: 2,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 };
@@ -676,7 +677,7 @@ impl pallet_collective::Config<TechCouncilInstance> for Runtime {
 }
 
 parameter_types! {
-	pub const EraDuration: BlockNumber = 7 * DAYS;
+	pub const EraDuration: BlockNumber = 1 * DAYS;
 	pub const NominatorAPY: Perbill =     Perbill::from_percent(10);
 	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
 	pub const CandidacyDeposit: Balance =   1_000_000 * primitives::currency::REEF;
