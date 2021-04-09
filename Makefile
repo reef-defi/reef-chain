@@ -58,3 +58,9 @@ bench:
 doc:
 	SKIP_WASM_BUILD=1 cargo doc --open
 
+.PHONY: cargo-update
+cargo-update:
+	cargo update
+	cargo update --manifest-path node/Cargo.toml
+	make test
+
