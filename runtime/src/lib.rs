@@ -532,8 +532,8 @@ impl module_evm_accounts::Config for Runtime {
 static ISTANBUL_CONFIG: evm::Config = evm::Config::istanbul();
 
 parameter_types! {
-    //In [3]: random.randint(1000, 100_000)
-    //Out[3]: 13939
+	//In [3]: random.randint(1000, 100_000)
+	//Out[3]: 13939
 	pub const ChainId: u64 = 13939;
 	// 10 REEF minimum storage deposit
 	pub const NewContractExtraBytes: u32 = 10_000;
@@ -593,8 +593,8 @@ impl module_evm_bridge::Config for Runtime {
 }
 
 parameter_types! {
-    // note: if we add other native tokens (RUSD) we have to set native
-    // existential deposit to 0 or check for other tokens on account pruning
+	// note: if we add other native tokens (RUSD) we have to set native
+	// existential deposit to 0 or check for other tokens on account pruning
 	pub const NativeTokenExistentialDeposit: Balance = 1 * REEF;
 	pub const MaxLocks: u32 = 50;
 }
