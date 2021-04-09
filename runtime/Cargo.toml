@@ -25,7 +25,7 @@ smallvec = "1.4.0"
 hex-literal = { optional = true, version = '0.3.1' }
 serde = { features = ['derive'], optional = true, version = '1.0.119' }
 serde_json = "1.0.60"
-evm = { version = "0.24.0", optional = true, default-features = false }
+evm = { version = "0.26.0", optional = true, default-features = false }
 
 # Substrate dependencies
 frame-benchmarking = { default-features = false, optional = true, version = '3.1.0' }
