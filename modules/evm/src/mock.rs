@@ -114,7 +114,6 @@ parameter_types! {
 
 ord_parameter_types! {
 	pub const CouncilAccount: AccountId32 = AccountId32::from([1u8; 32]);
-	pub const TreasuryAccount: AccountId32 = AccountId32::from([2u8; 32]);
 	pub const NetworkContractAccount: AccountId32 = AccountId32::from([0u8; 32]);
 	pub const NewContractExtraBytes: u32 = 100;
 	pub const StorageDepositPerByte: u64 = 10;
@@ -142,7 +141,6 @@ impl Config for Test {
 	type NetworkContractSource = NetworkContractSource;
 	type DeveloperDeposit = DeveloperDeposit;
 	type DeploymentFee = DeploymentFee;
-	type TreasuryAccount = TreasuryAccount;
 	type FreeDeploymentOrigin = EnsureSignedBy<CouncilAccount, AccountId32>;
 
 	type WeightInfo = ();

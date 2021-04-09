@@ -105,7 +105,6 @@ impl module_evm::Config for Runtime {
 
 	type DeveloperDeposit = DeveloperDeposit;
 	type DeploymentFee = DeploymentFee;
-	type TreasuryAccount = ();
 	type FreeDeploymentOrigin = EnsureSignedBy<CouncilAccount, AccountId32>;
 
 	type WeightInfo = ();

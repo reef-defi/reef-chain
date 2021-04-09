@@ -101,6 +101,7 @@ mod benchmarking;
 //
 parameter_types! {
 	pub BurnAccount: AccountId = AccountId::from([0u8; 32]);
+	pub const SevenDays: BlockNumber = 7 * DAYS;
 }
 
 pub fn get_all_module_accounts() -> Vec<AccountId> {
@@ -154,7 +155,7 @@ impl orml_authority::AsOriginId<Origin, OriginCaller> for AuthoritysOriginId {
 		ensure_root(origin.clone()).or_else(|_| {
 			match self {
 			AuthoritysOriginId::Root => <EnsureDelayed<
-				7 * DAYS,
+				SevenDays,
 				EnsureRoot<AccountId>,
 				BlockNumber,
 				OriginCaller,
@@ -578,7 +579,6 @@ impl module_evm::Config for Runtime {
 	type NetworkContractSource = NetworkContractSource;
 	type DeveloperDeposit = DeveloperDeposit;
 	type DeploymentFee = DeploymentFee;
-	type TreasuryAccount = BurnAccount;
 	type FreeDeploymentOrigin = EnsureRoot<AccountId>; // todo: EnsureRootOrHalfGeneralCouncil
 	type WeightInfo = weights::evm::WeightInfo<Runtime>;
 

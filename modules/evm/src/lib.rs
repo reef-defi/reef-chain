@@ -11,7 +11,15 @@ use frame_support::{
 	ensure,
 	error::BadOrigin,
 	pallet_prelude::*,
-	traits::{Currency, EnsureOrigin, ExistenceRequirement, Get, OnKilledAccount, ReservableCurrency},
+	traits::{
+		Currency,
+		EnsureOrigin,
+		ExistenceRequirement,
+		Get,
+		OnKilledAccount,
+		ReservableCurrency,
+		WithdrawReasons,
+	},
 	transactional,
 	weights::{Pays, PostDispatchInfo, Weight},
 	RuntimeDebug,
@@ -161,8 +169,6 @@ pub mod module {
 		/// The fee for deploying the contract.
 		#[pallet::constant]
 		type DeploymentFee: Get<BalanceOf<Self>>;
-
-		type TreasuryAccount: Get<Self::AccountId>;
 
 		type FreeDeploymentOrigin: EnsureOrigin<Self::Origin>;
 
@@ -572,12 +578,11 @@ pub mod module {
 		pub fn deploy(origin: OriginFor<T>, contract: EvmAddress) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let address = T::AddressMapping::get_evm_address(&who).ok_or(Error::<T>::AddressNotMapped)?;
-			T::Currency::transfer(
+			T::Currency::withdraw(
 				&who,
-				&T::TreasuryAccount::get(),
 				T::DeploymentFee::get(),
-				ExistenceRequirement::AllowDeath,
-			)?;
+				WithdrawReasons::FEE,
+				ExistenceRequirement::KeepAlive)?;
 			Self::mark_deployed(contract, Some(address))?;
 			Pallet::<T>::deposit_event(Event::<T>::ContractDeployed(contract));
 			Ok(().into())

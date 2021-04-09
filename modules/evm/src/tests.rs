@@ -692,7 +692,6 @@ fn should_deploy() {
 			account_info.contract_info.map_or(0, |contract_info| CodeInfos::<Test>::get(contract_info.code_hash).map_or(0, |code_info| code_info.code_size))
 		});
 		assert_eq!(balance(alice()), INITIAL_BALANCE - DeploymentFee::get() - ((NewContractExtraBytes::get() + code_size) as u64 * StorageDepositPerByte::get()));
-		assert_eq!(Balances::free_balance(TreasuryAccount::get()), DeploymentFee::get());
 
 		// call method `multiply` will work
 		assert_ok!(Runner::<Test>::call(
