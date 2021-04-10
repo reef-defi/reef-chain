@@ -2,7 +2,7 @@
 #![allow(clippy::all)]
 
 use ethereum_types::H160;
-use primitives::evm::{CallInfo, CreateInfo};
+use primitives::evm::{CallInfo, CreateInfo, EstimateResourcesRequest};
 use sp_runtime::{
 	codec::Codec,
 	traits::{MaybeDisplay, MaybeFromStr},
@@ -31,5 +31,9 @@ sp_api::decl_runtime_apis! {
 			storage_limit: u32,
 			estimate: bool,
 		) -> Result<CreateInfo, sp_runtime::DispatchError>;
+
+ 		fn get_estimate_resources_request(
+			data: Vec<u8>
+		) -> Result<EstimateResourcesRequest, sp_runtime::DispatchError>;
 	}
 }

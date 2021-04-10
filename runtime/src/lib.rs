@@ -12,13 +12,13 @@ use sp_std::prelude::*;
 use sp_core::{
 	crypto::KeyTypeId,
 	u32_trait::{_2, _3, _4},
-	H160, OpaqueMetadata,
+	H160, OpaqueMetadata, Decode,
 };
 use sp_runtime::{
 	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
 	transaction_validity::{TransactionValidity, TransactionSource, TransactionPriority},
 	curve::PiecewiseLinear,
-	FixedPointNumber, ModuleId,
+	FixedPointNumber, ModuleId, MultiAddress,
 };
 use sp_runtime::traits::{
 	BlakeTwo256,
@@ -70,7 +70,7 @@ use orml_traits::{parameter_type_with_key};
 use orml_authority::EnsureDelayed;
 // use orml_tokens::CurrencyAdapter;
 
-use module_evm::{CallInfo, CreateInfo};
+use module_evm::{CallInfo, CreateInfo, AddressMapping};
 use module_evm_accounts::EvmAddressMapping;
 use module_currencies::{BasicCurrencyAdapter, Currency};
 use module_transaction_payment::{Multiplier, TargetedFeeAdjustment};
@@ -79,6 +79,7 @@ use module_transaction_payment::{Multiplier, TargetedFeeAdjustment};
 
 pub use pallet_staking::StakerStatus;
 pub use primitives::{
+	evm::EstimateResourcesRequest,
 	AccountId, AccountIndex, Amount, Balance, BlockNumber,
 	CurrencyId, EraIndex, Hash, Moment, Nonce, Signature, TokenSymbol,
 	AuthoritysOriginId,
@@ -1068,6 +1069,49 @@ impl_runtime_apis! {
 				storage_limit,
 				config.as_ref().unwrap_or(<Runtime as module_evm::Config>::config()),
 			)
+		}
+
+		fn get_estimate_resources_request(
+			extrinsic: Vec<u8>) -> Result<EstimateResourcesRequest, sp_runtime::DispatchError> {
+
+			let utx = UncheckedExtrinsic::decode(&mut &*extrinsic)
+				.map_err(|_| sp_runtime::DispatchError::Other("Invalid parameter extrinsic, decode failed"))?;
+
+			let request = match utx.function {
+				Call::EVM(module_evm::Call::call(to, data, value, gas_limit, storage_limit)) => {
+					Some(EstimateResourcesRequest {
+						from: None,
+						to: Some(to),
+						gas_limit: Some(gas_limit),
+						storage_limit: Some(storage_limit),
+						value: Some(value),
+						data: Some(data),
+					})
+				}
+				Call::EVM(module_evm::Call::create(data, value, gas_limit, storage_limit)) => {
+					Some(EstimateResourcesRequest {
+						from: None,
+						to: None,
+						gas_limit: Some(gas_limit),
+						storage_limit: Some(storage_limit),
+						value: Some(value),
+						data: Some(data),
+					})
+				}
+				_ => None,
+			};
+
+			let mut request = request.ok_or(sp_runtime::DispatchError::Other("Invalid parameter extrinsic, not evm Call"))?;
+			let signature = utx.signature.ok_or(sp_runtime::DispatchError::Other("Invalid parameter signature, miss signature"))?;
+			let account = match signature.0 {
+				MultiAddress::Id(account) => Some(account),
+				_ => None,
+			}.ok_or(sp_runtime::DispatchError::Other("Invalid parameter signature, not MultiAddress::Id"))?;
+
+			request.from = Some(EvmAddressMapping::<Runtime>::get_evm_address(&account)
+								.ok_or(sp_runtime::DispatchError::Other("Invalid parameter signature, not mapping evm address"))?);
+
+			Ok(request)
 		}
 
 	}
