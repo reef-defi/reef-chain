@@ -1482,10 +1482,12 @@ name = "evm-rpc"
 version = "0.1.0"
 dependencies = [
  "ethereum-types",
+ "frame-support",
  "jsonrpc-core",
  "jsonrpc-derive 14.2.2",
  "module-evm",
  "module-evm-rpc-runtime-api",
+ "pallet-transaction-payment-rpc-runtime-api",
  "rustc-hex",
  "sc-client-api",
  "sc-network",
