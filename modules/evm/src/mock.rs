@@ -185,7 +185,6 @@ pub fn charlie() -> H160 {
 	H160::from_str("1000000000000000000000000000000000000003").unwrap()
 }
 
-pub const NETWORK_CONTRACT_INDEX: u64 = 2048;
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
@@ -239,7 +238,6 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		.unwrap();
 	evm_mod::GenesisConfig::<Test> {
 		accounts,
-		network_contract_index: NETWORK_CONTRACT_INDEX,
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();

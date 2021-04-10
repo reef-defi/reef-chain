@@ -193,7 +193,6 @@ impl ExtBuilder {
 		);
 		module_evm::GenesisConfig::<Runtime> {
 			accounts,
-			network_contract_index: 2048,
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();
