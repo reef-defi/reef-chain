@@ -20,9 +20,9 @@ use sc_chain_spec::ChainSpecExtension;
 use serde::{Deserialize, Serialize};
 
 use hex_literal::hex;
-use sp_core::crypto::UncheckedInto;
+use sp_core::{crypto::UncheckedInto, bytes::from_hex};
 
-use reef_primitives::{AccountPublic, Balance, Nonce, PREDEPLOY_ADDRESS_START};
+use reef_primitives::{AccountPublic, Balance, Nonce};
 use module_evm::GenesisAccount;
 
 // The URL for the telemetry server.
@@ -225,7 +225,7 @@ fn testnet_genesis(
 	_enable_println: bool,
 ) -> GenesisConfig {
 
-	let (evm_genesis_accounts, network_contract_index) = evm_genesis();
+	let evm_genesis_accounts = evm_genesis();
 
 	const INITIAL_BALANCE: u128 = 100_000_000 * REEF;
 	const INITIAL_STAKING: u128 =   1_000_000 * REEF;
@@ -294,7 +294,6 @@ fn testnet_genesis(
 		}),
 		module_evm: Some(EVMConfig {
 			accounts: evm_genesis_accounts,
-			network_contract_index,
 		}),
 		pallet_sudo: Some(SudoConfig { key: root_key }),
 		pallet_collective_Instance1: Some(Default::default()),
@@ -311,22 +310,24 @@ pub fn reef_properties() -> Properties {
 }
 
 
-/// Returns `(evm_genesis_accounts, network_contract_index)`
-pub fn evm_genesis() -> (BTreeMap<H160, GenesisAccount<Balance, Nonce>>, u64) {
-	let contracts_json = &include_bytes!("../../predeploy-contracts/resources/bytecodes.json")[..];
-	let contracts: Vec<(String, String)> = serde_json::from_slice(contracts_json).unwrap();
+/// Predeployed contract addresses
+pub fn evm_genesis() -> BTreeMap<H160, module_evm::GenesisAccount<Balance, Nonce>> {
+	let contracts_json = &include_bytes!("../../assets/bytecodes.json")[..];
+	let contracts: Vec<(String, String, String)> = serde_json::from_slice(contracts_json).unwrap();
 	let mut accounts = BTreeMap::new();
-	let mut network_contract_index = PREDEPLOY_ADDRESS_START;
-	for (_, code_string) in contracts {
-		let account = GenesisAccount {
-			nonce: 0u32,
+	for (_, address, code_string) in contracts {
+		let account = module_evm::GenesisAccount {
+			nonce: 0,
 			balance: 0u128,
-			storage: BTreeMap::new(),
+			storage: Default::default(),
 			code: Bytes::from_str(&code_string).unwrap().0,
 		};
-		let addr = H160::from_low_u64_be(network_contract_index);
+		let addr = H160::from_slice(
+			from_hex(address.as_str())
+				.expect("predeploy-contracts must specify address")
+				.as_slice(),
+		);
 		accounts.insert(addr, account);
-		network_contract_index += 1;
 	}
-	(accounts, network_contract_index)
+	accounts
 }

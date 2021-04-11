@@ -114,7 +114,6 @@ parameter_types! {
 
 ord_parameter_types! {
 	pub const CouncilAccount: AccountId32 = AccountId32::from([1u8; 32]);
-	pub const TreasuryAccount: AccountId32 = AccountId32::from([2u8; 32]);
 	pub const NetworkContractAccount: AccountId32 = AccountId32::from([0u8; 32]);
 	pub const NewContractExtraBytes: u32 = 100;
 	pub const StorageDepositPerByte: u64 = 10;
@@ -142,7 +141,6 @@ impl Config for Test {
 	type NetworkContractSource = NetworkContractSource;
 	type DeveloperDeposit = DeveloperDeposit;
 	type DeploymentFee = DeploymentFee;
-	type TreasuryAccount = TreasuryAccount;
 	type FreeDeploymentOrigin = EnsureSignedBy<CouncilAccount, AccountId32>;
 
 	type WeightInfo = ();
@@ -187,7 +185,6 @@ pub fn charlie() -> H160 {
 	H160::from_str("1000000000000000000000000000000000000003").unwrap()
 }
 
-pub const NETWORK_CONTRACT_INDEX: u64 = 2048;
 
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
@@ -241,7 +238,6 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		.unwrap();
 	evm_mod::GenesisConfig::<Test> {
 		accounts,
-		network_contract_index: NETWORK_CONTRACT_INDEX,
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();

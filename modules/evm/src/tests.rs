@@ -530,10 +530,10 @@ fn create_network_contract_works() {
 			U256::from_str("02").unwrap()
 		);
 
-		let created_event = Event::evm_mod(crate::Event::Created(H160::from_low_u64_be(NETWORK_CONTRACT_INDEX)));
+		let created_event = Event::evm_mod(crate::Event::Created(H160::from_low_u64_be(primitives::NETWORK_CONTRACT_START)));
 		assert!(System::events().iter().any(|record| record.event == created_event));
 
-		assert_eq!(EVM::network_contract_index(), NETWORK_CONTRACT_INDEX + 1);
+		assert_eq!(EVM::network_contract_index(), primitives::NETWORK_CONTRACT_START + 1);
 	});
 }
 
@@ -692,7 +692,6 @@ fn should_deploy() {
 			account_info.contract_info.map_or(0, |contract_info| CodeInfos::<Test>::get(contract_info.code_hash).map_or(0, |code_info| code_info.code_size))
 		});
 		assert_eq!(balance(alice()), INITIAL_BALANCE - DeploymentFee::get() - ((NewContractExtraBytes::get() + code_size) as u64 * StorageDepositPerByte::get()));
-		assert_eq!(Balances::free_balance(TreasuryAccount::get()), DeploymentFee::get());
 
 		// call method `multiply` will work
 		assert_ok!(Runner::<Test>::call(

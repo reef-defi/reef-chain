@@ -12,13 +12,13 @@ use sp_std::prelude::*;
 use sp_core::{
 	crypto::KeyTypeId,
 	u32_trait::{_2, _3, _4},
-	H160, OpaqueMetadata,
+	H160, OpaqueMetadata, Decode,
 };
 use sp_runtime::{
 	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
 	transaction_validity::{TransactionValidity, TransactionSource, TransactionPriority},
 	curve::PiecewiseLinear,
-	FixedPointNumber, ModuleId,
+	FixedPointNumber, ModuleId, MultiAddress,
 };
 use sp_runtime::traits::{
 	BlakeTwo256,
@@ -70,7 +70,7 @@ use orml_traits::{parameter_type_with_key};
 use orml_authority::EnsureDelayed;
 // use orml_tokens::CurrencyAdapter;
 
-use module_evm::{CallInfo, CreateInfo};
+use module_evm::{CallInfo, CreateInfo, AddressMapping};
 use module_evm_accounts::EvmAddressMapping;
 use module_currencies::{BasicCurrencyAdapter, Currency};
 use module_transaction_payment::{Multiplier, TargetedFeeAdjustment};
@@ -79,6 +79,7 @@ use module_transaction_payment::{Multiplier, TargetedFeeAdjustment};
 
 pub use pallet_staking::StakerStatus;
 pub use primitives::{
+	evm::EstimateResourcesRequest,
 	AccountId, AccountIndex, Amount, Balance, BlockNumber,
 	CurrencyId, EraIndex, Hash, Moment, Nonce, Signature, TokenSymbol,
 	AuthoritysOriginId,
@@ -100,8 +101,8 @@ mod benchmarking;
 // formerly authority.rs
 //
 parameter_types! {
-	pub const SevenDays: BlockNumber = 7 * DAYS;
 	pub BurnAccount: AccountId = AccountId::from([0u8; 32]);
+	pub const SevenDays: BlockNumber = 7 * DAYS;
 }
 
 pub fn get_all_module_accounts() -> Vec<AccountId> {
@@ -230,12 +231,11 @@ pub mod fee {
 }
 
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	// TODO: rename to reef-chain
-	spec_name: create_runtime_str!("reef-finance"),
-	impl_name: create_runtime_str!("reef-finance"),
+	spec_name: create_runtime_str!("reef"),
+	impl_name: create_runtime_str!("reef"),
 	authoring_version: 1,
-	spec_version: 2,
-	impl_version: 2,
+	spec_version: 1,
+	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 };
@@ -532,8 +532,9 @@ impl module_evm_accounts::Config for Runtime {
 static ISTANBUL_CONFIG: evm::Config = evm::Config::istanbul();
 
 parameter_types! {
-	// TODO: update
-	pub const ChainId: u64 = 123;
+	//In [3]: random.randint(1000, 100_000)
+	//Out[3]: 13939
+	pub const ChainId: u64 = 13939;
 	// 10 REEF minimum storage deposit
 	pub const NewContractExtraBytes: u32 = 10_000;
 	pub const StorageDepositPerByte: Balance = 1 * mREEF;
@@ -578,7 +579,6 @@ impl module_evm::Config for Runtime {
 	type NetworkContractSource = NetworkContractSource;
 	type DeveloperDeposit = DeveloperDeposit;
 	type DeploymentFee = DeploymentFee;
-	type TreasuryAccount = BurnAccount;
 	type FreeDeploymentOrigin = EnsureRoot<AccountId>; // todo: EnsureRootOrHalfGeneralCouncil
 	type WeightInfo = weights::evm::WeightInfo<Runtime>;
 
@@ -593,8 +593,9 @@ impl module_evm_bridge::Config for Runtime {
 }
 
 parameter_types! {
-	pub const ExistentialDeposit: u128 = 500;
-	pub const NativeTokenExistentialDeposit: Balance = 0;
+	// note: if we add other native tokens (RUSD) we have to set native
+	// existential deposit to 0 or check for other tokens on account pruning
+	pub const NativeTokenExistentialDeposit: Balance = 1 * REEF;
 	pub const MaxLocks: u32 = 50;
 }
 
@@ -626,6 +627,7 @@ impl pallet_scheduler::Config for Runtime {
 	type WeightInfo = ();
 }
 
+// TODO: inspect this
 impl orml_authority::Config for Runtime {
 	type Event = Event;
 	type Origin = Origin;
@@ -663,6 +665,13 @@ parameter_types! {
 	pub const TechCouncilMaxProposals: u32 = 100;
 	pub const TechCouncilMaxMembers: u32 = 21;
 	pub const TechCouncilMaxCandidates: u32 = 100;
+
+	pub const EraDuration: BlockNumber = 7 * DAYS;
+	pub const NominatorAPY: Perbill =     Perbill::from_percent(10);
+	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
+	pub const CandidacyDeposit: Balance =   1_000_000 * primitives::currency::REEF;
+	pub const MinLockAmount: Balance =        100_000 * primitives::currency::REEF;
+	pub const TotalLockedCap: Balance = 2_000_000_000 * primitives::currency::REEF;
 }
 
 impl pallet_collective::Config<TechCouncilInstance> for Runtime {
@@ -674,15 +683,6 @@ impl pallet_collective::Config<TechCouncilInstance> for Runtime {
 	type MaxMembers = TechCouncilMaxMembers;
 	type DefaultVote = pallet_collective::MoreThanMajorityThenPrimeDefaultVote;
 	type WeightInfo = ();
-}
-
-parameter_types! {
-	pub const EraDuration: BlockNumber = 1 * DAYS;
-	pub const NominatorAPY: Perbill =     Perbill::from_percent(10);
-	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
-	pub const CandidacyDeposit: Balance =   1_000_000 * primitives::currency::REEF;
-	pub const MinLockAmount: Balance =        100_000 * primitives::currency::REEF;
-	pub const TotalLockedCap: Balance = 2_000_000_000 * primitives::currency::REEF;
 }
 
 impl module_poc::Config for Runtime {
@@ -1020,7 +1020,7 @@ impl_runtime_apis! {
 			to: H160,
 			data: Vec<u8>,
 			value: Balance,
-			gas_limit: u32,
+			gas_limit: u64,
 			storage_limit: u32,
 			estimate: bool,
 		) -> Result<CallInfo, sp_runtime::DispatchError> {
@@ -1048,7 +1048,7 @@ impl_runtime_apis! {
 			from: H160,
 			data: Vec<u8>,
 			value: Balance,
-			gas_limit: u32,
+			gas_limit: u64,
 			storage_limit: u32,
 			estimate: bool,
 		) -> Result<CreateInfo, sp_runtime::DispatchError> {
@@ -1068,6 +1068,49 @@ impl_runtime_apis! {
 				storage_limit,
 				config.as_ref().unwrap_or(<Runtime as module_evm::Config>::config()),
 			)
+		}
+
+		fn get_estimate_resources_request(
+			extrinsic: Vec<u8>) -> Result<EstimateResourcesRequest, sp_runtime::DispatchError> {
+
+			let utx = UncheckedExtrinsic::decode(&mut &*extrinsic)
+				.map_err(|_| sp_runtime::DispatchError::Other("Invalid parameter extrinsic, decode failed"))?;
+
+			let request = match utx.function {
+				Call::EVM(module_evm::Call::call(to, data, value, gas_limit, storage_limit)) => {
+					Some(EstimateResourcesRequest {
+						from: None,
+						to: Some(to),
+						gas_limit: Some(gas_limit),
+						storage_limit: Some(storage_limit),
+						value: Some(value),
+						data: Some(data),
+					})
+				}
+				Call::EVM(module_evm::Call::create(data, value, gas_limit, storage_limit)) => {
+					Some(EstimateResourcesRequest {
+						from: None,
+						to: None,
+						gas_limit: Some(gas_limit),
+						storage_limit: Some(storage_limit),
+						value: Some(value),
+						data: Some(data),
+					})
+				}
+				_ => None,
+			};
+
+			let mut request = request.ok_or(sp_runtime::DispatchError::Other("Invalid parameter extrinsic, not evm Call"))?;
+			let signature = utx.signature.ok_or(sp_runtime::DispatchError::Other("Invalid parameter signature, miss signature"))?;
+			let account = match signature.0 {
+				MultiAddress::Id(account) => Some(account),
+				_ => None,
+			}.ok_or(sp_runtime::DispatchError::Other("Invalid parameter signature, not MultiAddress::Id"))?;
+
+			request.from = Some(EvmAddressMapping::<Runtime>::get_evm_address(&account)
+								.ok_or(sp_runtime::DispatchError::Other("Invalid parameter signature, not mapping evm address"))?);
+
+			Ok(request)
 		}
 
 	}

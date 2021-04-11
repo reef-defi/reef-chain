@@ -18,8 +18,8 @@ release:
 build:
 	cargo build --manifest-path node/Cargo.toml --features runtime-benchmarks,with-ethereum-compatibility --release
 
-.PHONY: build-runtime
-build-runtime:
+.PHONY: wasm
+wasm:
 	cargo build -p reef-runtime --features with-ethereum-compatibility --release
 
 .PHONY: check
@@ -57,4 +57,10 @@ bench:
 .PHONY: doc
 doc:
 	SKIP_WASM_BUILD=1 cargo doc --open
+
+.PHONY: cargo-update
+cargo-update:
+	cargo update
+	cargo update --manifest-path node/Cargo.toml
+	make test
 

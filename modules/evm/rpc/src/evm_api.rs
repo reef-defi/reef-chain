@@ -7,7 +7,7 @@ use sp_core::Bytes;
 
 pub use rpc_impl_EVMApi::gen_server::EVMApi as EVMApiServer;
 
-use crate::call_request::CallRequest;
+use crate::call_request::{CallRequest, EstimateResourcesResponse};
 
 /// EVM rpc interface.
 #[rpc(server)]
@@ -19,4 +19,8 @@ pub trait EVMApi<BlockHash> {
 	/// Estimate gas needed for execution of given contract.
 	#[rpc(name = "evm_estimateGas")]
 	fn estimate_gas(&self, _: CallRequest, _: Option<BlockHash>) -> Result<U256>;
+
+	/// Estimate resources needed for execution of given contract.
+	#[rpc(name = "evm_estimateResources")]
+	fn estimate_resources(&self, extrinsic: Bytes, _: Option<BlockHash>) -> Result<EstimateResourcesResponse>;
 }

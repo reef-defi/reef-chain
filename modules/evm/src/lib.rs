@@ -11,7 +11,15 @@ use frame_support::{
 	ensure,
 	error::BadOrigin,
 	pallet_prelude::*,
-	traits::{Currency, EnsureOrigin, ExistenceRequirement, Get, OnKilledAccount, ReservableCurrency},
+	traits::{
+		Currency,
+		EnsureOrigin,
+		ExistenceRequirement,
+		Get,
+		OnKilledAccount,
+		ReservableCurrency,
+		WithdrawReasons,
+	},
 	transactional,
 	weights::{Pays, PostDispatchInfo, Weight},
 	RuntimeDebug,
@@ -162,8 +170,6 @@ pub mod module {
 		#[pallet::constant]
 		type DeploymentFee: Get<BalanceOf<Self>>;
 
-		type TreasuryAccount: Get<Self::AccountId>;
-
 		type FreeDeploymentOrigin: EnsureOrigin<Self::Origin>;
 
 		/// Weight information for the extrinsics in this module.
@@ -244,9 +250,7 @@ pub mod module {
 
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
-		//TODO: use `T::Index` once `Deserialize` bound available https://github.com/paritytech/substrate/pull/8035
-		pub accounts: std::collections::BTreeMap<EvmAddress, GenesisAccount<BalanceOf<T>, u32>>,
-		pub network_contract_index: u64,
+		pub accounts: std::collections::BTreeMap<EvmAddress, GenesisAccount<BalanceOf<T>, T::Index>>,
 	}
 
 	#[cfg(feature = "std")]
@@ -254,7 +258,6 @@ pub mod module {
 		fn default() -> Self {
 			GenesisConfig {
 				accounts: Default::default(),
-				network_contract_index: Default::default(),
 			}
 		}
 	}
@@ -265,7 +268,7 @@ pub mod module {
 			self.accounts.iter().for_each(|(address, account)| {
 				let account_id = T::AddressMapping::get_account_id(address);
 
-				let account_info = <AccountInfo<T>>::new(account.nonce.into(), None);
+				let account_info = <AccountInfo<T>>::new(account.nonce, None);
 				<Accounts<T>>::insert(address, account_info);
 
 				T::Currency::deposit_creating(&account_id, account.balance);
@@ -283,7 +286,7 @@ pub mod module {
 					}
 				}
 			});
-			NetworkContractIndex::<T>::put(self.network_contract_index);
+			NetworkContractIndex::<T>::put(primitives::NETWORK_CONTRACT_START);
 		}
 	}
 
@@ -572,12 +575,11 @@ pub mod module {
 		pub fn deploy(origin: OriginFor<T>, contract: EvmAddress) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
 			let address = T::AddressMapping::get_evm_address(&who).ok_or(Error::<T>::AddressNotMapped)?;
-			T::Currency::transfer(
+			T::Currency::withdraw(
 				&who,
-				&T::TreasuryAccount::get(),
 				T::DeploymentFee::get(),
-				ExistenceRequirement::AllowDeath,
-			)?;
+				WithdrawReasons::FEE,
+				ExistenceRequirement::KeepAlive)?;
 			Self::mark_deployed(contract, Some(address))?;
 			Pallet::<T>::deposit_event(Event::<T>::ContractDeployed(contract));
 			Ok(().into())

@@ -111,3 +111,10 @@ Then run this command to install appropriate compiler version and produce a bina
 ```bash
 make release
 ```
+
+### On-Chain upgrade builds
+
+Build the wasm runtime with:
+```bash
+make wasm
+```

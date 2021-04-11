@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 jsonrpc-core = "15.0.0"
-jsonrpc-derive = "14.0.3"
+jsonrpc-derive = "15.0.0"
 ethereum-types = "0.11.0"
 sp-api = { version = "3.0.0" }
 sp-blockchain = { version = "3.0.0" }
@@ -24,6 +24,8 @@ rustc-hex = "2.1.0"
 serde = { version = "1.0", features = ["derive"] }
 module-evm-rpc-runtime-api = { path = "runtime_api" }
 module-evm = { path = ".." }
+pallet-transaction-payment-rpc-runtime-api = "3.0.0"
+frame-support = "3.0.0"
 
 [dev-dependencies]
 serde_json = "1.0.41"

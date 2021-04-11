@@ -116,7 +116,6 @@ parameter_types! {
 
 ord_parameter_types! {
 	pub const CouncilAccount: AccountId32 = AccountId32::from([1u8; 32]);
-	pub const TreasuryAccount: AccountId32 = AccountId32::from([2u8; 32]);
 	pub const NetworkContractAccount: AccountId32 = AccountId32::from([0u8; 32]);
 	pub const StorageDepositPerByte: u128 = 10;
 	pub const MaxCodeSize: u32 = 60 * 1024;
@@ -142,7 +141,6 @@ impl module_evm::Config for Runtime {
 
 	type DeveloperDeposit = DeveloperDeposit;
 	type DeploymentFee = DeploymentFee;
-	type TreasuryAccount = TreasuryAccount;
 	type FreeDeploymentOrigin = EnsureSignedBy<CouncilAccount, AccountId32>;
 
 	type WeightInfo = ();
@@ -280,7 +278,6 @@ impl ExtBuilder {
 		);
 		module_evm::GenesisConfig::<Runtime> {
 			accounts,
-			network_contract_index: 2048,
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();

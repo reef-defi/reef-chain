@@ -13,9 +13,8 @@ use orml_traits::{parameter_type_with_key, MultiReservableCurrency};
 pub use primitives::{
 	evm::AddressMapping, mocks::MockAddressMapping,
 	Amount, BlockNumber, CurrencyId, Header, Nonce, TokenSymbol,
-	PREDEPLOY_ADDRESS_START,
 };
-use sp_core::{crypto::AccountId32, Bytes, H160, H256};
+use sp_core::{crypto::AccountId32, bytes::from_hex, Bytes, H160, H256};
 use sp_runtime::{
 	traits::{BlakeTwo256, Convert, IdentityLookup},
 	DispatchResult, FixedPointNumber, FixedU128, ModuleId, Perbill,
@@ -225,7 +224,6 @@ parameter_types! {
 
 ord_parameter_types! {
 	pub const CouncilAccount: AccountId32 = AccountId32::from([1u8; 32]);
-	pub const TreasuryAccount: AccountId32 = AccountId32::from([2u8; 32]);
 	pub const NetworkContractAccount: AccountId32 = AccountId32::from([0u8; 32]);
 	pub const NewContractExtraBytes: u32 = 100;
 	pub const StorageDepositPerByte: u64 = 10;
@@ -263,7 +261,6 @@ impl module_evm::Config for Test {
 	type NetworkContractSource = NetworkContractSource;
 	type DeveloperDeposit = DeveloperDeposit;
 	type DeploymentFee = DeploymentFee;
-	type TreasuryAccount = TreasuryAccount;
 	type FreeDeploymentOrigin = EnsureSignedBy<CouncilAccount, AccountId>;
 	type WeightInfo = ();
 }
@@ -280,27 +277,29 @@ pub fn bob() -> H160 {
 	H160([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2])
 }
 
-pub fn evm_genesis() -> (BTreeMap<H160, module_evm::GenesisAccount<Balance, Nonce>>, u64) {
-	let contracts_json = &include_bytes!("../../../../predeploy-contracts/resources/bytecodes.json")[..];
-	let contracts: Vec<(String, String)> = serde_json::from_slice(contracts_json).unwrap();
+pub fn evm_genesis() -> BTreeMap<H160, module_evm::GenesisAccount<Balance, u64>> {
+	let contracts_json = &include_bytes!("../../../../assets/bytecodes.json")[..];
+	let contracts: Vec<(String, String, String)> = serde_json::from_slice(contracts_json).unwrap();
 	let mut accounts = BTreeMap::new();
-	let mut network_contract_index = PREDEPLOY_ADDRESS_START;
-	for (_, code_string) in contracts {
+	for (_, address, code_string) in contracts {
 		let account = module_evm::GenesisAccount {
 			nonce: 0,
 			balance: 0u128,
 			storage: Default::default(),
 			code: Bytes::from_str(&code_string).unwrap().0,
 		};
-		let addr = H160::from_low_u64_be(network_contract_index);
+		let addr = H160::from_slice(
+			from_hex(address.as_str())
+				.expect("predeploy-contracts must specify address")
+				.as_slice(),
+		);
 		accounts.insert(addr, account);
-		network_contract_index += 1;
 	}
-	(accounts, network_contract_index)
+	accounts
 }
 
 pub const INITIAL_BALANCE: Balance = 1_000_000_000_000;
-pub const REEF_ERC20_ADDRESS: &str = "0x0000000000000000000000000000000000000800";
+pub const REEF_ERC20_ADDRESS: &str = "0x0000000000000000000000000000000001000000";
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -331,7 +330,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut storage = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 
 	let mut accounts = BTreeMap::new();
-	let (mut evm_genesis_accounts, network_contract_index) = evm_genesis();
+	let mut evm_genesis_accounts = evm_genesis();
 	accounts.append(&mut evm_genesis_accounts);
 
 	accounts.insert(
@@ -358,7 +357,6 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		.unwrap();
 	module_evm::GenesisConfig::<Test> {
 		accounts,
-		network_contract_index,
 	}
 	.assimilate_storage(&mut storage)
 	.unwrap();
