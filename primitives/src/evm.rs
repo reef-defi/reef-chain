@@ -60,7 +60,7 @@ pub struct EstimateResourcesRequest {
 	/// To
 	pub to: Option<H160>,
 	/// Gas Limit
-	pub gas_limit: Option<u32>,
+	pub gas_limit: Option<u64>,
 	/// Storage Limit
 	pub storage_limit: Option<u32>,
 	/// Value

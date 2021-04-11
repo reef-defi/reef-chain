@@ -1,6 +1,6 @@
 #![allow(clippy::upper_case_acronyms)]
 
-use frame_support::log;
+use frame_support::debug;
 use ethereum_types::U256;
 use jsonrpc_core::{Error, ErrorCode, Result, Value};
 use rustc_hex::ToHex;
@@ -31,7 +31,7 @@ mod evm_api;
 // default gas and storage limits:
 // limits only apply to call() API
 // create() API takes values from the caller and is unlimited
-pub const GAS_LIMIT:     u32 = 100_000_000;
+pub const GAS_LIMIT:     u64 = 100_000_000;
 pub const STORAGE_LIMIT: u32 =   1_000_000;
 
 fn internal_err<T: ToString>(message: T) -> Error {
@@ -283,7 +283,7 @@ where
 			// invariant: lower <= mid <= upper
 			while change_pct > threshold_pct {
 				let mut test_request = request.clone();
-				test_request.gas_limit = Some(mid.as_u32());
+				test_request.gas_limit = Some(mid.as_u64());
 				match calculate_gas_used(test_request) {
 					// if Ok -- try to reduce the gas used
 					Ok(used_gas) => {
@@ -426,11 +426,11 @@ where
 			// invariant: lower <= mid <= upper
 			while change_pct > threshold_pct {
 				let mut test_request = request.clone();
-				test_request.gas_limit = Some(mid.as_u32());
+				test_request.gas_limit = Some(mid.as_u64());
 				match calculate_gas_used(test_request) {
 					// if Ok -- try to reduce the gas used
 					Ok((used_gas, used_storage)) => {
-						log::debug!(
+						debug::debug!(
 							target: "evm",
 							"calculate_gas_used ok, used_gas: {:?}, used_storage: {:?}",
 							used_gas, used_storage,
@@ -447,7 +447,7 @@ where
 					}
 
 					Err(err) => {
-						log::debug!(
+						debug::debug!(
 							target: "evm",
 							"calculate_gas_used err, lower: {:?}, upper: {:?}, mid: {:?}",
 							lower, upper, mid
@@ -468,7 +468,7 @@ where
 				}
 			}
 
-			let uxt: <B as traits::Block>::Extrinsic = Decode::decode(&mut &*extrinsic).map_err(|e| Error {
+			let uxt: <B as BlockT>::Extrinsic = Decode::decode(&mut &*extrinsic).map_err(|e| Error {
 				code: ErrorCode::InternalError,
 				message: "Unable to dry run extrinsic.".into(),
 				data: Some(format!("{:?}", e).into()),
@@ -496,7 +496,7 @@ where
 		} else {
 			let (used_gas, used_storage) = calculate_gas_used(request)?;
 
-			let uxt: <B as traits::Block>::Extrinsic = Decode::decode(&mut &*extrinsic).map_err(|e| Error {
+			let uxt: <B as BlockT>::Extrinsic = Decode::decode(&mut &*extrinsic).map_err(|e| Error {
 				code: ErrorCode::InternalError,
 				message: "Unable to dry run extrinsic.".into(),
 				data: Some(format!("{:?}", e).into()),
