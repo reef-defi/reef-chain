@@ -36,7 +36,7 @@ test:
 
 .PHONY: debug
 debug:
-	cargo build && RUST_LOG=debug RUST_BACKTRACE=1 gdb --args target/debug/reef-node --dev --tmp -lruntime=debug
+	cargo build && RUST_LOG=debug RUST_BACKTRACE=1 rust-gdb --args target/debug/reef-node --dev --tmp -lruntime=debug
 
 .PHONY: run
 run:
