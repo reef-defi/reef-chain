@@ -26,6 +26,10 @@ wasm:
 check:
 	SKIP_WASM_BUILD=1 cargo check
 
+.PHONY: clippy
+clippy:
+	SKIP_WASM_BUILD=1 cargo clippy
+
 .PHONY: watch
 watch:
 	SKIP_WASM_BUILD=1 cargo watch -c -x build
