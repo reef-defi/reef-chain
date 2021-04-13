@@ -303,8 +303,6 @@ pub mod module {
 				// pallet-collective expects sorted list
 				winners.sort();
 
-				// TODO: ensure minimum winner quorum size
-				// TODO: test if empty membership quorum can vote
 				if !winners.is_empty() {
 					// assign winners as new members in both collective and Self
 					let old_members = Members::<T>::get();

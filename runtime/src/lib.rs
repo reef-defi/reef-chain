@@ -595,7 +595,7 @@ impl pallet_balances::Config for Runtime {
 	type MaxLocks = MaxLocks;
 	/// The type for recording an account's balance.
 	type Balance = Balance;
-	type DustRemoval = (); // TODO: burn
+	type DustRemoval = (); // burn
 	type ExistentialDeposit = NativeTokenExistentialDeposit;
 	type AccountStore = frame_system::Module<Runtime>;
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
@@ -641,22 +641,22 @@ type TechCouncilInstance = pallet_collective::Instance1;
 type EnsureRootOrTwoThridsTechCouncil = EnsureOneOf<
 	AccountId,
 	EnsureRoot<AccountId>,
-	pallet_collective::EnsureProportionMoreThan<_2, _3, AccountId, TechCouncilInstance>,
+	pallet_collective::EnsureProportionAtLeast<_2, _3, AccountId, TechCouncilInstance>,
 >;
 
 type EnsureRootOrThreeFourthsTechCouncil = EnsureOneOf<
 	AccountId,
 	EnsureRoot<AccountId>,
-	pallet_collective::EnsureProportionMoreThan<_3, _4, AccountId, TechCouncilInstance>,
+	pallet_collective::EnsureProportionAtLeast<_3, _4, AccountId, TechCouncilInstance>,
 >;
 
 parameter_types! {
 	pub const EraDuration: BlockNumber = 7 * DAYS;
 	pub const TechCouncilMotionDuration: BlockNumber = 7 * DAYS;
 
-	pub const TechCouncilMaxMembers: u32 = 21;
+	pub const TechCouncilMaxMembers: u32 = 9; // 21 eventually
 	pub const TechCouncilMaxCandidates: u32 = 100;
-	pub const TechCouncilMaxProposals: u32 = 100;
+	pub const TechCouncilMaxProposals: u32 = 10;
 
 	pub const NominatorAPY: Perbill =     Perbill::from_percent(10);
 	pub const CouncilInflation: Perbill = Perbill::from_percent(1);
