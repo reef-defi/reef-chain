@@ -23,7 +23,7 @@ use reef_runtime::Block;
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {
-		"Reef Substrate Node".into()
+		"Reef Chain Node".into()
 	}
 
 	fn impl_version() -> String {
@@ -39,7 +39,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn support_url() -> String {
-		"support.anonymous.an".into()
+		"docs.reef.finance".into()
 	}
 
 	fn copyright_start_year() -> i32 {
@@ -51,6 +51,7 @@ impl SubstrateCli for Cli {
 			"dev" => Box::new(chain_spec::development_config()?),
 			"local" => Box::new(chain_spec::local_testnet_config()?),
 			"testnet" => Box::new(chain_spec::public_testnet_config()?),
+			"mainnet" => Box::new(chain_spec::mainnet_config()?),
 			path => Box::new(chain_spec::ChainSpec::from_json_file(
 				std::path::PathBuf::from(path),
 			)?),

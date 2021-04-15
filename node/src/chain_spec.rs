@@ -75,7 +75,6 @@ pub fn get_authority_keys_from_seed(seed: &str) -> (AccountId, AccountId, Grandp
 
 pub fn development_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
-
 	Ok(ChainSpec::from_genesis(
 		// Name
 		"Development",
@@ -97,7 +96,6 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				get_account_id_from_seed::<sr25519::Public>("Alice//stash"),
 				get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 			],
-			true,
 		),
 		// Bootnodes
 		vec![],
@@ -114,7 +112,6 @@ pub fn development_config() -> Result<ChainSpec, String> {
 
 pub fn local_testnet_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
-
 	Ok(ChainSpec::from_genesis(
 		// Name
 		"Local Testnet",
@@ -145,7 +142,6 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 				get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 				get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 			],
-			true,
 		),
 		// Bootnodes
 		vec![],
@@ -163,10 +159,9 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 
 pub fn public_testnet_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
-
 	Ok(ChainSpec::from_genesis(
 		// Name
-		"Reef Testnet 2",
+		"Reef Testnet",
 		// ID
 		"reef_testnet",
 		ChainType::Live,
@@ -195,13 +190,12 @@ pub fn public_testnet_config() -> Result<ChainSpec, String> {
 			],
 			// Sudo
 			hex!["0c994e7589709a85128a6695254af16227f7873816ae0269aa705861c315ba1e"].into(),
-			// Endowment Accounts
+			// Endowed accounts
 			vec![
 				hex!["0c994e7589709a85128a6695254af16227f7873816ae0269aa705861c315ba1e"].into(),
 				hex!["9e42365c1a43fe7bd886118f49a2247aabda7079c3e4c5288f41afadd7bb1963"].into(),
 				hex!["6c1371ce4b06b8d191d6f552d716c00da31aca08a291ccbdeaf0f7aeae51201b"].into(),
 			],
-			true,
 		),
 		// Bootnodes
 		vec!["/dns/bootnode-t1.reefscan.com/tcp/30334/p2p/12D3KooWKmFtS7BFtkkKWrP5ZcCpPFokmST2JFXFSsVBNeW5SXWg".parse().unwrap()],
@@ -216,13 +210,80 @@ pub fn public_testnet_config() -> Result<ChainSpec, String> {
 	))
 }
 
-/// Configure initial storage state for FRAME modules.
+pub fn mainnet_config() -> Result<ChainSpec, String> {
+	let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
+	Ok(ChainSpec::from_genesis(
+		// Name
+		"Reef Mainnet",
+		// ID
+		"reef_mainnet",
+		ChainType::Live,
+		move || mainnet_genesis(
+			wasm_binary,
+			// Initial authorities
+			vec![
+				(
+					hex!["6c08c1f8e0cf1e200b24b43fca4c4e407b963b6b1e459d1aeff80c566a1da469"].into(),
+					hex!["864eff3160ff8609c030316867630850a9d6e35c47d3efe54de44264fef7665e"].into(),
+					hex!["dc563fb4641b61381ee79b98d54270e798515dac2193eef871ff18912f9a2960"].unchecked_into(),
+					hex!["da9d50d8b4122743227cc7af017bd6fea7da3f2d86f786cf29605264935e6f3a"].unchecked_into(),
+				),
+				(
+					hex!["5c22097b5c8b5912ce28b72ba4de52c3da8aca9379c748c1356a6642107d4c4a"].into(),
+					hex!["543fd4fd9a284c0f955bb083ae6e0fe7a584eb6f6e72b386071a250b94f99a59"].into(),
+					hex!["2ef0e32340579ca51b755ef8fa3fa4b7b0ada7214a7dc1fc96f84fc9d36b4a0c"].unchecked_into(),
+					hex!["b66040bbbe3440f508b9275c404d38ee73f5e22eaaf89a55819d52d52d85ed56"].unchecked_into(),
+				),
+				(
+					hex!["a67f388c1b8d68287fb3288b5aa36f069875c15ebcb9b1e4e62678aad6b24b44"].into(),
+					hex!["ec912201d98911842b1a8e82983f71f2116dd8b898798ece4e1d210590de7d60"].into(),
+					hex!["5031a3fbf6119e72d02d95d30fed820a3048ff9b80c44ff6215dee5aa6b8a233"].unchecked_into(),
+					hex!["9603161d3d5c2ad0e334a789c408b5828c84291c395aff2faaec882ebd34dc17"].unchecked_into(),
+				),
+			],
+			// Sudo
+			hex!["9c48c0498bdf1d716f4544fc21f050963409f2db8154ba21e5233001202cbf08"].into(),
+			// Endowed accounts
+			vec![
+				// Investors
+				(hex!["3c483acc759b79f8b12fa177e4bdfa0448a6ea03c389cf4db2b4325f0fc8f84a"].into(), 4_340_893_656 as u128),
+				// Liquidity bridge reserves
+				(hex!["5adebb35eb317412b58672db0434e4b112fcd27abaf28039f07c0db155b26650"].into(), 2_000_000_000 as u128),
+				// Lockup & core nominators
+				(hex!["746db342d3981b230804d1a187245e565f8eb3a2897f83d0d841cc52282e324c"].into(), 500_000_000 as u128),
+				(hex!["da512d1335a62ad6f79baecfe87578c5d829113dc85dbb984d90a83f50680145"].into(), 500_000_000 as u128),
+				(hex!["b493eacad9ca9d7d8dc21b940966b4db65dfbe01084f73c1eee2793b1b0a1504"].into(), 500_000_000 as u128),
+				(hex!["849cf6f8a093c28fd0f699b47383767b0618f06aad9df61c4a9aff4af5809841"].into(), 250_000_000 as u128),
+				(hex!["863bd6a38c7beb526be033068ac625536cd5d8a83cd51c1577a1779fab41655c"].into(), 250_000_000 as u128),
+				(hex!["c2d2d7784e9272ef1785f92630dbce167a280149b22f2ae3b0262435e478884d"].into(), 250_000_000 as u128),
+				// Sudo
+				(hex!["9c48c0498bdf1d716f4544fc21f050963409f2db8154ba21e5233001202cbf08"].into(), 100_000_000 as u128),
+				// Developer pool & faucet
+				(hex!["1acc4a5c6361770eac4da9be1c37ac37ea91a55f57121c03240ceabf0b7c1c5e"].into(), 10_000_000 as u128),
+			],
+		),
+		// Bootnodes
+		vec![
+			"/dns/bootnode-1.reefscan.com/tcp/30333/p2p/12D3KooWFHSc9cUcyNtavUkLg4VBAeBnYNgy713BnovUa9WNY5pp".parse().unwrap(),
+			"/dns/bootnode-2.reefscan.com/tcp/30333/p2p/12D3KooWAQqcXvcvt4eVEgogpDLAdGWgR5bY1drew44We6FfJAYq".parse().unwrap(),
+			"/dns/bootnode-3.reefscan.com/tcp/30333/p2p/12D3KooWCT7rnUmEK7anTp7svwr4GTs6k3XXnSjmgTcNvdzWzgWU".parse().unwrap(),
+		],
+		// Telemetry
+		TelemetryEndpoints::new(vec![(TELEMETRY_URL.into(), 0)]).ok(),
+		// Protocol ID
+		Some("reef_mainnet"),
+		// Properties
+		Some(reef_properties()),
+		// Extensions
+		Default::default(),
+	))
+}
+
 fn testnet_genesis(
 	wasm_binary: &[u8],
 	initial_authorities: Vec<(AccountId, AccountId, GrandpaId, BabeId)>,
 	root_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
-	_enable_println: bool,
 ) -> GenesisConfig {
 
 	let evm_genesis_accounts = evm_genesis();
@@ -232,7 +293,7 @@ fn testnet_genesis(
 
 	let balances = initial_authorities
 		.iter()
-		.map(|x| (x.0.clone(), INITIAL_STAKING + 10 * REEF)) // bit more for fee
+		.map(|x| (x.0.clone(), INITIAL_STAKING))
 		.chain(endowed_accounts.iter().cloned().map(|k| (k, INITIAL_BALANCE)))
 		// .chain(
 		// 	get_all_module_accounts()
@@ -299,6 +360,76 @@ fn testnet_genesis(
 		pallet_collective_Instance1: Some(Default::default()),
 	}
 }
+
+fn mainnet_genesis(
+	wasm_binary: &[u8],
+	initial_authorities: Vec<(AccountId, AccountId, GrandpaId, BabeId)>,
+	root_key: AccountId,
+	endowed_accounts: Vec<(AccountId, Balance)>,
+) -> GenesisConfig {
+
+	let evm_genesis_accounts = evm_genesis();
+
+	const INITIAL_STAKING: u128 = 1_000_000 * REEF;
+
+	let balances = initial_authorities
+		.iter()
+		.map(|x| (x.0.clone(), INITIAL_STAKING))
+		.chain(endowed_accounts)
+		.fold(
+			BTreeMap::<AccountId, Balance>::new(),
+			|mut acc, (account_id, amount)| {
+				if let Some(balance) = acc.get_mut(&account_id) {
+					*balance = balance
+						.checked_add(amount)
+						.expect("balance cannot overflow when building genesis");
+				} else {
+					acc.insert(account_id.clone(), amount);
+				}
+				acc
+			},
+		)
+		.into_iter()
+		.collect::<Vec<(AccountId, Balance)>>();
+
+	GenesisConfig {
+		frame_system: Some(SystemConfig {
+			// Add Wasm runtime to storage.
+			code: wasm_binary.to_vec(),
+			changes_trie_config: Default::default(),
+		}),
+		pallet_indices: Some(IndicesConfig { indices: vec![] }),
+		pallet_balances: Some(BalancesConfig { balances }),
+		pallet_session: Some(SessionConfig {
+			keys: initial_authorities
+				.iter()
+				.map(|x| (x.0.clone(), x.0.clone(), get_session_keys(x.2.clone(), x.3.clone())))
+				.collect::<Vec<_>>(),
+		}),
+		pallet_staking: Some(StakingConfig {
+			validator_count: initial_authorities.len() as u32 * 2,
+			minimum_validator_count: initial_authorities.len() as u32,
+			stakers: initial_authorities
+				.iter()
+				.map(|x| (x.0.clone(), x.1.clone(), INITIAL_STAKING, StakerStatus::Validator))
+				.collect(),
+			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
+			slash_reward_fraction: sp_runtime::Perbill::from_percent(10),
+			..Default::default()
+		}),
+		pallet_babe: Some(BabeConfig { authorities: vec![] }),
+		pallet_grandpa: Some(GrandpaConfig { authorities: vec![] }),
+		orml_tokens: Some(TokensConfig {
+			endowed_accounts: vec![]
+		}),
+		module_evm: Some(EVMConfig {
+			accounts: evm_genesis_accounts,
+		}),
+		pallet_sudo: Some(SudoConfig { key: root_key }),
+		pallet_collective_Instance1: Some(Default::default()),
+	}
+}
+
 
 /// Token
 pub fn reef_properties() -> Properties {
