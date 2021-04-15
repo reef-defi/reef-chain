@@ -338,10 +338,10 @@ impl pallet_session::historical::Config for Runtime {
 }
 
 pallet_staking_reward_curve::build! {
-	// 2.5% min, 10% max, 50% ideal stake
+	// 2.5% min, 12.5% max, 50% ideal stake
 	const REWARD_CURVE: PiecewiseLinear<'static> = curve!(
 		min_inflation: 0_025_000,
-		max_inflation: 0_100_000,
+		max_inflation: 0_125_000,
 		ideal_stake: 0_500_000,
 		falloff: 0_050_000,
 		max_piece_count: 40,
@@ -1029,7 +1029,7 @@ impl_runtime_apis! {
 				to,
 				data,
 				value,
-				gas_limit.into(),
+				gas_limit,
 				storage_limit,
 				config.as_ref().unwrap_or(<Runtime as module_evm::Config>::config()),
 			)
@@ -1055,7 +1055,7 @@ impl_runtime_apis! {
 				from,
 				data,
 				value,
-				gas_limit.into(),
+				gas_limit,
 				storage_limit,
 				config.as_ref().unwrap_or(<Runtime as module_evm::Config>::config()),
 			)
