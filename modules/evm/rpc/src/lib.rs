@@ -119,8 +119,11 @@ where
 	C::Api: TransactionPaymentApi<B, Balance>,
 	Balance: Codec + MaybeDisplay + MaybeFromStr + Default + Send + Sync + 'static + TryFrom<u128> + Into<U256>,
 {
-	fn call(&self, request: CallRequest, _: Option<B>) -> Result<Bytes> {
-		let hash = self.client.info().best_hash;
+	fn call(&self, request: CallRequest, at: Option<B>) -> Result<Bytes> {
+		let hash = match at {
+			Some(hash) => hash.hash(),
+			None => self.client.info().best_hash,
+		};
 
 		let CallRequest {
 			from,
@@ -190,10 +193,13 @@ where
 		}
 	}
 
-	fn estimate_gas(&self, request: CallRequest, _: Option<B>) -> Result<U256> {
-		let calculate_gas_used = |request| {
-			let hash = self.client.info().best_hash;
+	fn estimate_gas(&self, request: CallRequest, at: Option<B>) -> Result<U256> {
+		let hash = match at {
+			Some(hash) => hash.hash(),
+			None => self.client.info().best_hash,
+		};
 
+		let calculate_gas_used = |request| {
 			let CallRequest {
 				from,
 				to,
@@ -315,8 +321,11 @@ where
 	}
 
 
-	fn estimate_resources(&self, extrinsic: Bytes, _: Option<B>) -> Result<EstimateResourcesResponse> {
-		let hash = self.client.info().best_hash;
+	fn estimate_resources(&self, extrinsic: Bytes, at: Option<B>) -> Result<EstimateResourcesResponse> {
+		let hash = match at {
+			Some(hash) => hash.hash(),
+			None => self.client.info().best_hash,
+		};
 		let request = self
 			.client
 			.runtime_api()
@@ -334,7 +343,6 @@ where
 		};
 
 		let calculate_gas_used = |request| -> Result<(U256, i32)> {
-			let hash = self.client.info().best_hash;
 
 			let CallRequest {
 				from,

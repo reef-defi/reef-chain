@@ -14,13 +14,13 @@ use crate::call_request::{CallRequest, EstimateResourcesResponse};
 pub trait EVMApi<BlockHash> {
 	/// Call contract, returning the output data.
 	#[rpc(name = "evm_call")]
-	fn call(&self, _: CallRequest, _: Option<BlockHash>) -> Result<Bytes>;
+	fn call(&self, _: CallRequest, at: Option<BlockHash>) -> Result<Bytes>;
 
 	/// Estimate gas needed for execution of given contract.
 	#[rpc(name = "evm_estimateGas")]
-	fn estimate_gas(&self, _: CallRequest, _: Option<BlockHash>) -> Result<U256>;
+	fn estimate_gas(&self, _: CallRequest, at: Option<BlockHash>) -> Result<U256>;
 
 	/// Estimate resources needed for execution of given contract.
 	#[rpc(name = "evm_estimateResources")]
-	fn estimate_resources(&self, extrinsic: Bytes, _: Option<BlockHash>) -> Result<EstimateResourcesResponse>;
+	fn estimate_resources(&self, extrinsic: Bytes, at: Option<BlockHash>) -> Result<EstimateResourcesResponse>;
 }
