@@ -9,9 +9,19 @@ To clone the repo with its submodules run:
 git clone --recursive https://github.com/reef-defi/reef-chain
 ```
 
-### Install
+### Rust Setup
 
-You can install the latest compiler and the toolchain with:
+If you don’t have Rust already, you can install it with:
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+You can install developer tools on Ubuntu 20.04 with:
+```bash
+sudo apt install make clang pkg-config libssl-dev build-essential
+```
+
+You can install the latest Rust toolchain with:
 ```bash
 make init
 ```
