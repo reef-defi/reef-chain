@@ -225,20 +225,20 @@ pub fn mainnet_config() -> Result<ChainSpec, String> {
 				(
 					hex!["6c08c1f8e0cf1e200b24b43fca4c4e407b963b6b1e459d1aeff80c566a1da469"].into(),
 					hex!["864eff3160ff8609c030316867630850a9d6e35c47d3efe54de44264fef7665e"].into(),
-					hex!["dc563fb4641b61381ee79b98d54270e798515dac2193eef871ff18912f9a2960"].unchecked_into(),
-					hex!["da9d50d8b4122743227cc7af017bd6fea7da3f2d86f786cf29605264935e6f3a"].unchecked_into(),
+					hex!["dc41d9325da71d90806d727b826d125cd523da28eb39ab048ab983d7bb74fb32"].unchecked_into(),
+					hex!["8a688a748fd39bedaa507c942600c40478c2082dee17b8263613fc3c086b0c53"].unchecked_into(),
 				),
 				(
 					hex!["5c22097b5c8b5912ce28b72ba4de52c3da8aca9379c748c1356a6642107d4c4a"].into(),
 					hex!["543fd4fd9a284c0f955bb083ae6e0fe7a584eb6f6e72b386071a250b94f99a59"].into(),
-					hex!["2ef0e32340579ca51b755ef8fa3fa4b7b0ada7214a7dc1fc96f84fc9d36b4a0c"].unchecked_into(),
-					hex!["b66040bbbe3440f508b9275c404d38ee73f5e22eaaf89a55819d52d52d85ed56"].unchecked_into(),
+					hex!["f15a651be0ea0afcfe691a118ee7acfa114d11a27cf10991ee91ea97942d2135"].unchecked_into(),
+					hex!["70e74bed02b733e47bc044da80418fd287bb2b7a0c032bd211d7956c68c9561b"].unchecked_into(),
 				),
 				(
 					hex!["a67f388c1b8d68287fb3288b5aa36f069875c15ebcb9b1e4e62678aad6b24b44"].into(),
 					hex!["ec912201d98911842b1a8e82983f71f2116dd8b898798ece4e1d210590de7d60"].into(),
-					hex!["5031a3fbf6119e72d02d95d30fed820a3048ff9b80c44ff6215dee5aa6b8a233"].unchecked_into(),
-					hex!["9603161d3d5c2ad0e334a789c408b5828c84291c395aff2faaec882ebd34dc17"].unchecked_into(),
+					hex!["347f5342875b9847ec089ca723c1c09cc532e53dca4b940a6138040025d94eb9"].unchecked_into(),
+					hex!["64841d2d124e1b1dd5485a58908ab244b296b184ae645a0c103adcbcc565f070"].unchecked_into(),
 				),
 			],
 			// Sudo
