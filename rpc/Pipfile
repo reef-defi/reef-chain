@@ -8,6 +8,7 @@ verify_ssl = true
 [packages]
 substrate-interface = "*"
 ipython = "*"
+tqdm = "*"
 
 [requires]
 python_version = "3.8"
