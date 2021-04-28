@@ -107,6 +107,18 @@ where
 	AccountId: Default,
 	Balance: Default,
 {
+	fn name(_context: InvokeContext) -> Result<Vec<u8>, DispatchError> {
+		Ok(Default::default())
+	}
+
+	fn symbol(_context: InvokeContext) -> Result<Vec<u8>, DispatchError> {
+		Ok(Default::default())
+	}
+
+	fn decimals(_context: InvokeContext) -> Result<u8, DispatchError> {
+		Ok(18.into())
+	}
+
 	fn total_supply(_context: InvokeContext) -> Result<Balance, DispatchError> {
 		Ok(Default::default())
 	}
