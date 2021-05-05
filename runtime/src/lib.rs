@@ -356,9 +356,9 @@ pallet_staking_reward_curve::build! {
 }
 
 parameter_types! {
-	pub const SessionsPerEra: sp_staking::SessionIndex = 3; // 3 hours
-	pub const BondingDuration: pallet_staking::EraIndex = 4; // 12 hours
-	pub const SlashDeferDuration: pallet_staking::EraIndex = 2; // 6 hours
+	pub const SessionsPerEra: sp_staking::SessionIndex = 24; // 24 hours
+	pub const BondingDuration: pallet_staking::EraIndex = 28; // 28 days
+	pub const SlashDeferDuration: pallet_staking::EraIndex = 27; // 27 days
 	pub const RewardCurve: &'static PiecewiseLinear<'static> = &REWARD_CURVE;
 	// only top N nominators get paid for each validator
 	pub const MaxNominatorRewardedPerValidator: u32 = 64;
