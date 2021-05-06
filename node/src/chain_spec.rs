@@ -7,6 +7,8 @@ use reef_runtime::{
 	TokenSymbol, TokensConfig, REEF,
 	StakerStatus,
 	ImOnlineId, AuthorityDiscoveryId,
+	MaxNativeTokenExistentialDeposit,
+	get_all_module_accounts,
 	opaque::SessionKeys,
 };
 use sp_consensus_babe::AuthorityId as BabeId;
@@ -322,16 +324,17 @@ fn testnet_genesis(
 
 	const INITIAL_BALANCE: u128 = 100_000_000 * REEF;
 	const INITIAL_STAKING: u128 =   1_000_000 * REEF;
+	let existential_deposit = MaxNativeTokenExistentialDeposit::get();
 
 	let balances = initial_authorities
 		.iter()
 		.map(|x| (x.0.clone(), INITIAL_STAKING))
 		.chain(endowed_accounts.iter().cloned().map(|k| (k, INITIAL_BALANCE)))
-		// .chain(
-		// 	get_all_module_accounts()
-		// 		.iter()
-		// 		.map(|x| (x.clone(), existential_deposit)),
-		// )
+		.chain(
+			get_all_module_accounts()
+				.iter()
+				.map(|x| (x.clone(), existential_deposit)),
+		)
 		.fold(
 			BTreeMap::<AccountId, Balance>::new(),
 			|mut acc, (account_id, amount)| {
@@ -413,11 +416,17 @@ fn mainnet_genesis(
 	let evm_genesis_accounts = evm_genesis();
 
 	const INITIAL_STAKING: u128 = 1_000_000 * REEF;
+	let existential_deposit = MaxNativeTokenExistentialDeposit::get();
 
 	let balances = initial_authorities
 		.iter()
 		.map(|x| (x.0.clone(), INITIAL_STAKING))
 		.chain(endowed_accounts)
+		.chain(
+			get_all_module_accounts()
+				.iter()
+				.map(|x| (x.clone(), existential_deposit)),
+		)
 		.fold(
 			BTreeMap::<AccountId, Balance>::new(),
 			|mut acc, (account_id, amount)| {
@@ -495,13 +504,14 @@ pub fn reef_properties() -> Properties {
 
 /// Predeployed contract addresses
 pub fn evm_genesis() -> BTreeMap<H160, module_evm::GenesisAccount<Balance, Nonce>> {
+	let existential_deposit = MaxNativeTokenExistentialDeposit::get();
 	let contracts_json = &include_bytes!("../../assets/bytecodes.json")[..];
 	let contracts: Vec<(String, String, String)> = serde_json::from_slice(contracts_json).unwrap();
 	let mut accounts = BTreeMap::new();
 	for (_, address, code_string) in contracts {
 		let account = module_evm::GenesisAccount {
 			nonce: 0,
-			balance: 0u128,
+			balance: existential_deposit,
 			storage: Default::default(),
 			code: Bytes::from_str(&code_string).unwrap().0,
 		};
