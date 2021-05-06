@@ -618,7 +618,8 @@ impl module_evm_bridge::Config for Runtime {
 parameter_types! {
 	// note: if we add other native tokens (RUSD) we have to set native
 	// existential deposit to 0 or check for other tokens on account pruning
-	pub const NativeTokenExistentialDeposit: Balance = 1 * REEF;
+	pub const NativeTokenExistentialDeposit: Balance =       1 * REEF;
+	pub const MaxNativeTokenExistentialDeposit: Balance = 1000 * REEF;
 	pub const MaxLocks: u32 = 50;
 }
 
