@@ -242,8 +242,8 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("reef"),
 	impl_name: create_runtime_str!("reef"),
 	authoring_version: 1,
-	spec_version: 4,
-	impl_version: 4,
+	spec_version: 5,
+	impl_version: 5,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 };
@@ -345,14 +345,14 @@ impl pallet_session::historical::Config for Runtime {
 }
 
 pallet_staking_reward_curve::build! {
-	// 3.5% min, 27.5% max, 50% ideal stake
+	// 4.5% min, 27.5% max, 50% ideal stake
 	const REWARD_CURVE: PiecewiseLinear<'static> = curve!(
-		min_inflation: 0_035_000,
+		min_inflation: 0_045_000,
 		max_inflation: 0_275_000,
 		ideal_stake: 0_500_000,
 		falloff: 0_050_000,
 		max_piece_count: 40,
-		test_precision: 0_008_000,
+		test_precision: 0_005_500,
 	);
 }
 
