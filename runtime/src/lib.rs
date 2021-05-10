@@ -737,43 +737,43 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		// Core
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Call, Storage},
-		Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
-		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>},
+		System: frame_system::{Module, Call, Config, Storage, Event<T>} = 0,
+		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Call, Storage} = 1,
+		Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent} = 2,
+		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>} = 3,
+		Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>} = 4,
 
 		// Account lookup
-		Indices: pallet_indices::{Module, Call, Storage, Config<T>, Event<T>},
+		Indices: pallet_indices::{Module, Call, Storage, Config<T>, Event<T>} = 5,
 
 		// Tokens & Fees
-		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
-		Currencies: module_currencies::{Module, Call, Event<T>},
-		Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
-		TransactionPayment: module_transaction_payment::{Module, Call, Storage},
+		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>} = 6,
+		Currencies: module_currencies::{Module, Call, Event<T>} = 7,
+		Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>} = 8,
+		TransactionPayment: module_transaction_payment::{Module, Call, Storage} = 9,
+
+		// Authorization
+		Authority: orml_authority::{Module, Call, Event<T>, Origin<T>} = 10,
 
 		// Smart contracts
-		EvmAccounts: module_evm_accounts::{Module, Call, Storage, Event<T>},
-		EVM: module_evm::{Module, Config<T>, Call, Storage, Event<T>},
-		EVMBridge: module_evm_bridge::{Module},
+		EvmAccounts: module_evm_accounts::{Module, Call, Storage, Event<T>} = 20,
+		EVM: module_evm::{Module, Config<T>, Call, Storage, Event<T>} = 21,
+		EVMBridge: module_evm_bridge::{Module} = 22,
 
 		// Consensus
-		Authorship: pallet_authorship::{Module, Call, Storage, Inherent},
-		Babe: pallet_babe::{Module, Call, Storage, Config, Inherent, ValidateUnsigned},
-		Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event, ValidateUnsigned},
-		Staking: pallet_staking::{Module, Call, Config<T>, Storage, Event<T>},
-		Session: pallet_session::{Module, Call, Storage, Event, Config<T>},
-		Historical: pallet_session_historical::{Module},
-		Offences: pallet_offences::{Module, Call, Storage, Event},
-		ImOnline: pallet_im_online::{Module, Call, Storage, Event<T>, ValidateUnsigned, Config<T>},
-		AuthorityDiscovery: pallet_authority_discovery::{Module, Call, Config},
+		Authorship: pallet_authorship::{Module, Call, Storage, Inherent} = 30,
+		Babe: pallet_babe::{Module, Call, Storage, Config, Inherent, ValidateUnsigned} = 31,
+		Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event, ValidateUnsigned} = 32,
+		Staking: pallet_staking::{Module, Call, Config<T>, Storage, Event<T>} = 33,
+		Session: pallet_session::{Module, Call, Storage, Event, Config<T>} = 34,
+		Historical: pallet_session_historical::{Module} = 35,
+		Offences: pallet_offences::{Module, Call, Storage, Event} = 36,
+		ImOnline: pallet_im_online::{Module, Call, Storage, Event<T>, ValidateUnsigned, Config<T>} = 37,
+		AuthorityDiscovery: pallet_authority_discovery::{Module, Call, Config} = 38,
 
 		// Proof of Commitment
-		TechCouncil: pallet_collective::<Instance1>::{Module, Call, Storage, Origin<T>, Event<T>, Config<T>},
-		Poc: module_poc::{Module, Call, Storage, Event<T>},
-
-		// Other
-		Authority: orml_authority::{Module, Call, Event<T>, Origin<T>},
-		Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
+		TechCouncil: pallet_collective::<Instance1>::{Module, Call, Storage, Origin<T>, Event<T>, Config<T>} = 50,
+		Poc: module_poc::{Module, Call, Storage, Event<T>} = 51,
 	}
 );
 

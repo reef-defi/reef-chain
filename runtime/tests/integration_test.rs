@@ -169,7 +169,7 @@ fn deploy_contract(account: AccountId) -> Result<H160, DispatchError> {
 
 #[test]
 fn test_authority_module() {
-	const AUTHORITY_ORIGIN_ID: u8 = 33u8;
+	const AUTHORITY_ORIGIN_ID: u8 = 10u8;
 
 	ExtBuilder::default()
 		.balances(vec![
