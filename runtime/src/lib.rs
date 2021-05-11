@@ -60,6 +60,7 @@ pub use frame_support::{
 		// Get,
 		// IsType,
 		// LockIdentifier,
+		WithdrawReasons,
 		KeyOwnerProofSystem, Randomness, EnsureOrigin, OriginTrait, U128CurrencyToVote,
 		schedule::Priority,
 	},
@@ -543,11 +544,28 @@ impl module_transaction_payment::Config for Runtime {
 	type WeightInfo = weights::transaction_payment::WeightInfo<Runtime>;
 }
 
+pub struct EvmAccountsOnClaimHandler;
+impl module_evm_accounts::Handler<AccountId> for EvmAccountsOnClaimHandler {
+	fn handle(who: &AccountId) -> DispatchResult {
+		if System::providers(who) == 0 {
+			// no provider. i.e. no native tokens
+			// ensure there are some native tokens, which will add provider
+			TransactionPayment::ensure_can_charge_fee(
+				who,
+				NativeTokenExistentialDeposit::get(),
+				WithdrawReasons::TRANSACTION_PAYMENT,
+			);
+		}
+		Ok(())
+	}
+}
+
 impl module_evm_accounts::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
 	type AddressMapping = EvmAddressMapping<Runtime>;
 	type MergeAccount = Currencies;
+	type OnClaim = EvmAccountsOnClaimHandler;
 	type WeightInfo = weights::evm_accounts::WeightInfo<Runtime>;
 }
 
