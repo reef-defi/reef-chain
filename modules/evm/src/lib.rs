@@ -360,6 +360,8 @@ pub mod module {
 		OutOfStorage,
 		/// Charge fee failed
 		ChargeFeeFailed,
+		/// Contract address conflicts with the system contract
+		ConflictContractAddress,
 	}
 
 	#[pallet::pallet]

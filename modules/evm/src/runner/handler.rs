@@ -21,6 +21,8 @@ use sp_runtime::{
 };
 use sp_std::{cmp::min, convert::Infallible, marker::PhantomData, prelude::*, rc::Rc};
 
+use primitives::SYSTEM_CONTRACT_ADDRESS_PREFIX;
+
 /// Storage key size and storage value size.
 pub const STORAGE_SIZE: u32 = 64;
 
@@ -189,8 +191,8 @@ impl<'vicinity, 'config, T: Config> Handler<'vicinity, 'config, '_, T> {
 		});
 	}
 
-	pub fn create_address(scheme: CreateScheme) -> H160 {
-		match scheme {
+	pub fn create_address(scheme: CreateScheme) -> Result<H160, ExitError> {
+		let address = match scheme {
 			CreateScheme::Create2 {
 				caller,
 				code_hash,
@@ -211,6 +213,14 @@ impl<'vicinity, 'config, T: Config> Handler<'vicinity, 'config, '_, T> {
 				H256::from_slice(Keccak256::digest(&stream.out()).as_slice()).into()
 			}
 			CreateScheme::Fixed(naddress) => naddress,
+		};
+
+		if address.as_bytes().starts_with(&SYSTEM_CONTRACT_ADDRESS_PREFIX) {
+			Err(ExitError::Other(
+				Into::<&str>::into(Error::<T>::ConflictContractAddress).into(),
+			))
+		} else {
+			Ok(address)
 		}
 	}
 
@@ -445,7 +455,12 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 		target_gas = min(target_gas, after_gas);
 		try_or_fail!(self.gasometer.record_cost(target_gas));
 
-		let address = Self::create_address(scheme);
+		let maybe_address = Self::create_address(scheme);
+		let address = if let Err(e) = maybe_address {
+			return Capture::Exit((ExitReason::Error(e), None, Vec::new()));
+		} else {
+			maybe_address.unwrap()
+		};
 		Self::inc_nonce(caller);
 
 		let origin = &self.vicinity.origin;

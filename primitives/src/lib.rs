@@ -21,6 +21,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(test)]
 mod tests;
 
+/// System contracts
+/// 0x00000000000...
+pub const SYSTEM_CONTRACT_ADDRESS_PREFIX: [u8; 11] = [0u8; 11];
 /// Ethereum precompiles
 /// 0 - 0x400
 /// Reef precompiles
