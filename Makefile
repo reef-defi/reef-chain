@@ -7,8 +7,8 @@ init:
 
 .PHONY: release
 release:
-	rustup install 1.52.0
-	rustup default 1.52.0
+	rustup install 1.51.0
+	rustup default 1.51.0
 	rustup toolchain install nightly-2021-05-09
 	rustup target add wasm32-unknown-unknown --toolchain nightly-2021-05-09
 	rm -rf target/
