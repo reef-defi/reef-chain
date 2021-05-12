@@ -1,7 +1,7 @@
 #![allow(clippy::upper_case_acronyms)]
 
 use frame_support::debug;
-use ethereum_types::U256;
+use ethereum_types::{U256, H160};
 use jsonrpc_core::{Error, ErrorCode, Result, Value};
 use rustc_hex::ToHex;
 use sp_api::ProvideRuntimeApi;
@@ -321,7 +321,12 @@ where
 	}
 
 
-	fn estimate_resources(&self, extrinsic: Bytes, at: Option<B>) -> Result<EstimateResourcesResponse> {
+	fn estimate_resources(
+		&self,
+		from: H160,
+		unsigned_extrinsic: Bytes,
+		at: Option<B>,
+	) -> Result<EstimateResourcesResponse> {
 		let hash = match at {
 			Some(hash) => hash.hash(),
 			None => self.client.info().best_hash,
@@ -329,12 +334,12 @@ where
 		let request = self
 			.client
 			.runtime_api()
-			.get_estimate_resources_request(&BlockId::Hash(hash), extrinsic.to_vec())
+			.get_estimate_resources_request(&BlockId::Hash(hash), unsigned_extrinsic.to_vec())
 			.map_err(|err| internal_err(format!("runtime error: {:?}", err)))?
 			.map_err(|err| internal_err(format!("execution fatal: {:?}", err)))?;
 
 		let request = CallRequest {
-			from: request.from,
+			from: Some(from),
 			to: request.to,
 			gas_limit: request.gas_limit,
 			storage_limit: request.storage_limit,
@@ -476,16 +481,18 @@ where
 				}
 			}
 
-			let uxt: <B as BlockT>::Extrinsic = Decode::decode(&mut &*extrinsic).map_err(|e| Error {
-				code: ErrorCode::InternalError,
-				message: "Unable to dry run extrinsic.".into(),
-				data: Some(format!("{:?}", e).into()),
-			})?;
+			let uxt: <B as BlockT>::Extrinsic =
+				Decode::decode(&mut &*unsigned_extrinsic)
+				.map_err(|e| Error {
+					code: ErrorCode::InternalError,
+					message: "Unable to dry run extrinsic.".into(),
+					data: Some(format!("{:?}", e).into()),
+				})?;
 
 			let fee = self
 				.client
 				.runtime_api()
-				.query_fee_details(&BlockId::Hash(hash), uxt, extrinsic.len() as u32)
+				.query_fee_details(&BlockId::Hash(hash), uxt, unsigned_extrinsic.len() as u32)
 				.map_err(|e| Error {
 					code: ErrorCode::InternalError,
 					message: "Unable to query fee details.".into(),
@@ -504,16 +511,18 @@ where
 		} else {
 			let (used_gas, used_storage) = calculate_gas_used(request)?;
 
-			let uxt: <B as BlockT>::Extrinsic = Decode::decode(&mut &*extrinsic).map_err(|e| Error {
-				code: ErrorCode::InternalError,
-				message: "Unable to dry run extrinsic.".into(),
-				data: Some(format!("{:?}", e).into()),
-			})?;
+			let uxt: <B as BlockT>::Extrinsic =
+				Decode::decode(&mut &*unsigned_extrinsic)
+				.map_err(|e| Error {
+					code: ErrorCode::InternalError,
+					message: "Unable to dry run extrinsic.".into(),
+					data: Some(format!("{:?}", e).into()),
+				})?;
 
 			let fee = self
 				.client
 				.runtime_api()
-				.query_fee_details(&BlockId::Hash(hash), uxt, extrinsic.len() as u32)
+				.query_fee_details(&BlockId::Hash(hash), uxt, unsigned_extrinsic.len() as u32)
 				.map_err(|e| Error {
 					code: ErrorCode::InternalError,
 					message: "Unable to query fee details.".into(),

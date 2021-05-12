@@ -1121,7 +1121,8 @@ impl_runtime_apis! {
 		}
 
 		fn get_estimate_resources_request(
-			extrinsic: Vec<u8>) -> Result<EstimateResourcesRequest, sp_runtime::DispatchError> {
+			extrinsic: Vec<u8>,
+		) -> Result<EstimateResourcesRequest, sp_runtime::DispatchError> {
 
 			let utx = UncheckedExtrinsic::decode(&mut &*extrinsic)
 				.map_err(|_| sp_runtime::DispatchError::Other("Invalid parameter extrinsic, decode failed"))?;
@@ -1150,17 +1151,7 @@ impl_runtime_apis! {
 				_ => None,
 			};
 
-			let mut request = request.ok_or(sp_runtime::DispatchError::Other("Invalid parameter extrinsic, not evm Call"))?;
-			let signature = utx.signature.ok_or(sp_runtime::DispatchError::Other("Invalid parameter signature, miss signature"))?;
-			let account = match signature.0 {
-				MultiAddress::Id(account) => Some(account),
-				_ => None,
-			}.ok_or(sp_runtime::DispatchError::Other("Invalid parameter signature, not MultiAddress::Id"))?;
-
-			request.from = Some(EvmAddressMapping::<Runtime>::get_evm_address(&account)
-								.ok_or(sp_runtime::DispatchError::Other("Invalid parameter signature, not mapping evm address"))?);
-
-			Ok(request)
+			request.ok_or(sp_runtime::DispatchError::Other("Invalid parameter extrinsic, not evm Call"))
 		}
 
 	}
