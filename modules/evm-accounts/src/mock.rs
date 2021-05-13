@@ -91,11 +91,19 @@ impl orml_currencies::Config for Runtime {
 }
 pub type AdaptedBasicCurrency = orml_currencies::BasicCurrencyAdapter<Runtime, Balances, Amount, BlockNumber>;
 
+pub struct EvmAccountsOnClaimHandler;
+impl evm_accounts::Handler<AccountId> for EvmAccountsOnClaimHandler {
+	fn handle(who: &AccountId) -> DispatchResult {
+		Ok(())
+	}
+}
+
 impl Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
 	type AddressMapping = EvmAddressMapping<Runtime>;
 	type MergeAccount = Currencies;
+	type OnClaim = EvmAccountsOnClaimHandler;
 	type WeightInfo = ();
 }
 

@@ -30,6 +30,7 @@ use sp_io::{
 use sp_runtime::{
 	traits::{LookupError, StaticLookup},
 	MultiAddress,
+	DispatchResult,
 };
 use sp_std::{marker::PhantomData, vec::Vec};
 
@@ -42,6 +43,10 @@ pub use module::*;
 pub trait WeightInfo {
 	fn claim_account() -> Weight;
 	fn claim_default_account() -> Weight;
+}
+
+pub trait Handler<T> {
+	fn handle(t: &T) -> DispatchResult;
 }
 
 pub type EcdsaSignature = ecdsa::Signature;
@@ -62,6 +67,9 @@ pub mod module {
 
 		/// Merge free balance from source to dest.
 		type MergeAccount: MergeAccount<Self::AccountId>;
+
+		/// On claim account hook.
+		type OnClaim: Handler<Self::AccountId>;
 
 		/// Weight information for the extrinsics in this module.
 		type WeightInfo: WeightInfo;
@@ -141,6 +149,8 @@ pub mod module {
 			Accounts::<T>::insert(eth_address, &who);
 			EvmAddresses::<T>::insert(&who, eth_address);
 
+			T::OnClaim::handle(&who)?;
+
 			Self::deposit_event(Event::ClaimAccount(who, eth_address));
 
 			Ok(().into())
@@ -154,6 +164,8 @@ pub mod module {
 			ensure!(!EvmAddresses::<T>::contains_key(&who), Error::<T>::AccountIdHasMapped);
 
 			let eth_address = T::AddressMapping::get_or_create_evm_address(&who);
+
+			T::OnClaim::handle(&who)?;
 
 			Self::deposit_event(Event::ClaimAccount(who, eth_address));
 

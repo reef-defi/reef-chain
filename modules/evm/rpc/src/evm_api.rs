@@ -1,6 +1,6 @@
 //! EVM rpc interface.
 
-use ethereum_types::U256;
+use ethereum_types::{U256, H160};
 use jsonrpc_core::Result;
 use jsonrpc_derive::rpc;
 use sp_core::Bytes;
@@ -22,5 +22,5 @@ pub trait EVMApi<BlockHash> {
 
 	/// Estimate resources needed for execution of given contract.
 	#[rpc(name = "evm_estimateResources")]
-	fn estimate_resources(&self, extrinsic: Bytes, at: Option<BlockHash>) -> Result<EstimateResourcesResponse>;
+	fn estimate_resources(&self, from: H160, unsigned_extrinsic: Bytes, at: Option<BlockHash>) -> Result<EstimateResourcesResponse>;
 }

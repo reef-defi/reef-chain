@@ -9,8 +9,8 @@ init:
 release:
 	rustup install 1.51.0
 	rustup default 1.51.0
-	rustup toolchain install nightly-2021-03-24
-	rustup target add wasm32-unknown-unknown --toolchain nightly-2021-03-24
+	rustup toolchain install nightly-2021-05-09
+	rustup target add wasm32-unknown-unknown --toolchain nightly-2021-05-09
 	rm -rf target/
 	cargo build --manifest-path node/Cargo.toml --features with-ethereum-compatibility --release
 
@@ -21,6 +21,12 @@ build:
 .PHONY: wasm
 wasm:
 	cargo build -p reef-runtime --features with-ethereum-compatibility --release
+
+.PHONY: genesis
+genesis:
+	make release
+	./target/release/reef-node build-spec --chain testnet > assets/chain_spec_testnet.json
+	./target/release/reef-node build-spec --chain mainnet > assets/chain_spec_mainnet.json
 
 .PHONY: check
 check:
