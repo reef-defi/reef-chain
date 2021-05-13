@@ -70,6 +70,8 @@ pallet-offences = { version = "3.0.0", default-features = false }
 sp-authority-discovery = { version = "3.0.0", default-features = false }
 pallet-authority-discovery = { version = "3.0.0", default-features = false }
 
+pallet-identity = { version = "3.0.0", default-features = false }
+
 
 # PoC
 pallet-collective = { version = "3.0.0", default-features = false }
@@ -130,6 +132,7 @@ std = [
 	"pallet-authority-discovery/std",
 	"pallet-im-online/std",
 	"pallet-offences/std",
+	"pallet-identity/std",
 
 	"sp-api/std",
 	"sp-block-builder/std",
