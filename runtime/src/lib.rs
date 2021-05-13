@@ -478,9 +478,33 @@ impl pallet_im_online::Config for Runtime {
 	type WeightInfo = ();
 }
 
+parameter_types! {
+	pub const BasicDeposit: Balance =      100 * REEF;
+	pub const FieldDeposit: Balance =        1 * REEF;
+	pub const SubAccountDeposit: Balance =  20 * REEF;
+	pub const MaxSubAccounts: u32 = 100;
+	pub const MaxAdditionalFields: u32 = 100;
+	pub const MaxRegistrars: u32 = 20;
+}
+
+impl pallet_identity::Config for Runtime {
+	type Event = Event;
+	type Currency = Balances;
+	type BasicDeposit = BasicDeposit;
+	type FieldDeposit = FieldDeposit;
+	type SubAccountDeposit = SubAccountDeposit;
+	type MaxSubAccounts = MaxSubAccounts;
+	type MaxAdditionalFields = MaxAdditionalFields;
+	type MaxRegistrars = MaxRegistrars;
+	type Slashed = ();
+	type ForceOrigin = EnsureRootOrTwoThridsTechCouncil;
+	type RegistrarOrigin = EnsureRootOrTwoThridsTechCouncil;
+	type WeightInfo = ();
+}
+
 
 parameter_types! {
-	pub const IndexDeposit: Balance = primitives::currency::DOLLARS;
+	pub const IndexDeposit: Balance = 1 * REEF;
 }
 
 impl pallet_indices::Config for Runtime {
@@ -788,6 +812,9 @@ construct_runtime!(
 		Offences: pallet_offences::{Module, Call, Storage, Event} = 36,
 		ImOnline: pallet_im_online::{Module, Call, Storage, Event<T>, ValidateUnsigned, Config<T>} = 37,
 		AuthorityDiscovery: pallet_authority_discovery::{Module, Call, Config} = 38,
+
+		// Identity
+		Identity: pallet_identity::{Module, Call, Storage, Event<T>} = 40,
 
 		// Proof of Commitment
 		TechCouncil: pallet_collective::<Instance1>::{Module, Call, Storage, Origin<T>, Event<T>, Config<T>} = 50,
