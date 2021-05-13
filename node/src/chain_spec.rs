@@ -400,6 +400,7 @@ fn testnet_genesis(
 		}),
 		module_evm: Some(EVMConfig {
 			accounts: evm_genesis_accounts,
+			deployer: root_key.clone(),
 		}),
 		pallet_sudo: Some(SudoConfig { key: root_key }),
 		pallet_collective_Instance1: Some(Default::default()),
@@ -485,6 +486,7 @@ fn mainnet_genesis(
 		}),
 		module_evm: Some(EVMConfig {
 			accounts: evm_genesis_accounts,
+			deployer: root_key.clone(),
 		}),
 		pallet_sudo: Some(SudoConfig { key: root_key }),
 		pallet_collective_Instance1: Some(Default::default()),

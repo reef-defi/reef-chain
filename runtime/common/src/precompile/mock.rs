@@ -357,6 +357,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		.unwrap();
 	module_evm::GenesisConfig::<Test> {
 		accounts,
+		deployer: Default::default(),
 	}
 	.assimilate_storage(&mut storage)
 	.unwrap();

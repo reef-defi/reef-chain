@@ -7,6 +7,7 @@
 use codec::Codec;
 use frame_support::{
 	pallet_prelude::*,
+	transactional,
 	traits::{
 		Currency as PalletCurrency, ExistenceRequirement, LockableCurrency as PalletLockableCurrency,
 		ReservableCurrency as PalletReservableCurrency, WithdrawReasons,
@@ -19,7 +20,6 @@ use orml_traits::{
 	BalanceStatus, BasicCurrency, BasicCurrencyExtended, BasicLockableCurrency, BasicReservableCurrency,
 	LockIdentifier, MultiCurrency, MultiCurrencyExtended, MultiLockableCurrency, MultiReservableCurrency,
 };
-use orml_utilities::with_transaction_result;
 use primitives::{
 	evm::{AddressMapping, EvmAddress},
 	CurrencyId, TokenSymbol,
@@ -827,17 +827,13 @@ where
 }
 
 impl<T: Config> MergeAccount<T::AccountId> for Pallet<T> {
+	#[transactional]
 	fn merge_account(source: &T::AccountId, dest: &T::AccountId) -> DispatchResult {
-		with_transaction_result(|| {
-			// transfer non-native free to dest
-			T::MultiCurrency::merge_account(source, dest)?;
+		// transfer non-native free to dest
+		T::MultiCurrency::merge_account(source, dest)?;
 
-			// unreserve all reserved currency
-			T::NativeCurrency::unreserve(source, T::NativeCurrency::reserved_balance(source));
-
-			// transfer all free to dest
-			T::NativeCurrency::transfer(source, dest, T::NativeCurrency::free_balance(source))
-		})
+		// transfer all free to dest
+		T::NativeCurrency::transfer(source, dest, T::NativeCurrency::free_balance(source))
 	}
 }
 

@@ -193,6 +193,7 @@ impl ExtBuilder {
 		);
 		module_evm::GenesisConfig::<Runtime> {
 			accounts,
+			deployer: Default::default(),
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();

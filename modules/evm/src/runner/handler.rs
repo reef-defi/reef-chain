@@ -10,7 +10,7 @@ use evm::{Capture, Context, CreateScheme, ExitError, ExitReason, Opcode, Runtime
 use evm_gasometer::{self as gasometer, Gasometer};
 use evm_runtime::{Config as EvmRuntimeConfig, Handler as HandlerT};
 use frame_support::{
-	debug, require_transactional,
+	debug,
 	traits::{BalanceStatus, Currency, ExistenceRequirement, Get, ReservableCurrency},
 };
 use primitive_types::{H160, H256, U256};
@@ -50,10 +50,7 @@ impl<'vicinity, 'config, T: Config> Handler<'vicinity, 'config, '_, T> {
 		f: F,
 	) -> Result<R, DispatchError> {
 		frame_support::storage::with_transaction(|| {
-			let mut storage_meter_handler = StorageMeterHandlerImpl::<T> {
-				origin: vicinity.origin,
-				_marker: PhantomData,
-			};
+			let mut storage_meter_handler = StorageMeterHandlerImpl::<T>::new(vicinity.origin);
 			let storage_meter = match StorageMeter::new(&mut storage_meter_handler, contract, storage_limit) {
 				Ok(x) => x,
 				Err(e) => return TransactionOutcome::Rollback(Err(e)),
@@ -225,15 +222,18 @@ impl<'vicinity, 'config, T: Config> Handler<'vicinity, 'config, '_, T> {
 	}
 
 	// is contract && not deployed
-	pub fn is_undeployed_contract(address: &H160) -> bool {
+	pub fn can_call_contract(address: &H160, caller: &H160) -> bool {
 		if let Some(AccountInfo {
-			contract_info: Some(ContractInfo { deployed, .. }),
+			contract_info: Some(ContractInfo {
+				deployed, maintainer, ..
+			}),
 			..
 		}) = Accounts::<T>::get(address)
 		{
-			!deployed
+			deployed || maintainer == *caller || Self::has_permission_to_call(caller)
 		} else {
-			false
+			// evm compatible
+			true
 		}
 	}
 
@@ -397,9 +397,15 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 		}
 
 		match storage_change {
-			StorageChange::Added => self.storage_meter.charge(STORAGE_SIZE),
-			StorageChange::Removed => self.storage_meter.refund(STORAGE_SIZE),
-			_ => Ok(()),
+			StorageChange::Added => {
+				Pallet::<T>::update_contract_storage_size(&address, STORAGE_SIZE as i32);
+				self.storage_meter.charge(STORAGE_SIZE)
+			}
+			StorageChange::Removed => {
+				Pallet::<T>::update_contract_storage_size(&address, -(STORAGE_SIZE as i32));
+				self.storage_meter.refund(STORAGE_SIZE)
+			}
+			StorageChange::None => Ok(()),
 		}
 		.map_err(|_| ExitError::OutOfGas)
 	}
@@ -414,17 +420,12 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 		if self.is_static {
 			return Err(ExitError::OutOfGas);
 		}
-
-		let source = T::AddressMapping::get_account_id(&address);
-		let dest = T::AddressMapping::get_account_id(&target);
-
-		let size = Pallet::<T>::remove_account(&address)?;
-
+		let storage = Pallet::<T>::remove_contract(&address, &target)
+			.map_err(|e| ExitError::Other(Into::<&str>::into(e).into()))?;
 		self.storage_meter
-			.refund(size.saturating_add(T::NewContractExtraBytes::get()))
-			.map_err(|_| ExitError::Other("RefundStorageError".into()))?;
-
-		T::MergeAccount::merge_account(&source, &dest).map_err(|_| ExitError::Other("MergeAccountError".into()))
+			.refund(storage)
+			.map_err(|e| ExitError::Other(Into::<&str>::into(e).into()))?;
+ 		Ok(())
 	}
 
 	fn create(
@@ -642,9 +643,18 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 	}
 }
 
-struct StorageMeterHandlerImpl<T: Config> {
+pub struct StorageMeterHandlerImpl<T: Config> {
 	origin: H160,
 	_marker: PhantomData<T>,
+}
+
+impl<T: Config> StorageMeterHandlerImpl<T> {
+	pub fn new(origin: H160) -> Self {
+		Self {
+			origin,
+			_marker: Default::default(),
+		}
+	}
 }
 
 impl<T: Config> StorageMeterHandler for StorageMeterHandlerImpl<T> {
@@ -689,7 +699,6 @@ impl<T: Config> StorageMeterHandler for StorageMeterHandlerImpl<T> {
 		Ok(())
 	}
 
-	#[require_transactional]
 	fn charge_storage(&mut self, contract: &H160, used: u32, refunded: u32) -> DispatchResult {
 		if used == refunded {
 			return Ok(());
@@ -719,7 +728,8 @@ impl<T: Config> StorageMeterHandler for StorageMeterHandlerImpl<T> {
 			let amount = T::StorageDepositPerByte::get().saturating_mul(storage.into());
 
 			// user can't be a dead account
-			T::Currency::repatriate_reserved(&contract_acc, &user, amount, BalanceStatus::Reserved)?;
+			let val = T::Currency::repatriate_reserved(&contract_acc, &user, amount, BalanceStatus::Reserved)?;
+			debug_assert!(val.is_zero());
 		};
 
 		Ok(())

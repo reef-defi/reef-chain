@@ -96,8 +96,6 @@ pub mod module {
 		InvalidSignature,
 		/// Account ref count is not zero
 		NonZeroRefCount,
-		/// Account still has active reserved
-		StillHasActiveReserved,
 	}
 
 	#[pallet::storage]

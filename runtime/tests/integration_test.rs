@@ -25,6 +25,8 @@ use sp_runtime::{
 	DispatchError, DispatchResult, FixedPointNumber, MultiAddress,
 };
 
+use module_evm_accounts::EvmAddressMapping;
+
 use primitives::currency::*;
 
 const ALICE: [u8; 32] = [4u8; 32];
@@ -535,3 +537,58 @@ fn test_evm_module() {
 			}
 		});
 }
+
+// TODO
+// #[test]
+// fn should_not_kill_contract_on_transfer_all() {
+// 	ExtBuilder::default()
+// 		.balances(vec![
+// 			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1000 * REEF)),
+// 			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1000 * REEF)),
+// 		])
+// 		.build()
+// 		.execute_with(|| {
+// 			// pragma solidity ^0.5.0;
+// 			//
+// 			// contract Test {
+// 			// 	 constructor() public payable {
+// 			// 	 }
+// 			// }
+// 			let code = hex_literal::hex!("6080604052603e8060116000396000f3fe6080604052600080fdfea265627a7a72315820e816b34c9ce8a2446f3d059b4907b4572645fde734e31dabf5465c801dcb44a964736f6c63430005110032").to_vec();
+//
+// 			assert_ok!(EVM::create(Origin::signed(AccountId::from(ALICE)), code, 2 * REEF, 1000000000, 1000000000));
+//
+// 			let contract = if let Event::module_evm(module_evm::Event::Created(address)) = System::events().iter().last().unwrap().event {
+// 				address
+// 			} else {
+// 				panic!("deploy contract failed");
+// 			};
+//
+// 			assert_eq!(Balances::free_balance(EvmAddressMapping::<Runtime>::get_account_id(&contract)), 2 * REEF);
+//
+// 			#[cfg(not(feature = "with-ethereum-compatibility"))]
+// 			assert_eq!(Balances::free_balance(AccountId::from(ALICE)), 997_999_899_380_000);
+//
+// 			#[cfg(feature = "with-ethereum-compatibility")]
+// 			assert_eq!(Balances::free_balance(AccountId::from(ALICE)), 998 * REEF);
+//
+// 			assert_ok!(Currencies::transfer(
+// 				Origin::signed(EvmAddressMapping::<Runtime>::get_account_id(&contract)),
+// 				AccountId::from(ALICE),
+// 				CurrencyId::Token(TokenSymbol::REEF),
+// 				2 * REEF
+// 			));
+//
+// 			assert_eq!(Balances::free_balance(EvmAddressMapping::<Runtime>::get_account_id(&contract)), 0);
+//
+// 			#[cfg(not(feature = "with-ethereum-compatibility"))]
+// 			assert_eq!(Balances::free_balance(AccountId::from(ALICE)), 999_999_899_380_000);
+//
+// 			#[cfg(feature = "with-ethereum-compatibility")]
+// 			assert_eq!(Balances::free_balance(AccountId::from(ALICE)), 1000 * REEF);
+//
+// 			// assert the contract account is not purged
+// 			assert!(EVM::accounts(contract).is_some());
+// 		});
+// }
+//

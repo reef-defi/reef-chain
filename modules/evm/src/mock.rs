@@ -43,7 +43,7 @@ impl frame_system::Config for Test {
 	type PalletInfo = PalletInfo;
 	type AccountData = pallet_balances::AccountData<u64>;
 	type OnNewAccount = ();
-	type OnKilledAccount = ();
+	type OnKilledAccount = crate::CallKillAccount<Test>;
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
 }
@@ -238,6 +238,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		.unwrap();
 	evm_mod::GenesisConfig::<Test> {
 		accounts,
+		deployer: Default::default(),
 	}
 	.assimilate_storage(&mut t)
 	.unwrap();

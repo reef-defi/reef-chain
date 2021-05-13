@@ -170,8 +170,8 @@ pub type UncheckedExtrinsic = sp_runtime::generic::UncheckedExtrinsic<u32, Call,
 frame_support::construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
-	NodeBlock = Block,
-	UncheckedExtrinsic = UncheckedExtrinsic
+		NodeBlock = Block,
+		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		System: frame_system::{Module, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
@@ -197,6 +197,7 @@ pub fn bob() -> AccountId {
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
 pub const BOB: AccountId = AccountId::new([2u8; 32]);
 pub const EVA: AccountId = AccountId::new([5u8; 32]);
+pub const DEPLOYER: AccountId = AccountId::new([42u8; 32]);
 
 pub const ID_1: LockIdentifier = *b"1       ";
 
@@ -210,7 +211,7 @@ pub struct ExtBuilder {
 impl Default for ExtBuilder {
 	fn default() -> Self {
 		Self {
-			endowed_accounts: vec![],
+			endowed_accounts: vec![(DEPLOYER, NATIVE_CURRENCY_ID, 100_000)],
 		}
 	}
 }
@@ -236,8 +237,7 @@ impl ExtBuilder {
 			.unwrap();
 
 		pallet_balances::GenesisConfig::<Runtime> {
-			balances: self
-				.endowed_accounts
+			balances: self.endowed_accounts
 				.clone()
 				.into_iter()
 				.filter(|(_, currency_id, _)| *currency_id == NATIVE_CURRENCY_ID)
@@ -278,6 +278,7 @@ impl ExtBuilder {
 		);
 		module_evm::GenesisConfig::<Runtime> {
 			accounts,
+			deployer: DEPLOYER,
 		}
 		.assimilate_storage(&mut t)
 		.unwrap();

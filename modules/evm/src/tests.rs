@@ -3,8 +3,8 @@
 use super::*;
 use mock::{Event, *};
 
-use crate::runner::handler::Handler;
-use frame_support::{assert_noop, assert_ok};
+use crate::runner::handler::{Handler, STORAGE_SIZE};
+use frame_support::{assert_noop, assert_ok, assert_err};
 use sp_core::{
 	bytes::{from_hex, to_hex},
 	H160,
@@ -101,9 +101,27 @@ fn should_create_and_call_contract() {
 			U256::from(result.output.as_slice())
 		);
 
-		assert_eq!(Module::<Test>::account_basic(&caller).nonce, U256::from_str("03").unwrap());
+		assert_eq!(Pallet::<Test>::account_basic(&caller).nonce, 3.into());
 
-		assert_eq!(Module::<Test>::account_basic(&contract_address).nonce, U256::from_str("01").unwrap());
+		let code_hash = H256::from_str("164981e02df203a0fb32a0af7c2cd1cc7f9df7bb49a4d2b0219307bb68a4b603").unwrap();
+		let code_size = 184u32;
+
+		assert_eq!(Accounts::<Test>::get(&contract_address), Some(AccountInfo {
+			nonce: 1,
+			contract_info: Some(ContractInfo {
+				code_hash,
+				maintainer: alice(),
+				deployed: true
+			}),
+			developer_deposit: None,
+		}));
+
+		assert_eq!(ContractStorageSizes::<Test>::get(&contract_address), code_size + NewContractExtraBytes::get());
+		assert_eq!(CodeInfos::<Test>::get(&code_hash), Some(CodeInfo {
+			code_size,
+			ref_count: 1,
+		}));
+		assert!(Codes::<Test>::contains_key(&code_hash));
 	});
 }
 
@@ -241,6 +259,14 @@ fn should_deploy_payable_contract() {
 
 		assert_eq!(balance(alice()), alice_balance - amount);
 		assert_eq!(balance(contract_address), 2 * amount);
+
+		assert_eq!(
+			AccountStorages::<Test>::iter_prefix(&contract_address).collect::<Vec<_>>(),
+			vec![(
+				H256::from_str("0x0000000000000000000000000000000000000000000000000000000000000000").unwrap(),
+				H256::from_slice(stored_value.as_slice())
+			)]
+		);
 	});
 }
 
@@ -659,9 +685,21 @@ fn should_deploy() {
 		// multiply(2, 3)
 		let multiply = from_hex("0x165c4a1600000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003").unwrap();
 
+		// contract maintainer can call
+		assert_ok!(Runner::<Test>::call(
+			alice(),
+			alice(),
+			contract_address,
+			multiply.clone(),
+			0,
+			1000000,
+			1000000,
+			<Test as Config>::config(),
+		));
+
 		// call method `multiply` will fail, not deployed yet
 		assert_noop!(Runner::<Test>::call(
-			alice(),
+			bob(),
 			alice(),
 			contract_address,
 			multiply.clone(),
@@ -734,7 +772,7 @@ fn should_deploy_free() {
 
 		// call method `multiply` will fail, not deployed yet
 		assert_noop!(Runner::<Test>::call(
-			alice(),
+			bob(),
 			alice(),
 			contract_address,
 			multiply.clone(),
@@ -746,12 +784,9 @@ fn should_deploy_free() {
 
 		assert_ok!(EVM::deploy_free(Origin::signed(CouncilAccount::get()), contract_address));
 
-		// multiply(2, 3)
-		let multiply = from_hex("0x165c4a1600000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003").unwrap();
-
 		// call method `multiply`
 		assert_ok!(Runner::<Test>::call(
-			alice(),
+			bob(),
 			alice(),
 			contract_address,
 			multiply.clone(),
@@ -891,33 +926,57 @@ fn should_selfdestruct() {
 	// 	 	return a * b;
 	// 	 }
 	// }
-	let contract = from_hex("0x608060405234801561001057600080fd5b5060b88061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063165c4a1614602d575b600080fd5b606060048036036040811015604157600080fd5b8101908080359060200190929190803590602001909291905050506076565b6040518082815260200191505060405180910390f35b600081830290509291505056fea265627a7a723158201f3db7301354b88b310868daf4395a6ab6cd42d16b1d8e68cdf4fdd9d34fffbf64736f6c63430005110032").unwrap();
+	let mut contract = from_hex("0x608060405234801561001057600080fd5b5060b88061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063165c4a1614602d575b600080fd5b606060048036036040811015604157600080fd5b8101908080359060200190929190803590602001909291905050506076565b6040518082815260200191505060405180910390f35b600081830290509291505056fea265627a7a723158201f3db7301354b88b310868daf4395a6ab6cd42d16b1d8e68cdf4fdd9d34fffbf64736f6c63430005110032").unwrap();
 
 	new_test_ext().execute_with(|| {
 		let alice_account_id = <Test as Config>::AddressMapping::get_account_id(&alice());
 		let bob_account_id = <Test as Config>::AddressMapping::get_account_id(&bob());
 
-		// create contract
-		let result = Runner::<Test>::create(
-			alice(),
-			contract.clone(),
-			0,
-			21_000_000,
-			21_000_000,
-			<Test as Config>::config(),
-		)
-		.unwrap();
+
+		let amount = 1000u64;
+		let stored_value: Vec<u8> =
+			from_hex("0x000000000000000000000000000000000000000000000000000000000000007b").unwrap();
+		contract.append(&mut stored_value.clone());
+
+		let result =
+			Runner::<Test>::create(alice(), contract, amount, 100000, 100000, <Test as Config>::config()).unwrap();
+
 		let contract_address = result.address;
-		assert_eq!(result.used_storage, 284);
-		let alice_balance = INITIAL_BALANCE - 284 * <Test as Config>::StorageDepositPerByte::get();
+		assert_eq!(result.used_storage, 287);
+		let alice_balance = INITIAL_BALANCE - 287 * <Test as Config>::StorageDepositPerByte::get() - amount;
 
 		assert_eq!(balance(alice()), alice_balance);
+
+		let code_hash = H256::from_str("21fe816097a50d298f819bc6d40cff473c43c87d99bcd7d3c3b2b85417f66f5a").unwrap();
+		let code_size = 123u32;
+
+		assert_eq!(
+			ContractStorageSizes::<Test>::get(&contract_address),
+			code_size + NewContractExtraBytes::get() + STORAGE_SIZE
+		);
+		assert_eq!(
+			CodeInfos::<Test>::get(&code_hash),
+			Some(CodeInfo {
+				code_size,
+				ref_count: 1,
+			})
+		);
+		assert!(Codes::<Test>::contains_key(&code_hash));
 
 		assert_noop!(
 			EVM::selfdestruct(Origin::signed(bob_account_id), contract_address),
 			Error::<Test>::NoPermission
 		);
 		assert_ok!(EVM::selfdestruct(Origin::signed(alice_account_id), contract_address));
+
+		let contract_account_id = <Test as Config>::AddressMapping::get_account_id(&contract_address);
+
+		assert!(!System::account_exists(&contract_account_id));
+		assert!(!Accounts::<Test>::contains_key(&contract_address));
+		assert!(!ContractStorageSizes::<Test>::contains_key(&contract_address));
+		assert_eq!(AccountStorages::<Test>::iter_prefix(&contract_address).count(), 0);
+		assert!(!CodeInfos::<Test>::contains_key(&code_hash));
+		assert!(!Codes::<Test>::contains_key(&code_hash));
 	});
 }
 
@@ -1028,6 +1087,96 @@ fn storage_limit_should_work() {
 		.unwrap();
 		assert_eq!(result.exit_reason, ExitReason::Succeed(ExitSucceed::Stopped));
 		assert_eq!(result.used_storage, 452);
+	});
+}
+
+#[test]
+fn should_update_storage() {
+	// pragma solidity ^0.5.0;
+	//
+	// contract Test {
+	//     mapping(address => uint256) public values;
+	//
+	//     constructor() public {
+	//         values[msg.sender] = 42;
+	//     }
+	//
+	//     function set(uint val) public {
+	//      values[msg.sender] = val;
+	//     }
+	// }
+
+	let contract = from_hex(
+		"0x608060405234801561001057600080fd5b50602a6000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200190815260200160002081905550610154806100646000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c806354fe9fd71461003b57806360fe47b114610093575b600080fd5b61007d6004803603602081101561005157600080fd5b81019080803573ffffffffffffffffffffffffffffffffffffffff1690602001909291905050506100c1565b6040518082815260200191505060405180910390f35b6100bf600480360360208110156100a957600080fd5b81019080803590602001909291905050506100d9565b005b60006020528060005260406000206000915090505481565b806000803373ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff168152602001908152602001600020819055505056fea265627a7a723158207ab6991e97c9c12f57d81df0c7f955435418354adeb26116b581d7f2f035ca8f64736f6c63430005110032"
+	).unwrap();
+
+	new_test_ext().execute_with(|| {
+		// create contract
+		let result = Runner::<Test>::create(alice(), contract, 0, 500000, 100000, <Test as Config>::config()).unwrap();
+
+		let contract_address = result.address;
+
+		let code_size = 340u32;
+
+		let mut used_storage = code_size + NewContractExtraBytes::get() + STORAGE_SIZE;
+
+		assert_eq!(result.used_storage, used_storage as i32);
+
+		assert_eq!(ContractStorageSizes::<Test>::get(&contract_address), used_storage);
+
+		#[cfg(not(feature = "with-ethereum-compatibility"))]
+		deploy_free(contract_address);
+
+		// call method `set(123)`
+		assert_err!(
+			Runner::<Test>::call(
+				bob(),
+				alice(),
+				contract_address,
+				from_hex("0x60fe47b1000000000000000000000000000000000000000000000000000000000000007b").unwrap(),
+				0,
+				1000000,
+				0,
+				<Test as Config>::config(),
+			),
+			DispatchError::Other("OutOfStorage")
+		);
+
+		// call method `set(123)`
+		let result = Runner::<Test>::call(
+			bob(),
+			alice(),
+			contract_address,
+			from_hex("0x60fe47b1000000000000000000000000000000000000000000000000000000000000007b").unwrap(),
+			0,
+			1000000,
+			STORAGE_SIZE,
+			<Test as Config>::config(),
+		)
+		.unwrap();
+
+		used_storage += STORAGE_SIZE;
+
+		assert_eq!(result.used_storage, STORAGE_SIZE as i32);
+		assert_eq!(ContractStorageSizes::<Test>::get(&contract_address), used_storage);
+
+		// call method `set(0)`
+		let result = Runner::<Test>::call(
+			bob(),
+			alice(),
+			contract_address,
+			from_hex("0x60fe47b10000000000000000000000000000000000000000000000000000000000000000").unwrap(),
+			0,
+			1000000,
+			STORAGE_SIZE,
+			<Test as Config>::config(),
+		)
+		.unwrap();
+
+		used_storage -= STORAGE_SIZE;
+
+		assert_eq!(result.used_storage, -(STORAGE_SIZE as i32));
+		assert_eq!(ContractStorageSizes::<Test>::get(&contract_address), used_storage);
 	});
 }
 
