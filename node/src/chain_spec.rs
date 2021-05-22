@@ -420,8 +420,8 @@ fn mainnet_genesis(
 
 	let balances = initial_authorities
 		.iter()
-		.map(|x| (x.0.clone(), INITIAL_STAKING))
-		.chain(endowed_accounts)
+		.map(|x| (x.0.clone(), INITIAL_STAKING*2))
+		.chain(endowed_accounts.iter().cloned().map(|x| (x.0.clone(), x.1 * REEF)))
 		.chain(
 			get_all_module_accounts()
 				.iter()
