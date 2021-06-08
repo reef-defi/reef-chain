@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use crate::{AllPrecompiles, BlockWeights, Ratio, SystemContractsFilter, Weight};
+use crate::{AllPrecompiles, BlockWeights, SystemContractsFilter, Weight};
 use codec::{Decode, Encode};
 use frame_support::{
 	assert_ok, ord_parameter_types, parameter_types,
@@ -9,7 +9,7 @@ use frame_support::{
 	RuntimeDebug,
 };
 use frame_system::{EnsureRoot, EnsureSignedBy};
-use orml_traits::{parameter_type_with_key, MultiReservableCurrency};
+use orml_traits::{parameter_type_with_key};
 pub use primitives::{
 	evm::AddressMapping, mocks::MockAddressMapping,
 	Amount, BlockNumber, CurrencyId, Header, Nonce, TokenSymbol,
@@ -17,7 +17,7 @@ pub use primitives::{
 use sp_core::{crypto::AccountId32, bytes::from_hex, Bytes, H160, H256};
 use sp_runtime::{
 	traits::{BlakeTwo256, Convert, IdentityLookup},
-	DispatchResult, FixedPointNumber, FixedU128, ModuleId, Perbill,
+	Perbill,
 };
 use sp_std::{collections::btree_map::BTreeMap, str::FromStr};
 

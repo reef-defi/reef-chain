@@ -10,10 +10,10 @@ use primitives::{evm::EvmAddress, mocks::MockAddressMapping, Amount, TokenSymbol
 use smallvec::smallvec;
 use sp_core::{crypto::AccountId32, H256};
 use sp_runtime::{
-	testing::Header, traits::IdentityLookup, DispatchError, DispatchResult, FixedPointNumber, ModuleId, Perbill,
+	testing::Header, traits::IdentityLookup, DispatchError, DispatchResult, Perbill,
 };
 use sp_std::cell::RefCell;
-use support::{EVMBridge, InvokeContext, Ratio};
+use support::{EVMBridge, InvokeContext};
 
 pub type AccountId = AccountId32;
 pub type BlockNumber = u64;
