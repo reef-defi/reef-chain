@@ -3,7 +3,7 @@ use super::*;
 use crate::precompile::{
 	mock::{
 		alice, bob, get_task_id, new_test_ext, run_to_block, Balances, Event as TestEvent,
-		Origin, Price, ScheduleCallPrecompile, System, Test,
+		Origin, ScheduleCallPrecompile, System, Test,
 		REEF_ERC20_ADDRESS, ALICE, RUSD,
 	},
 	schedule_call::TaskInfo,

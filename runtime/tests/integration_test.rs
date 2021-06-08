@@ -166,7 +166,7 @@ fn deploy_contract(account: AccountId) -> Result<H160, DispatchError> {
 
 #[test]
 fn test_authority_module() {
-	const AUTHORITY_ORIGIN_ID: u8 = 10u8;
+	const _AUTHORITY_ORIGIN_ID: u8 = 10u8;
 
 	ExtBuilder::default()
 		.balances(vec![
@@ -179,7 +179,7 @@ fn test_authority_module() {
 		.build()
 		.execute_with(|| {
 			let ensure_root_call = Call::System(frame_system::Call::fill_block(Perbill::one()));
-			let call = Call::Authority(orml_authority::Call::dispatch_as(
+			let _call = Call::Authority(orml_authority::Call::dispatch_as(
 				AuthoritysOriginId::Root,
 				Box::new(ensure_root_call.clone()),
 			));
