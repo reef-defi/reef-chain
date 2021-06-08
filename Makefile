@@ -16,7 +16,7 @@ release:
 
 .PHONY: build
 build:
-	cargo build --manifest-path node/Cargo.toml --features runtime-benchmarks,with-ethereum-compatibility --release
+	cargo build --manifest-path node/Cargo.toml --features runtime-benchmarks,with-ethereum-compatibility
 
 .PHONY: wasm
 wasm:
