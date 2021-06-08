@@ -8,10 +8,9 @@ init:
 .PHONY: release
 release:
 	rustup install 1.51.0
-	rustup default 1.51.0
+	rustup default 1.51.0  # TODO: Do not set the default toolchain here (it's obscure and super unexpected).
 	rustup toolchain install nightly-2021-05-09
 	rustup target add wasm32-unknown-unknown --toolchain nightly-2021-05-09
-	rm -rf target/
 	cargo build --manifest-path node/Cargo.toml --features with-ethereum-compatibility --release
 
 .PHONY: build
