@@ -22,8 +22,7 @@ wasm:
 	cargo build -p reef-runtime --features with-ethereum-compatibility --release
 
 .PHONY: genesis
-genesis:
-	make release
+genesis: release
 	./target/release/reef-node build-spec --chain testnet > assets/chain_spec_testnet.json
 	./target/release/reef-node build-spec --chain mainnet > assets/chain_spec_mainnet.json
 
