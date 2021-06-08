@@ -63,7 +63,7 @@ impl pallet_balances::Config for Runtime {
 }
 
 parameter_type_with_key! {
-	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
 		Default::default()
 	};
 }
@@ -93,7 +93,7 @@ pub type AdaptedBasicCurrency = orml_currencies::BasicCurrencyAdapter<Runtime, B
 
 pub struct EvmAccountsOnClaimHandler;
 impl evm_accounts::Handler<AccountId> for EvmAccountsOnClaimHandler {
-	fn handle(who: &AccountId) -> DispatchResult {
+	fn handle(_who: &AccountId) -> DispatchResult {
 		Ok(())
 	}
 }

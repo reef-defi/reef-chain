@@ -1,7 +1,7 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::upper_case_acronyms)]
 
-use codec::{Decode, Encode, FullCodec, HasCompact};
+use codec::{Decode, Encode};
 use frame_support::pallet_prelude::Weight;
 use primitives::evm::{CallInfo, EvmAddress};
 use sp_core::H160;
@@ -12,7 +12,6 @@ use sp_runtime::{
 };
 use sp_std::{
 	cmp::{Eq, PartialEq},
-	fmt::Debug,
 	prelude::*,
 };
 

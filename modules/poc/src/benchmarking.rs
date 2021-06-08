@@ -1,10 +1,9 @@
 #![cfg(feature = "runtime-benchmarks")]
 
-use crate::{*, Module as Poc};
+use crate::{*};
 use frame_benchmarking::{benchmarks, account, impl_benchmark_test_suite};
 use frame_system::RawOrigin;
-use primitives::{Balance, currency::REEF, time::DAYS};
-use sp_std::prelude::*;
+use primitives::{currency::REEF, time::DAYS};
 
 benchmarks! {
 	where_clause { where BalanceOf<T>: From<u128> }
@@ -26,12 +25,12 @@ benchmarks! {
 			T::Currency::deposit_creating(&voter, BalanceOf::<T>::from(100_001 * REEF));
 			T::Currency::deposit_creating(&candidate, BalanceOf::<T>::from(1_000_001 * REEF));
 
-			Pallet::<T>::start_candidacy(
+			let _ = Pallet::<T>::start_candidacy(
 				RawOrigin::Signed(candidate.clone()).into()
 			);
 
 			let amount: BalanceOf<T> = BalanceOf::<T>::from(100_000 * REEF);
-			Pallet::<T>::commit(
+			let _ = Pallet::<T>::commit(
 				RawOrigin::Signed(voter.clone()).into(),
 				amount,
 				LockDuration::OneYear,
@@ -60,7 +59,7 @@ benchmarks! {
 		let deposit: BalanceOf<T> = BalanceOf::<T>::from(1_000_001 * REEF);
 		T::Currency::deposit_creating(&alice, deposit);
 
-		Pallet::<T>::start_candidacy(
+		let _ = Pallet::<T>::start_candidacy(
 			RawOrigin::Signed(alice.clone()).into(),
 		);
 
@@ -89,7 +88,7 @@ benchmarks! {
 		let amount: BalanceOf<T> = BalanceOf::<T>::from(100_000 * REEF);
 
 		// she makes initial commitment
-		Pallet::<T>::commit(
+		let _ = Pallet::<T>::commit(
 			RawOrigin::Signed(alice.clone()).into(),
 			amount,
 			LockDuration::OneYear,
@@ -109,7 +108,7 @@ benchmarks! {
 		let amount: BalanceOf<T> = BalanceOf::<T>::from(100_000 * REEF);
 
 		// she makes initial commitment
-		Pallet::<T>::commit(
+		let _ = Pallet::<T>::commit(
 			RawOrigin::Signed(alice.clone()).into(),
 			amount,
 			LockDuration::OneYear,
@@ -129,7 +128,7 @@ benchmarks! {
 		let amount: BalanceOf<T> = BalanceOf::<T>::from(100_000 * REEF);
 
 		// she makes initial commitment
-		Pallet::<T>::commit(
+		let _ = Pallet::<T>::commit(
 			RawOrigin::Signed(alice.clone()).into(),
 			amount,
 			LockDuration::OneMonth,
@@ -137,7 +136,7 @@ benchmarks! {
 		);
 
 		// she unbonds
-		Pallet::<T>::unbond(
+		let _ = Pallet::<T>::unbond(
 			RawOrigin::Signed(alice.clone()).into(),
 		);
 
@@ -158,7 +157,7 @@ benchmarks! {
 		let amount: BalanceOf<T> = BalanceOf::<T>::from(100_000 * REEF);
 
 		// she makes initial commitment
-		Pallet::<T>::commit(
+		let _ = Pallet::<T>::commit(
 			RawOrigin::Signed(alice.clone()).into(),
 			amount,
 			LockDuration::OneYear,

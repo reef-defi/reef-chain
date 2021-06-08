@@ -1,6 +1,6 @@
 #![cfg(test)]
 
-use crate::{AllPrecompiles, BlockWeights, Ratio, SystemContractsFilter, Weight};
+use crate::{AllPrecompiles, BlockWeights, SystemContractsFilter, Weight};
 use codec::{Decode, Encode};
 use frame_support::{
 	assert_ok, ord_parameter_types, parameter_types,
@@ -9,7 +9,7 @@ use frame_support::{
 	RuntimeDebug,
 };
 use frame_system::{EnsureRoot, EnsureSignedBy};
-use orml_traits::{parameter_type_with_key, MultiReservableCurrency};
+use orml_traits::{parameter_type_with_key};
 pub use primitives::{
 	evm::AddressMapping, mocks::MockAddressMapping,
 	Amount, BlockNumber, CurrencyId, Header, Nonce, TokenSymbol,
@@ -17,13 +17,11 @@ pub use primitives::{
 use sp_core::{crypto::AccountId32, bytes::from_hex, Bytes, H160, H256};
 use sp_runtime::{
 	traits::{BlakeTwo256, Convert, IdentityLookup},
-	DispatchResult, FixedPointNumber, FixedU128, ModuleId, Perbill,
+	Perbill,
 };
 use sp_std::{collections::btree_map::BTreeMap, str::FromStr};
 
 pub type AccountId = AccountId32;
-type Key = CurrencyId;
-pub type Price = FixedU128;
 type Balance = u128;
 
 parameter_types! {
@@ -63,7 +61,7 @@ impl pallet_timestamp::Config for Test {
 }
 
 parameter_type_with_key! {
-	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
 		Default::default()
 	};
 }
@@ -266,8 +264,6 @@ impl module_evm::Config for Test {
 }
 
 pub const ALICE: AccountId = AccountId::new([1u8; 32]);
-pub const BOB: AccountId = AccountId::new([2u8; 32]);
-pub const EVA: AccountId = AccountId::new([5u8; 32]);
 
 pub fn alice() -> H160 {
 	H160([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1])

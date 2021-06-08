@@ -53,6 +53,7 @@ fn charges_fee() {
 				.priority,
 			fee2
 		);
+		use sp_runtime::{traits::{UniqueSaturatedInto}};
 		assert_eq!(
 			Currencies::free_balance(REEF, &ALICE),
 			(100000 - fee - fee2).unique_saturated_into()
@@ -93,7 +94,7 @@ fn charges_fee_when_validate_and_native_is_not_enough() {
 		assert_eq!(<Currencies as MultiCurrency<_>>::free_balance(REEF, &BOB), 0);
 		assert_eq!(<Currencies as MultiCurrency<_>>::free_balance(RUSD, &BOB), 1000);
 
-		let fee = 500 * 2 + 1000; // len * byte + weight
+		let _fee = 500 * 2 + 1000; // len * byte + weight
 		assert_err!(
 			ChargeTransactionPayment::<Runtime>::from(0)
 				.validate(&BOB, CALL2, &INFO, 500),

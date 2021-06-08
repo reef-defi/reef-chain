@@ -15,10 +15,10 @@ use sp_core::{
 	H160, OpaqueMetadata, Decode,
 };
 use sp_runtime::{
-	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
+	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys,
 	transaction_validity::{TransactionValidity, TransactionSource, TransactionPriority},
 	curve::PiecewiseLinear,
-	FixedPointNumber, ModuleId, MultiAddress,
+	FixedPointNumber,
 };
 use sp_runtime::traits::{
 	BlakeTwo256,
@@ -49,17 +49,10 @@ use sp_version::NativeVersion;
 #[cfg(any(feature = "std", test))]
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_balances::Call as BalancesCall;
-// pub use sp_runtime::BuildStorage;
 pub use frame_support::{
 	construct_runtime, parameter_types, debug,
 	StorageValue,
 	traits::{
-		// Contains,
-		// ContainsLengthBound,
-		// Filter,
-		// Get,
-		// IsType,
-		// LockIdentifier,
 		WithdrawReasons,
 		KeyOwnerProofSystem, Randomness, EnsureOrigin, OriginTrait, U128CurrencyToVote,
 		schedule::Priority,
@@ -73,11 +66,10 @@ pub use frame_system::{ensure_root, EnsureOneOf, EnsureRoot, RawOrigin};
 
 use orml_traits::{parameter_type_with_key};
 use orml_authority::EnsureDelayed;
-// use orml_tokens::CurrencyAdapter;
 
-use module_evm::{CallInfo, CreateInfo, AddressMapping};
+use module_evm::{CallInfo, CreateInfo};
 use module_evm_accounts::EvmAddressMapping;
-use module_currencies::{BasicCurrencyAdapter, Currency};
+use module_currencies::{BasicCurrencyAdapter};
 use module_transaction_payment::{Multiplier, TargetedFeeAdjustment};
 
 // re-exports
@@ -203,7 +195,7 @@ pub mod opaque {
 
 /// Fee-related
 pub mod fee {
-	use super::{Balance, mREEF};
+	use super::{Balance, MREEF};
 	use frame_support::weights::{
 		constants::ExtrinsicBaseWeight, WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
 	};
@@ -226,7 +218,7 @@ pub mod fee {
 	impl WeightToFeePolynomial for WeightToFee {
 		type Balance = Balance;
 		fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
-			let p = mREEF;
+			let p = MREEF;
 			let q = Balance::from(ExtrinsicBaseWeight::get()); // 125_000_000
 			smallvec![WeightToFeeCoefficient {
 				degree: 1,
@@ -525,7 +517,7 @@ impl module_currencies::Config for Runtime {
 }
 
 parameter_type_with_key! {
-	pub ExistentialDeposits: |currency_id: CurrencyId| -> Balance {
+	pub ExistentialDeposits: |_currency_id: CurrencyId| -> Balance {
 		Zero::zero()
 	};
 }
@@ -549,7 +541,7 @@ parameter_types! {
 }
 
 parameter_types! {
-	pub const TransactionByteFee: Balance = 10 * mREEF;
+	pub const TransactionByteFee: Balance = 10 * MREEF;
 	pub const TargetBlockFullness: Perquintill = Perquintill::from_percent(25);
 	pub AdjustmentVariable: Multiplier = Multiplier::saturating_from_rational(1, 100_000);
 	pub MinimumMultiplier:  Multiplier = Multiplier::saturating_from_rational(1, 1_000_000_000 as u128);
@@ -602,7 +594,7 @@ parameter_types! {
 	pub const ChainId: u64 = 13939;
 	// 10 REEF minimum storage deposit
 	pub const NewContractExtraBytes: u32 = 10_000;
-	pub const StorageDepositPerByte: Balance = 1 * mREEF;
+	pub const StorageDepositPerByte: Balance = 1 * MREEF;
 	pub const MaxCodeSize: u32 = 60 * 1024;
 	pub NetworkContractSource: H160 = H160::from_low_u64_be(0);
 	pub const DeveloperDeposit: Balance = 1_000 * REEF;
