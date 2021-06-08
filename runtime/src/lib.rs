@@ -15,10 +15,10 @@ use sp_core::{
 	H160, OpaqueMetadata, Decode,
 };
 use sp_runtime::{
-	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys, MultiSignature,
+	ApplyExtrinsicResult, generic, create_runtime_str, impl_opaque_keys,
 	transaction_validity::{TransactionValidity, TransactionSource, TransactionPriority},
 	curve::PiecewiseLinear,
-	FixedPointNumber, ModuleId, MultiAddress,
+	FixedPointNumber,
 };
 use sp_runtime::traits::{
 	BlakeTwo256,
@@ -49,17 +49,10 @@ use sp_version::NativeVersion;
 #[cfg(any(feature = "std", test))]
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_balances::Call as BalancesCall;
-// pub use sp_runtime::BuildStorage;
 pub use frame_support::{
 	construct_runtime, parameter_types, debug,
 	StorageValue,
 	traits::{
-		// Contains,
-		// ContainsLengthBound,
-		// Filter,
-		// Get,
-		// IsType,
-		// LockIdentifier,
 		WithdrawReasons,
 		KeyOwnerProofSystem, Randomness, EnsureOrigin, OriginTrait, U128CurrencyToVote,
 		schedule::Priority,
@@ -73,11 +66,10 @@ pub use frame_system::{ensure_root, EnsureOneOf, EnsureRoot, RawOrigin};
 
 use orml_traits::{parameter_type_with_key};
 use orml_authority::EnsureDelayed;
-// use orml_tokens::CurrencyAdapter;
 
-use module_evm::{CallInfo, CreateInfo, AddressMapping};
+use module_evm::{CallInfo, CreateInfo};
 use module_evm_accounts::EvmAddressMapping;
-use module_currencies::{BasicCurrencyAdapter, Currency};
+use module_currencies::{BasicCurrencyAdapter};
 use module_transaction_payment::{Multiplier, TargetedFeeAdjustment};
 
 // re-exports

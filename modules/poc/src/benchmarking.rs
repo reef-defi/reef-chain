@@ -1,10 +1,9 @@
 #![cfg(feature = "runtime-benchmarks")]
 
-use crate::{*, Module as Poc};
+use crate::{*};
 use frame_benchmarking::{benchmarks, account, impl_benchmark_test_suite};
 use frame_system::RawOrigin;
-use primitives::{Balance, currency::REEF, time::DAYS};
-use sp_std::prelude::*;
+use primitives::{currency::REEF, time::DAYS};
 
 benchmarks! {
 	where_clause { where BalanceOf<T>: From<u128> }

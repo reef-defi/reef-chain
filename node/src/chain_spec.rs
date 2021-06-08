@@ -3,7 +3,7 @@ use reef_runtime::{
 	AccountId, CurrencyId,
 	BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
 	IndicesConfig, EVMConfig, StakingConfig, SessionConfig, AuthorityDiscoveryConfig,
-	WASM_BINARY, Signature,
+	WASM_BINARY,
 	TokenSymbol, TokensConfig, REEF,
 	StakerStatus,
 	ImOnlineId, AuthorityDiscoveryId,
@@ -13,7 +13,7 @@ use reef_runtime::{
 };
 use sp_consensus_babe::AuthorityId as BabeId;
 use sp_finality_grandpa::AuthorityId as GrandpaId;
-use sp_runtime::traits::{Verify, IdentifyAccount};
+use sp_runtime::traits::{IdentifyAccount};
 use sc_service::{ChainType, Properties};
 use sc_telemetry::TelemetryEndpoints;
 

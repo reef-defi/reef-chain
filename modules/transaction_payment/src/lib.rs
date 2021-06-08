@@ -23,7 +23,7 @@ use primitives::{Balance, CurrencyId};
 use sp_runtime::{
 	traits::{
 		CheckedSub, Convert, DispatchInfoOf, PostDispatchInfoOf, SaturatedConversion, Saturating, SignedExtension,
-		UniqueSaturatedInto, Zero,
+		Zero,
 	},
 	transaction_validity::{
 		InvalidTransaction, TransactionPriority, TransactionValidity, TransactionValidityError, ValidTransaction,
@@ -31,7 +31,7 @@ use sp_runtime::{
 	FixedPointNumber, FixedPointOperand, FixedU128, Perquintill,
 };
 use sp_std::{prelude::*, vec};
-use support::{Ratio, TransactionPayment};
+use support::{TransactionPayment};
 
 mod default_weight;
 mod mock;
@@ -515,7 +515,6 @@ where
 
 	pub fn ensure_can_charge_fee(who: &T::AccountId, fee: PalletBalanceOf<T>, reason: WithdrawReasons) {
 		let native_currency_id = T::NativeCurrencyId::get();
-		let stable_currency_id = T::StableCurrencyId::get();
 		let other_currency_ids = T::AllNonNativeCurrencyIds::get();
 		let mut charge_fee_order: Vec<CurrencyId> =
 			if let Some(default_fee_currency_id) = DefaultFeeCurrencyId::<T>::get(who) {

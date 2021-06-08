@@ -10,7 +10,7 @@ use frame_support::{
 	pallet_prelude::*,
 	traits::{
 		Currency, ReservableCurrency, IsType, WithdrawReasons, ExistenceRequirement,
-		InitializeMembers, ChangeMembers,
+		ChangeMembers,
 	},
 	weights::Weight,
 	ensure,
@@ -19,7 +19,7 @@ use frame_support::{
 use sp_runtime::Perbill;
 use frame_support::sp_runtime::traits::{
 	Zero, Saturating,
-	CheckedAdd, CheckedMul, CheckedDiv
+	CheckedAdd, CheckedDiv
 };
 use frame_system::pallet_prelude::*;
 use sp_std::prelude::*;

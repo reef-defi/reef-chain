@@ -53,6 +53,7 @@ fn charges_fee() {
 				.priority,
 			fee2
 		);
+		use sp_runtime::{traits::{UniqueSaturatedInto}};
 		assert_eq!(
 			Currencies::free_balance(REEF, &ALICE),
 			(100000 - fee - fee2).unique_saturated_into()

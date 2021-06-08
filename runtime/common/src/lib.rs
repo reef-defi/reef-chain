@@ -13,9 +13,8 @@ use frame_system::limits;
 use primitives::{PRECOMPILE_ADDRESS_START, PREDEPLOY_ADDRESS_START};
 use sp_core::H160;
 use sp_runtime::{
-	traits::{Convert, Saturating},
-	transaction_validity::TransactionPriority,
-	FixedPointNumber, FixedPointOperand, Perbill,
+	traits::{Convert},
+	Perbill,
 	FixedU128
 };
 

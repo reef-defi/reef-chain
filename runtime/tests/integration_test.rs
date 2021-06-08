@@ -3,26 +3,23 @@
 use codec::Encode;
 use frame_support::{
 	assert_noop, assert_ok,
-	traits::{schedule::DispatchTime, Currency, GenesisBuild, OnFinalize, OnInitialize, OriginTrait},
+	traits::{GenesisBuild, OnFinalize, OnInitialize},
 };
-use frame_system::RawOrigin;
 use reef_runtime::{
 	get_all_module_accounts,
 	AccountId, AuthoritysOriginId,
-	Balance, Balances, BlockNumber, Call,
+	Balance, Balances, Call,
 	CurrencyId,
 	Event, EvmAccounts, GetNativeCurrencyId,
-	NativeTokenExistentialDeposit, Origin, OriginCaller,
+	NativeTokenExistentialDeposit, Origin,
 	Perbill, Runtime, System,
-	TokenSymbol, EVM, SevenDays,
+	TokenSymbol, EVM,
 };
-use module_support::{Price, Rate, Ratio};
-use orml_authority::DelayedOrigin;
-use orml_traits::{Change, MultiCurrency};
+use module_support::{Price};
 use sp_io::hashing::keccak_256;
 use sp_runtime::{
-	traits::{AccountIdConversion, BadOrigin},
-	DispatchError, DispatchResult, FixedPointNumber, MultiAddress,
+	traits::{BadOrigin},
+	DispatchError, FixedPointNumber, MultiAddress,
 };
 
 use primitives::currency::*;
