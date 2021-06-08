@@ -48,7 +48,7 @@ pub mod currency {
 
 	pub const REEF: Balance = DOLLARS;
 	pub const MILLI_REEF: Balance = REEF / 1_000;
-	pub const UREEF: Balance = REEF / 1_000_000;
+	pub const MICRO_REEF: Balance = REEF / 1_000_000;
 }
 
 /// Time and blocks.
