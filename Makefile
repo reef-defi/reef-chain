@@ -70,5 +70,4 @@ doc:
 cargo-update:
 	cargo update
 	cargo update --manifest-path node/Cargo.toml
-	make test
 
