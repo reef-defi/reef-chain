@@ -440,13 +440,13 @@ fn test_evm_accounts_module() {
 fn test_evm_module() {
 	ExtBuilder::default()
 		.balances(vec![
-			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MREEF)),
-			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MREEF)),
+			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MILLI_REEF)),
+			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MILLI_REEF)),
 		])
 		.build()
 		.execute_with(|| {
-			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * MREEF));
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MREEF));
+			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * MILLI_REEF));
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF));
 
 			let _alice_address = EvmAccounts::eth_address(&alice());
 			let bob_address = EvmAccounts::eth_address(&bob());
@@ -465,7 +465,7 @@ fn test_evm_module() {
 
 			// test EvmAccounts Lookup
 			assert_eq!(Balances::free_balance(alice_account_id()), 999999999999989633000000000000000);
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MREEF));
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF));
 			let to = EvmAccounts::eth_address(&alice());
 			assert_ok!(Currencies::transfer(
 				Origin::signed(bob_account_id()),
@@ -474,7 +474,7 @@ fn test_evm_module() {
 				amount(10 * UREEF)
 			));
 			assert_eq!(Balances::free_balance(alice_account_id()), 1009999999999989633000000000000000);
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MREEF) - amount(10 * UREEF));
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF) - amount(10 * UREEF));
 		});
 }
 
@@ -483,13 +483,13 @@ fn test_evm_module() {
 fn test_evm_module() {
 	ExtBuilder::default()
 		.balances(vec![
-			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MREEF)),
-			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MREEF)),
+			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MILLI_REEF)),
+			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MILLI_REEF)),
 		])
 		.build()
 		.execute_with(|| {
-			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * MREEF));
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MREEF));
+			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * MILLI_REEF));
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF));
 
 			use std::fs::{self, File};
 			use std::io::Read;

@@ -47,7 +47,7 @@ pub mod currency {
 	pub const CENTS: Balance = DOLLARS / 100;
 
 	pub const REEF: Balance = DOLLARS;
-	pub const MREEF: Balance = REEF / 1_000;
+	pub const MILLI_REEF: Balance = REEF / 1_000;
 	pub const UREEF: Balance = REEF / 1_000_000;
 }
 
