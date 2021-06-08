@@ -2,7 +2,7 @@ use sp_core::{Pair, Public, sr25519, H160, Bytes};
 use reef_runtime::{
 	AccountId, CurrencyId,
 	BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
-	IndicesConfig, EVMConfig, StakingConfig, SessionConfig, AuthorityDiscoveryConfig,
+	IndicesConfig, EvmConfig, StakingConfig, SessionConfig, AuthorityDiscoveryConfig,
 	WASM_BINARY,
 	TokenSymbol, TokensConfig, REEF,
 	StakerStatus,
@@ -52,7 +52,7 @@ fn get_session_keys(
 	im_online: ImOnlineId,
 	authority_discovery: AuthorityDiscoveryId,
 	) -> SessionKeys {
-	SessionKeys { grandpa, babe, im_online, authority_discovery }
+	SessionKeys { babe, grandpa, im_online, authority_discovery }
 }
 
 /// Helper function to generate a crypto pair from seed
@@ -398,7 +398,7 @@ fn testnet_genesis(
 				})
 				.collect(),
 		}),
-		module_evm: Some(EVMConfig {
+		module_evm: Some(EvmConfig {
 			accounts: evm_genesis_accounts,
 		}),
 		pallet_sudo: Some(SudoConfig { key: root_key }),
@@ -483,7 +483,7 @@ fn mainnet_genesis(
 		orml_tokens: Some(TokensConfig {
 			endowed_accounts: vec![]
 		}),
-		module_evm: Some(EVMConfig {
+		module_evm: Some(EvmConfig {
 			accounts: evm_genesis_accounts,
 		}),
 		pallet_sudo: Some(SudoConfig { key: root_key }),

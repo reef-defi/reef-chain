@@ -24,6 +24,8 @@ type FullClient = sc_service::TFullClient<Block, RuntimeApi, Executor>;
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
 
+// TODO: Result structure is very complex. Consider factoring parts into `type` definitions.
+// After this TODO will be resolved, remove the suppresion of `type-complexity` warnings in the Makefile.
 pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponents<
 	FullClient,
 	FullBackend,
@@ -41,8 +43,7 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 	)
 >, ServiceError> {
 	if config.keystore_remote.is_some() {
-		return Err(ServiceError::Other(
-				format!("Remote Keystores are not supported.")))
+		return Err(ServiceError::Other("Remote Keystores are not supported.".to_string()))
 	}
 	let inherent_data_providers = sp_inherents::InherentDataProviders::new();
 
@@ -70,13 +71,11 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 		client.clone(),
 	)?;
 
-	let justification_import = grandpa_block_import.clone();
-
 	let import_queue =
 		sc_consensus_babe::import_queue(
 			babe_link.clone(),
 			block_import.clone(),
-			Some(Box::new(justification_import)),
+			Some(Box::new(grandpa_block_import)),
 			client.clone(),
 			select_chain.clone(),
 			inherent_data_providers.clone(),
@@ -98,7 +97,7 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 	})
 }
 
-fn remote_keystore(_url: &String) -> Result<Arc<LocalKeystore>, &'static str> {
+fn remote_keystore(_url: &str) -> Result<Arc<LocalKeystore>, &'static str> {
 	// FIXME: here would the concrete keystore be built,
 	//        must return a concrete type (NOT `LocalKeystore`) that
 	//        implements `CryptoStore` and `SyncCryptoStore`
@@ -222,7 +221,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		let proposer = sc_basic_authorship::ProposerFactory::new(
 			task_manager.spawn_handle(),
 			client.clone(),
-			transaction_pool.clone(),
+			transaction_pool,
 			prometheus_registry.as_ref(),
 		);
 
@@ -230,12 +229,12 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 
 		let babe_config = sc_consensus_babe::BabeParams {
 			keystore: keystore_container.sync_keystore(),
-			client: client.clone(),
+			client,
 			select_chain,
 			env: proposer,
 			block_import,
 			sync_oracle: network.clone(),
-			inherent_data_providers: inherent_data_providers.clone(),
+			inherent_data_providers,
 			force_authoring,
 			backoff_authoring_blocks,
 			babe_link,
@@ -329,12 +328,12 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
 
 	let import_queue =
 		sc_consensus_babe::import_queue(
-			babe_link.clone(),
-			block_import.clone(),
+			babe_link,
+			block_import,
 			Some(Box::new(justification_import)),
 			client.clone(),
-			select_chain.clone(),
-			inherent_data_providers.clone(),
+			select_chain,
+			inherent_data_providers,
 			&task_manager.spawn_handle(),
 			config.prometheus_registry(),
 			sp_consensus::NeverCanAuthor,
