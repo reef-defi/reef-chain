@@ -193,7 +193,7 @@ pub mod module {
 	#[pallet::type_value]
 	pub(super) fn FirstEra<T: Config>() -> Era<T::BlockNumber> {
 		Era {
-			index: (0 as u32).into(),
+			index: (0 as u32),
 			start: (0 as u32).into(),
 		}
 	}
@@ -393,9 +393,9 @@ pub mod module {
 
 			// create a new commitment
 			<Commitments<T>>::insert(&origin, Commitment {
-				amount: amount,
-				duration: duration,
-				candidate: candidate,
+				duration,
+				amount,
+				candidate,
 				..Default::default()
 			});
 			Self::deposit_event(Event::Committed(origin, amount));
@@ -566,8 +566,7 @@ impl<T: Config> Pallet<T> {
 	pub fn era_council_rewards() -> BalanceOf<T> {
 		let total_supply = T::Currency::total_issuance();
 		let council_apy = T::CouncilInflation::get() * total_supply;
-		let era_reward = Self::proportion_of_era_to_year() * council_apy;
-		era_reward
+		Self::proportion_of_era_to_year() * council_apy
 	}
 
 	/// example: 7/365

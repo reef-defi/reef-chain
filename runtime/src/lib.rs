@@ -121,15 +121,11 @@ impl orml_authority::AuthorityConfig<Origin, OriginCaller, BlockNumber> for Auth
 		_initial_origin: &OriginCaller,
 		_new_delay: BlockNumber,
 	) -> DispatchResult {
-		ensure_root(origin.clone()).or_else(|_| {
-			Err(BadOrigin.into())
-		})
+		ensure_root(origin).map_err(|_| BadOrigin.into())
 	}
 
 	fn check_delay_schedule(origin: Origin, _initial_origin: &OriginCaller) -> DispatchResult {
-		ensure_root(origin.clone()).or_else(|_| {
-			Err(BadOrigin.into())
-		})
+		ensure_root(origin).map_err(|_| BadOrigin.into())
 	}
 
 	fn check_cancel_schedule(origin: Origin, initial_origin: &OriginCaller) -> DispatchResult {
@@ -195,7 +191,7 @@ pub mod opaque {
 
 /// Fee-related
 pub mod fee {
-	use super::{Balance, MREEF};
+	use super::{Balance, MILLI_REEF};
 	use frame_support::weights::{
 		constants::ExtrinsicBaseWeight, WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
 	};
@@ -218,7 +214,7 @@ pub mod fee {
 	impl WeightToFeePolynomial for WeightToFee {
 		type Balance = Balance;
 		fn polynomial() -> WeightToFeeCoefficients<Self::Balance> {
-			let p = MREEF;
+			let p = MILLI_REEF;
 			let q = Balance::from(ExtrinsicBaseWeight::get()); // 125_000_000
 			smallvec![WeightToFeeCoefficient {
 				degree: 1,
@@ -541,7 +537,7 @@ parameter_types! {
 }
 
 parameter_types! {
-	pub const TransactionByteFee: Balance = 10 * MREEF;
+	pub const TransactionByteFee: Balance = 10 * MILLI_REEF;
 	pub const TargetBlockFullness: Perquintill = Perquintill::from_percent(25);
 	pub AdjustmentVariable: Multiplier = Multiplier::saturating_from_rational(1, 100_000);
 	pub MinimumMultiplier:  Multiplier = Multiplier::saturating_from_rational(1, 1_000_000_000 as u128);
@@ -594,7 +590,7 @@ parameter_types! {
 	pub const ChainId: u64 = 13939;
 	// 10 REEF minimum storage deposit
 	pub const NewContractExtraBytes: u32 = 10_000;
-	pub const StorageDepositPerByte: Balance = 1 * MREEF;
+	pub const StorageDepositPerByte: Balance = 1 * MILLI_REEF;
 	pub const MaxCodeSize: u32 = 60 * 1024;
 	pub NetworkContractSource: H160 = H160::from_low_u64_be(0);
 	pub const DeveloperDeposit: Balance = 1_000 * REEF;
@@ -603,7 +599,7 @@ parameter_types! {
 
 pub type MultiCurrencyPrecompile =
 	runtime_common::MultiCurrencyPrecompile<AccountId, EvmAddressMapping<Runtime>, Currencies>;
-pub type StateRentPrecompile = runtime_common::StateRentPrecompile<AccountId, EvmAddressMapping<Runtime>, EVM>;
+pub type StateRentPrecompile = runtime_common::StateRentPrecompile<AccountId, EvmAddressMapping<Runtime>, Evm>;
 pub type ScheduleCallPrecompile = runtime_common::ScheduleCallPrecompile<
 	AccountId,
 	EvmAddressMapping<Runtime>,
@@ -646,7 +642,7 @@ impl module_evm::Config for Runtime {
 }
 
 impl module_evm_bridge::Config for Runtime {
-	type EVM = EVM;
+	type EVM = Evm;
 }
 
 parameter_types! {
@@ -764,6 +760,8 @@ impl module_poc::Config for Runtime {
 // workaround for a weird bug in macro
 use pallet_session::historical as pallet_session_historical;
 
+// TODO: Implementation of `From` is preferred since it gives you `Into<_>` for free where the reverse isn't true.
+// After this TODO will be resolved, remove the suppresion of `from-over-into` warnings in the Makefile.
 construct_runtime!(
 	pub enum Runtime where
 		Block = Block,
@@ -791,7 +789,7 @@ construct_runtime!(
 
 		// Smart contracts
 		EvmAccounts: module_evm_accounts::{Module, Call, Storage, Event<T>} = 20,
-		EVM: module_evm::{Module, Config<T>, Call, Storage, Event<T>} = 21,
+		Evm: module_evm::{Module, Config<T>, Call, Storage, Event<T>} = 21,
 		EVMBridge: module_evm_bridge::{Module} = 22,
 
 		// Consensus
@@ -1093,14 +1091,10 @@ impl_runtime_apis! {
 			storage_limit: u32,
 			estimate: bool,
 		) -> Result<CallInfo, sp_runtime::DispatchError> {
-			let config = if estimate {
-				let mut config = <Runtime as module_evm::Config>::config().clone();
+			let mut config = <Runtime as module_evm::Config>::config().clone();
+			if estimate {
 				config.estimate = true;
-				Some(config)
-			} else {
-				None
-			};
-
+			}
 			module_evm::Runner::<Runtime>::call(
 				from,
 				from,
@@ -1109,7 +1103,7 @@ impl_runtime_apis! {
 				value,
 				gas_limit,
 				storage_limit,
-				config.as_ref().unwrap_or(<Runtime as module_evm::Config>::config()),
+				&config,
 			)
 		}
 
@@ -1121,21 +1115,17 @@ impl_runtime_apis! {
 			storage_limit: u32,
 			estimate: bool,
 		) -> Result<CreateInfo, sp_runtime::DispatchError> {
-			let config = if estimate {
-				let mut config = <Runtime as module_evm::Config>::config().clone();
+			let mut config = <Runtime as module_evm::Config>::config().clone();
+			if estimate {
 				config.estimate = true;
-				Some(config)
-			} else {
-				None
-			};
-
+			}
 			module_evm::Runner::<Runtime>::create(
 				from,
 				data,
 				value,
 				gas_limit,
 				storage_limit,
-				config.as_ref().unwrap_or(<Runtime as module_evm::Config>::config()),
+				&config,
 			)
 		}
 
@@ -1147,7 +1137,7 @@ impl_runtime_apis! {
 				.map_err(|_| sp_runtime::DispatchError::Other("Invalid parameter extrinsic, decode failed"))?;
 
 			let request = match utx.function {
-				Call::EVM(module_evm::Call::call(to, data, value, gas_limit, storage_limit)) => {
+				Call::Evm(module_evm::Call::call(to, data, value, gas_limit, storage_limit)) => {
 					Some(EstimateResourcesRequest {
 						from: None,
 						to: Some(to),
@@ -1157,7 +1147,7 @@ impl_runtime_apis! {
 						data: Some(data),
 					})
 				}
-				Call::EVM(module_evm::Call::create(data, value, gas_limit, storage_limit)) => {
+				Call::Evm(module_evm::Call::create(data, value, gas_limit, storage_limit)) => {
 					Some(EstimateResourcesRequest {
 						from: None,
 						to: None,

@@ -44,4 +44,12 @@ jobs:
       run: make init
     - name: Test
       run: make test
+  clippy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Init
+      run: make init
+    - name: Clippy
+      run: make clippy
 

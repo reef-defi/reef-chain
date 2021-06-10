@@ -13,7 +13,7 @@ use reef_runtime::{
 	Event, EvmAccounts, GetNativeCurrencyId,
 	NativeTokenExistentialDeposit, Origin,
 	Perbill, Runtime, System,
-	TokenSymbol, EVM,
+	TokenSymbol, Evm,
 };
 use module_support::{Price};
 use sp_io::hashing::keccak_256;
@@ -153,7 +153,7 @@ fn deploy_contract(account: AccountId) -> Result<H160, DispatchError> {
 	// contract Contract {}
 	let contract = hex_literal::hex!("608060405234801561001057600080fd5b5061016f806100206000396000f3fe608060405260043610610041576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff168063412a5a6d14610046575b600080fd5b61004e610050565b005b600061005a6100e2565b604051809103906000f080158015610076573d6000803e3d6000fd5b50905060008190806001815401808255809150509060018203906000526020600020016000909192909190916101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055505050565b6040516052806100f28339019056fe6080604052348015600f57600080fd5b50603580601d6000396000f3fe6080604052600080fdfea165627a7a7230582092dc1966a8880ddf11e067f9dd56a632c11a78a4afd4a9f05924d427367958cc0029a165627a7a723058202b2cc7384e11c452cdbf39b68dada2d5e10a632cc0174a354b8b8c83237e28a40029").to_vec();
 
-	EVM::create(Origin::signed(account), contract, 0, 1000000000, 1000000000)
+	Evm::create(Origin::signed(account), contract, 0, 1000000000, 1000000000)
 		.map_or_else(|e| Err(e.error), |_| Ok(()))?;
 
 	if let Event::module_evm(module_evm::Event::Created(address)) = System::events().iter().last().unwrap().event {
@@ -440,13 +440,13 @@ fn test_evm_accounts_module() {
 fn test_evm_module() {
 	ExtBuilder::default()
 		.balances(vec![
-			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MREEF)),
-			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MREEF)),
+			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MILLI_REEF)),
+			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MILLI_REEF)),
 		])
 		.build()
 		.execute_with(|| {
-			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * MREEF));
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MREEF));
+			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * MILLI_REEF));
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF));
 
 			let _alice_address = EvmAccounts::eth_address(&alice());
 			let bob_address = EvmAccounts::eth_address(&bob());
@@ -455,7 +455,7 @@ fn test_evm_module() {
 			let event = Event::module_evm(module_evm::Event::Created(contract));
 			assert_eq!(last_event(), event);
 
-			assert_ok!(EVM::transfer_maintainer(
+			assert_ok!(Evm::transfer_maintainer(
 				Origin::signed(alice_account_id()),
 				contract,
 				bob_address
@@ -465,16 +465,16 @@ fn test_evm_module() {
 
 			// test EvmAccounts Lookup
 			assert_eq!(Balances::free_balance(alice_account_id()), 999999999999989633000000000000000);
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MREEF));
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF));
 			let to = EvmAccounts::eth_address(&alice());
 			assert_ok!(Currencies::transfer(
 				Origin::signed(bob_account_id()),
 				MultiAddress::Address20(to.0),
 				CurrencyId::Token(TokenSymbol::REEF),
-				amount(10 * UREEF)
+				amount(10 * MICRO_REEF)
 			));
 			assert_eq!(Balances::free_balance(alice_account_id()), 1009999999999989633000000000000000);
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MREEF) - amount(10 * UREEF));
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF) - amount(10 * MICRO_REEF));
 		});
 }
 
@@ -483,13 +483,13 @@ fn test_evm_module() {
 fn test_evm_module() {
 	ExtBuilder::default()
 		.balances(vec![
-			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MREEF)),
-			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MREEF)),
+			(alice_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MILLI_REEF)),
+			(bob_account_id(), CurrencyId::Token(TokenSymbol::REEF), amount(1 * MILLI_REEF)),
 		])
 		.build()
 		.execute_with(|| {
-			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * MREEF));
-			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MREEF));
+			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * MILLI_REEF));
+			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF));
 
 			use std::fs::{self, File};
 			use std::io::Read;
@@ -510,7 +510,7 @@ fn test_evm_module() {
 				let bytecode_str = bytecode_str.replace("\"", "");
 
 				let bytecode = hex::decode(bytecode_str).unwrap();
-				assert_ok!(EVM::create(
+				assert_ok!(Evm::create(
 					Origin::signed(alice_account_id()),
 					bytecode,
 					0,
