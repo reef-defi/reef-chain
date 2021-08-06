@@ -1,5 +1,7 @@
 .PHONY: init
 init:
+	rustup install 1.51.0
+	rustup default 1.51.0
 	rustup update stable
 	rustup update nightly
 	rustup target add wasm32-unknown-unknown --toolchain nightly
