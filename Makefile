@@ -1,16 +1,18 @@
-.PHONY: init
-init:
-	rustup update stable
-	rustup update nightly
-	rustup target add wasm32-unknown-unknown --toolchain nightly
-	git submodule update --init --recursive
-
-.PHONY: release
-release:
+.PHONY: configure-rust
+configure-rust:
 	rustup install 1.51.0
 	rustup default 1.51.0
 	rustup toolchain install nightly-2021-05-09
 	rustup target add wasm32-unknown-unknown --toolchain nightly-2021-05-09
+
+.PHONY: init
+init:
+	make configure-rust
+	git submodule update --init --recursive
+
+.PHONY: release
+release:
+	make configure-rust
 	rm -rf target/
 	cargo build --manifest-path node/Cargo.toml --features with-ethereum-compatibility --release
 
