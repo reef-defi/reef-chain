@@ -98,6 +98,8 @@ pub mod module {
 		NonZeroRefCount,
 		/// Account still has active reserved
 		StillHasActiveReserved,
+		/// Arithmetic calculation overflow
+		NumOverflow,
 	}
 
 	#[pallet::storage]
@@ -135,8 +137,7 @@ pub mod module {
 			);
 
 			// recover evm address from signature
-			let address = Self::eth_recover(&eth_signature, &who.using_encoded(to_ascii_hex), &[][..])
-				.ok_or(Error::<T>::BadSignature)?;
+			let address = Self::eth_recover(&eth_signature, &who.using_encoded(Self::convert_to_ascii_hex)?, &[][..])?;
 			ensure!(eth_address == address, Error::<T>::InvalidSignature);
 
 			// check if the evm padded address already exists
@@ -177,9 +178,9 @@ pub mod module {
 impl<T: Config> Pallet<T> {
 	// Constructs the message that Ethereum RPC's `personal_sign` and `eth_sign`
 	// would sign.
-	pub fn ethereum_signable_message(what: &[u8], extra: &[u8]) -> Vec<u8> {
+	pub fn ethereum_signable_message(what: &[u8], extra: &[u8]) -> Result<Vec<u8>, DispatchError> {
 		let prefix = b"reef evm:";
-		let mut l = prefix.len() + what.len() + extra.len();
+		let mut l = prefix.len().checked_add(what.len()).and_then(|sum| sum.checked_add(extra.len())).ok_or(Error::<T>::NumOverflow)?;
 		let mut rev = Vec::new();
 		while l > 0 {
 			rev.push(b'0' + (l % 10) as u8);
@@ -190,17 +191,17 @@ impl<T: Config> Pallet<T> {
 		v.extend_from_slice(&prefix[..]);
 		v.extend_from_slice(what);
 		v.extend_from_slice(extra);
-		v
+		Ok(v)
 	}
 
 	// Attempts to recover the Ethereum address from a message signature signed by
 	// using the Ethereum RPC's `personal_sign` and `eth_sign`.
-	pub fn eth_recover(s: &EcdsaSignature, what: &[u8], extra: &[u8]) -> Option<EvmAddress> {
-		let msg = keccak_256(&Self::ethereum_signable_message(what, extra));
+	pub fn eth_recover(s: &EcdsaSignature, what: &[u8], extra: &[u8]) -> Result<EvmAddress, DispatchError> {
+		let msg = keccak_256(&Self::ethereum_signable_message(what, extra)?);
 		let mut res = EvmAddress::default();
 		res.0
-			.copy_from_slice(&keccak_256(&secp256k1_ecdsa_recover(&s.0, &msg).ok()?[..])[12..]);
-		Some(res)
+			.copy_from_slice(&keccak_256(&secp256k1_ecdsa_recover(&s.0, &msg).ok().ok_or(Error::<T>::BadSignature)?[..])[12..]);
+		Ok(res)
 	}
 
 	pub fn eth_public(secret: &secp256k1::SecretKey) -> secp256k1::PublicKey {
@@ -211,14 +212,32 @@ impl<T: Config> Pallet<T> {
 		EvmAddress::from_slice(&keccak_256(&Self::eth_public(secret).serialize()[1..65])[12..])
 	}
 
-	pub fn eth_sign(secret: &secp256k1::SecretKey, what: &[u8], extra: &[u8]) -> EcdsaSignature {
-		let msg = keccak_256(&Self::ethereum_signable_message(&to_ascii_hex(what)[..], extra));
+	pub fn eth_sign(secret: &secp256k1::SecretKey, what: &[u8], extra: &[u8]) -> Result<EcdsaSignature, DispatchError> {
+		let msg = keccak_256(&Self::ethereum_signable_message(&Self::convert_to_ascii_hex(what)?[..], extra)?);
 		let (sig, recovery_id) = secp256k1::sign(&secp256k1::Message::parse(&msg), secret);
 		let mut r = [0u8; 65];
 		r[0..64].copy_from_slice(&sig.serialize()[..]);
 		r[64] = recovery_id.serialize();
-		EcdsaSignature::from_slice(&r)
+		Ok(EcdsaSignature::from_slice(&r))
 	}
+
+	/// Converts the given binary data into ASCII-encoded hex. It will be twice
+	/// the length.
+	pub fn convert_to_ascii_hex(data: &[u8]) -> Result<Vec<u8>, DispatchError> {
+		let mut r = Vec::with_capacity(data.len().checked_mul(2).ok_or(Error::<T>::NumOverflow)?);
+		for &b in data.iter() {
+			Self::push_nibble(b / 16, &mut r)?;
+			Self::push_nibble(b % 16, &mut r)?;
+		}
+		Ok(r)
+	}
+
+	pub fn push_nibble(nibble: u8, r: &mut Vec<u8>) -> Result<(), DispatchError> {
+		let value = (if nibble < 10 { b'0'.checked_add(nibble) } else { b'a'.checked_sub(10).and_then(|sum| sum.checked_add(nibble))}).ok_or(Error::<T>::NumOverflow)?;
+		r.push(value);
+		Ok(())
+	}
+
 }
 
 fn account_to_default_evm_address(account_id: &impl Encode) -> EvmAddress {
@@ -307,14 +326,3 @@ impl<T: Config> StaticLookup for Pallet<T> {
 	}
 }
 
-/// Converts the given binary data into ASCII-encoded hex. It will be twice
-/// the length.
-pub fn to_ascii_hex(data: &[u8]) -> Vec<u8> {
-	let mut r = Vec::with_capacity(data.len() * 2);
-	let mut push_nibble = |n| r.push(if n < 10 { b'0' + n } else { b'a' - 10 + n });
-	for &b in data.iter() {
-		push_nibble(b / 16);
-		push_nibble(b % 16);
-	}
-	r
-}

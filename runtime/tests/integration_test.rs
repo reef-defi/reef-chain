@@ -407,7 +407,7 @@ fn test_evm_accounts_module() {
 			assert_ok!(EvmAccounts::claim_account(
 				Origin::signed(AccountId::from(ALICE)),
 				EvmAccounts::eth_address(&alice()),
-				EvmAccounts::eth_sign(&alice(), &AccountId::from(ALICE).encode(), &[][..])
+				EvmAccounts::eth_sign(&alice(), &AccountId::from(ALICE).encode(), &[][..]).unwrap()
 			));
 			let event = Event::module_evm_accounts(module_evm_accounts::Event::ClaimAccount(
 				AccountId::from(ALICE),
@@ -420,7 +420,7 @@ fn test_evm_accounts_module() {
 				EvmAccounts::claim_account(
 					Origin::signed(AccountId::from(ALICE)),
 					EvmAccounts::eth_address(&alice()),
-					EvmAccounts::eth_sign(&alice(), &AccountId::from(ALICE).encode(), &[][..])
+					EvmAccounts::eth_sign(&alice(), &AccountId::from(ALICE).encode(), &[][..]).unwrap()
 				),
 				module_evm_accounts::Error::<Runtime>::AccountIdHasMapped
 			);
@@ -428,7 +428,7 @@ fn test_evm_accounts_module() {
 				EvmAccounts::claim_account(
 					Origin::signed(AccountId::from(BOB)),
 					EvmAccounts::eth_address(&alice()),
-					EvmAccounts::eth_sign(&alice(), &AccountId::from(BOB).encode(), &[][..])
+					EvmAccounts::eth_sign(&alice(), &AccountId::from(BOB).encode(), &[][..]).unwrap()
 				),
 				module_evm_accounts::Error::<Runtime>::EthAddressHasMapped
 			);

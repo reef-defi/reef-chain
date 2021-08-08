@@ -40,6 +40,7 @@ pub mod module {
 		ExecutionFatal,
 		ExecutionError,
 		InvalidReturnValue,
+		NumOverflow
 	}
 
 	#[pallet::pallet]
@@ -180,15 +181,15 @@ impl<T: Config> Pallet<T> {
 		);
 
 		let offset = U256::from_big_endian(&output[0..32]);
-		let length = U256::from_big_endian(&output[offset.as_usize()..offset.as_usize() + 32]);
+		let length = U256::from_big_endian(&output[offset.as_usize()..offset.as_usize().checked_add(32).ok_or(Error::<T>::NumOverflow)?]);
 		ensure!(
 			// output is 32-byte aligned. ensure total_length >= offset + string length + string data length.
-			output.len() >= offset.as_usize() + 32 + length.as_usize(),
+			output.len() >= offset.as_usize().checked_add(32).and_then(|sum| sum.checked_add(length.as_usize())).ok_or(Error::<T>::NumOverflow)?,
 			Error::<T>::InvalidReturnValue
 		);
 
 		let mut data = Vec::new();
-		data.extend_from_slice(&output[offset.as_usize() + 32..offset.as_usize() + 32 + length.as_usize()]);
+		data.extend_from_slice(&output[offset.as_usize().checked_add(32).ok_or(Error::<T>::NumOverflow)?..offset.as_usize().checked_add(32).and_then(|sum| sum.checked_add(length.as_usize())).ok_or(Error::<T>::NumOverflow)?]);
 
 		Ok(data.to_vec())
 	}
