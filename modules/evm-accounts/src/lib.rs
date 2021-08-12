@@ -100,6 +100,8 @@ pub mod module {
 		StillHasActiveReserved,
 		/// Arithmetic calculation overflow
 		NumOverflow,
+		/// Vec has insufficient capacity
+		VecInsufficientCapacity
 	}
 
 	#[pallet::storage]
@@ -224,7 +226,9 @@ impl<T: Config> Pallet<T> {
 	/// Converts the given binary data into ASCII-encoded hex. It will be twice
 	/// the length.
 	pub fn convert_to_ascii_hex(data: &[u8]) -> Result<Vec<u8>, DispatchError> {
-		let mut r = Vec::with_capacity(data.len().checked_mul(2).ok_or(Error::<T>::NumOverflow)?);
+		let len = data.len().checked_mul(2).ok_or(Error::<T>::NumOverflow)?;
+		ensure!(len < isize::MAX as usize, Error::<T>::VecInsufficientCapacity);
+		let mut r = Vec::with_capacity(len);
 		for &b in data.iter() {
 			Self::push_nibble(b / 16, &mut r)?;
 			Self::push_nibble(b % 16, &mut r)?;
