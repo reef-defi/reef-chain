@@ -5495,7 +5495,7 @@ dependencies = [
 
 [[package]]
 name = "reef-node"
-version = "3.0.0"
+version = "3.0.1"
 dependencies = [
  "evm-rpc",
  "frame-benchmarking",

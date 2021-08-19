@@ -7,7 +7,7 @@ homepage = 'https://reef.finance'
 license = 'Unlicense'
 name = 'reef-node'
 repository = 'https://github.com/reef-defi/reef-chain'
-version = '3.0.0'
+version = '3.0.1'
 
 [[bin]]
 name = 'reef-node'

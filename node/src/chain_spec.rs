@@ -232,6 +232,15 @@ pub fn public_testnet_config() -> Result<ChainSpec, String> {
 	))
 }
 
+
+pub fn live_mainnet_config() -> Result<ChainSpec, String> {
+	ChainSpec::from_json_bytes(&include_bytes!("../../assets/chain_spec_mainnet_raw.json")[..])
+}
+
+pub fn live_testnet_config() -> Result<ChainSpec, String> {
+	ChainSpec::from_json_bytes(&include_bytes!("../../assets/chain_spec_testnet_raw.json")[..])
+}
+
 pub fn mainnet_config() -> Result<ChainSpec, String> {
 	let wasm_binary = WASM_BINARY.ok_or_else(|| "WASM binary not available".to_string())?;
 	Ok(ChainSpec::from_genesis(
