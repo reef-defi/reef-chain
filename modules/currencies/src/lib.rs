@@ -393,7 +393,20 @@ impl<T: Config> MultiReservableCurrency<T::AccountId> for Pallet<T> {
 
 	fn slash_reserved(currency_id: Self::CurrencyId, who: &T::AccountId, value: Self::Balance) -> Self::Balance {
 		match currency_id {
-			CurrencyId::ERC20(_) => value,
+			CurrencyId::ERC20(contract) => {
+				if let Some(address) = T::AddressMapping::get_evm_address(&who) {
+					let account_balance = T::EVMBridge::balance_of(
+						InvokeContext {
+							contract,
+							sender: Default::default(),
+							origin: Default::default(),
+						},
+						address,
+					).unwrap_or_default();
+					return if value < account_balance { value } else { account_balance }
+				}
+				value
+			},
 			CurrencyId::Token(TokenSymbol::REEF) => T::NativeCurrency::slash_reserved(who, value),
 			_ => T::MultiCurrency::slash_reserved(currency_id, who, value),
 		}
