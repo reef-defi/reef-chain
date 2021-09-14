@@ -8,7 +8,6 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::unused_unit)]
 
-use frame_support::debug;
 use frame_support::{
 	dispatch::{DispatchResult, Dispatchable},
 	pallet_prelude::*,
@@ -32,6 +31,8 @@ use sp_runtime::{
 };
 use sp_std::{prelude::*, vec};
 use support::{TransactionPayment};
+// TODO: Assess the usage of these types
+use frame_support::traits::SameOrOther::{Same, Other};
 
 mod default_weight;
 mod mock;
@@ -162,7 +163,7 @@ where
 			.get(DispatchClass::Normal)
 			.max_total
 			.unwrap_or(weights.max_block);
-		let current_block_weight = <frame_system::Module<T>>::block_weight();
+		let current_block_weight = <frame_system::Pallet<T>>::block_weight();
 		let normal_block_weight = *current_block_weight.get(DispatchClass::Normal).min(&normal_max_weight);
 
 		let s = S::get();
@@ -302,7 +303,7 @@ pub mod module {
 			target += addition;
 
 			sp_io::TestExternalities::new_empty().execute_with(|| {
-				<frame_system::Module<T>>::set_block_consumed_resources(target, 0);
+				<frame_system::Pallet<T>>::set_block_consumed_resources(target, 0);
 				let next = T::FeeMultiplierUpdate::convert(min_value);
 				assert!(
 					next > min_value,
@@ -615,7 +616,7 @@ where
 		len: usize,
 	) -> Result<(PalletBalanceOf<T>, Option<NegativeImbalanceOf<T>>), TransactionValidityError> {
 		let tip = self.0;
-		let fee = Module::<T>::compute_fee(len as u32, info, tip);
+		let fee = Pallet::<T>::compute_fee(len as u32, info, tip);
 
 		let reason = if tip.is_zero() {
 			WithdrawReasons::TRANSACTION_PAYMENT
@@ -623,8 +624,8 @@ where
 			WithdrawReasons::TRANSACTION_PAYMENT | WithdrawReasons::TIP
 		};
 
-		debug::debug!(target: "fee", "who: {:?}, fee: {:?}", who, fee);
-		Module::<T>::ensure_can_charge_fee(who, fee, reason);
+		log::debug!(target: "fee", "who: {:?}, fee: {:?}", who, fee);
+		Pallet::<T>::ensure_can_charge_fee(who, fee, reason);
 
 		// withdraw native currency as fee
 		match <T as Config>::Currency::withdraw(who, fee, reason, ExistenceRequirement::KeepAlive) {
@@ -716,15 +717,16 @@ where
 	) -> Result<(), TransactionValidityError> {
 		let (tip, who, imbalance, fee) = pre;
 		if let Some(payed) = imbalance {
-			let actual_fee = Module::<T>::compute_actual_fee(len as u32, info, post_info, tip);
+			let actual_fee = Pallet::<T>::compute_actual_fee(len as u32, info, post_info, tip);
 			let refund = fee.saturating_sub(actual_fee);
 			let actual_payment = match <T as Config>::Currency::deposit_into_existing(&who, refund) {
 				Ok(refund_imbalance) => {
 					// The refund cannot be larger than the up front payed max weight.
 					// `PostDispatchInfo::calc_unspent` guards against such a case.
 					match payed.offset(refund_imbalance) {
-						Ok(actual_payment) => actual_payment,
-						Err(_) => return Err(InvalidTransaction::Payment.into()),
+						// TODO: Assess proper usage of these types
+						Same(actual_payment) => actual_payment,
+						_ => return Err(InvalidTransaction::Payment.into()),
 					}
 				}
 				// We do not recreate the account using the refund. The up front payment
@@ -748,8 +750,8 @@ where
 	PalletBalanceOf<T>: Send + Sync + FixedPointOperand,
 {
 	fn reserve_fee(who: &T::AccountId, weight: Weight) -> Result<PalletBalanceOf<T>, DispatchError> {
-		let fee = Module::<T>::weight_to_fee(weight);
-		Module::<T>::ensure_can_charge_fee(who, fee, WithdrawReasons::TRANSACTION_PAYMENT);
+		let fee = Pallet::<T>::weight_to_fee(weight);
+		Pallet::<T>::ensure_can_charge_fee(who, fee, WithdrawReasons::TRANSACTION_PAYMENT);
 		<T as Config>::Currency::reserve(&who, fee)?;
 		Ok(fee)
 	}
@@ -762,7 +764,7 @@ where
 		who: &T::AccountId,
 		weight: Weight,
 	) -> Result<(PalletBalanceOf<T>, NegativeImbalanceOf<T>), TransactionValidityError> {
-		let fee = Module::<T>::weight_to_fee(weight);
+		let fee = Pallet::<T>::weight_to_fee(weight);
 		<T as Config>::Currency::unreserve(&who, fee);
 
 		match <T as Config>::Currency::withdraw(
@@ -781,13 +783,14 @@ where
 		refund_weight: Weight,
 		payed: NegativeImbalanceOf<T>,
 	) -> Result<(), TransactionValidityError> {
-		let refund = Module::<T>::weight_to_fee(refund_weight);
+		let refund = Pallet::<T>::weight_to_fee(refund_weight);
 		let actual_payment = match <T as Config>::Currency::deposit_into_existing(&who, refund) {
 			Ok(refund_imbalance) => {
 				// The refund cannot be larger than the up front payed max weight.
 				match payed.offset(refund_imbalance) {
-					Ok(actual_payment) => actual_payment,
-					Err(_) => return Err(InvalidTransaction::Payment.into()),
+					// TODO: Assess proper usage of these types
+					Same(actual_payment) => actual_payment,
+					_ => return Err(InvalidTransaction::Payment.into()),
 				}
 			}
 			// We do not recreate the account using the refund. The up front payment

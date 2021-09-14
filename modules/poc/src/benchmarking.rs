@@ -141,7 +141,7 @@ benchmarks! {
 		);
 
 		// skip 1 month
-		frame_system::Module::<T>::set_block_number((31 * DAYS).into());
+		frame_system::Pallet::<T>::set_block_number((31 * DAYS).into());
 
 	}: _(RawOrigin::Signed(alice))
 

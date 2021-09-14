@@ -66,7 +66,7 @@ pub fn bob_account_id() -> AccountId {
 runtime_benchmarks! {
 	{ Runtime, module_evm }
 
-	_ {}
+	// _ {}
 
 	transfer_maintainer {
 		set_reef_balance(&alice_account_id(), dollar(1000));

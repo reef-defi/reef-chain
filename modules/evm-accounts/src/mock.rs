@@ -57,7 +57,7 @@ impl pallet_balances::Config for Runtime {
 	type Event = Event;
 	type DustRemoval = ();
 	type ExistentialDeposit = ExistentialDeposit;
-	type AccountStore = frame_system::Module<Runtime>;
+	type AccountStore = frame_system::Pallet<Runtime>;
 	type MaxLocks = ();
 	type WeightInfo = ();
 }
@@ -102,7 +102,7 @@ impl Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
 	type AddressMapping = EvmAddressMapping<Runtime>;
-	type MergeAccount = Currencies;
+	type TransferAll = Currencies;
 	type OnClaim = EvmAccountsOnClaimHandler;
 	type WeightInfo = ();
 }

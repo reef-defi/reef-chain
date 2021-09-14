@@ -270,7 +270,7 @@ pub mod module {
 				<CurrentEra<T>>::set(new_era);
 
 				// clear old voter rewards (to save space)
-				<VoterRewards<T>>::remove_prefix(&current_era.index);
+				<VoterRewards<T>>::remove_prefix(&current_era.index, None);
 
 				// set winners on new era
 				let mut counter: BTreeMap<T::AccountId, BalanceOf<T>> = BTreeMap::new();
@@ -448,7 +448,7 @@ pub mod module {
 			ensure!(commitment.state == LockState::Committed, Error::<T>::NotCommitted);
 
 			// record the unbonding block number
-			let current_block: T::BlockNumber = frame_system::Module::<T>::block_number();
+			let current_block: T::BlockNumber = frame_system::Pallet::<T>::block_number();
 			commitment.state = LockState::Unbonding(current_block);
 
 			<Commitments<T>>::insert(&origin, commitment.clone());
@@ -476,7 +476,7 @@ pub mod module {
 					LockDuration::TenYears => 3650,
 				} * primitives::time::DAYS;
 				let lock_period: T::BlockNumber = lock_period.into();
-				let current_block: T::BlockNumber = frame_system::Module::<T>::block_number();
+				let current_block: T::BlockNumber = frame_system::Pallet::<T>::block_number();
 
 				if start_block + lock_period <= current_block {
 					// credit the user his funds

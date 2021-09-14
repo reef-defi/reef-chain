@@ -1,6 +1,5 @@
 #![allow(clippy::upper_case_acronyms)]
 
-use frame_support::debug;
 use ethereum_types::{U256, H160};
 use jsonrpc_core::{Error, ErrorCode, Result, Value};
 use rustc_hex::ToHex;
@@ -443,7 +442,7 @@ where
 				match calculate_gas_used(test_request) {
 					// if Ok -- try to reduce the gas used
 					Ok((used_gas, used_storage)) => {
-						debug::debug!(
+						log::debug!(
 							target: "evm",
 							"calculate_gas_used ok, used_gas: {:?}, used_storage: {:?}",
 							used_gas, used_storage,
@@ -460,7 +459,7 @@ where
 					}
 
 					Err(err) => {
-						debug::debug!(
+						log::debug!(
 							target: "evm",
 							"calculate_gas_used err, lower: {:?}, upper: {:?}, mid: {:?}",
 							lower, upper, mid

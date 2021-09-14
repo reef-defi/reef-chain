@@ -97,7 +97,7 @@ impl pallet_balances::Config for Runtime {
 	type MaxLocks = ();
 }
 
-pub type PalletBalances = pallet_balances::Module<Runtime>;
+pub type PalletBalances = pallet_balances::Pallet<Runtime>;
 
 parameter_types! {
 	pub const MinimumPeriod: u64 = 1000;
@@ -126,7 +126,7 @@ ord_parameter_types! {
 impl module_evm::Config for Runtime {
 	type AddressMapping = MockAddressMapping;
 	type Currency = PalletBalances;
-	type MergeAccount = ();
+	type TransferAll = ();
 	type NewContractExtraBytes = NewContractExtraBytes;
 	type StorageDepositPerByte = StorageDepositPerByte;
 	type MaxCodeSize = MaxCodeSize;

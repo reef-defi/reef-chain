@@ -34,7 +34,7 @@ pub fn bob_account_id() -> AccountId {
 runtime_benchmarks! {
 	{ Runtime, module_evm_accounts }
 
-	_ {}
+	// _ {}
 
 	claim_account {
 		let caller: AccountId = account("caller", 0, SEED);

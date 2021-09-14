@@ -10,7 +10,7 @@ use orml_benchmarking::runtime_benchmarks;
 runtime_benchmarks! {
 	{ Runtime, orml_authority }
 
-	_ {}
+	// _ {}
 
 	// dispatch a dispatchable as other origin
 	dispatch_as {

@@ -40,7 +40,7 @@ use support::{EVMStateRentTrait, ExecutionMode, InvokeContext, TransactionPaymen
 pub use crate::precompiles::{Precompile, Precompiles};
 pub use crate::runner::Runner;
 pub use evm::{Context, ExitError, ExitFatal, ExitReason, ExitRevert, ExitSucceed};
-pub use orml_traits::account::MergeAccount;
+pub use orml_traits::currency::TransferAll;
 pub use primitives::evm::{Account, AddressMapping, CallInfo, CreateInfo, EvmAddress, Log, Vicinity};
 
 pub mod precompiles;
@@ -120,7 +120,7 @@ pub mod module {
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
 		/// Merge free balance from source to dest.
-		type MergeAccount: MergeAccount<Self::AccountId>;
+		type TransferAll: TransferAll<Self::AccountId>;
 
 		/// Charge extra bytes for creating a contract, would be reserved until
 		/// the contract deleted.
@@ -688,7 +688,7 @@ impl<T: Config> Pallet<T> {
 		}
 
 		Accounts::<T>::remove(address);
-		AccountStorages::<T>::remove_prefix(address);
+		AccountStorages::<T>::remove_prefix(address, None);
 
 		Ok(size)
 	}
@@ -876,7 +876,7 @@ impl<T: Config> Pallet<T> {
 			ensure!(contract_info.maintainer == *maintainer, Error::<T>::NoPermission);
 			ensure!(!contract_info.deployed, Error::<T>::ContractAlreadyDeployed);
 
-			AccountStorages::<T>::remove_prefix(contract);
+			AccountStorages::<T>::remove_prefix(contract, None);
 
 			CodeInfos::<T>::mutate_exists(&contract_info.code_hash, |maybe_code_info| {
 				if let Some(code_info) = maybe_code_info.as_mut() {
@@ -893,7 +893,7 @@ impl<T: Config> Pallet<T> {
 				&contract_account_id,
 				T::Currency::reserved_balance(&contract_account_id),
 			);
-			T::MergeAccount::merge_account(&contract_account_id, &who)?;
+			T::TransferAll::transfer_all(&contract_account_id, &who)?;
 
 			Ok(())
 		})?;

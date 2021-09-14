@@ -17,7 +17,7 @@ use frame_support::{
 	weights::Weight,
 };
 use frame_system::{ensure_signed, pallet_prelude::*};
-use orml_traits::account::MergeAccount;
+use orml_traits::currency::TransferAll;
 use primitives::{
 	evm::{AddressMapping, EvmAddress},
 	AccountIndex,
@@ -66,7 +66,7 @@ pub mod module {
 		type AddressMapping: AddressMapping<Self::AccountId>;
 
 		/// Merge free balance from source to dest.
-		type MergeAccount: MergeAccount<Self::AccountId>;
+		type TransferAll: TransferAll<Self::AccountId>;
 
 		/// On claim account hook.
 		type OnClaim: Handler<Self::AccountId>;
@@ -144,9 +144,9 @@ pub mod module {
 
 			// check if the evm padded address already exists
 			let account_id = T::AddressMapping::get_account_id(&eth_address);
-			if frame_system::Module::<T>::account_exists(&account_id) {
+			if frame_system::Pallet::<T>::account_exists(&account_id) {
 				// merge balance from `evm padded address` to `origin`
-				T::MergeAccount::merge_account(&account_id, &who)?;
+				T::TransferAll::transfer_all(&account_id, &who)?;
 			}
 
 			Accounts::<T>::insert(eth_address, &who);

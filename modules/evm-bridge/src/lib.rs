@@ -3,15 +3,15 @@
 
 use sp_std::vec::Vec;
 
-use ethereum_types::BigEndianHash;
+use ethereum_types::{H160, H256, U256, BigEndianHash};
 use frame_support::{
 	dispatch::{DispatchError, DispatchResult},
 	pallet_prelude::*,
 };
 use hex_literal::hex;
 use module_evm::{ExitReason, ExitSucceed};
-use primitive_types::H256;
-use sp_core::{H160, U256};
+// use primitive_types::H256;
+// use sp_core::{H160, U256};
 use sp_runtime::SaturatedConversion;
 use support::{EVMBridge as EVMBridgeTrait, ExecutionMode, InvokeContext, EVM};
 

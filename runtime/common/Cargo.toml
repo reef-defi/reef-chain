@@ -8,12 +8,13 @@ edition = "2018"
 static_assertions = "1.1.0"
 serde = { version = "1.0.101", optional = true, default-features = false }
 codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
-sp-std = { version = "3.0.0", default-features = false }
-sp-core = { version = "3.0.0", default-features = false }
-sp-runtime = { version = "3.0.0", default-features = false }
-frame-support = { version = "3.0.0", default-features = false }
-frame-system = { version = "3.0.0", default-features = false }
-pallet-scheduler = { version = "3.0.0", default-features = false }
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+sp-core = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+frame-support = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+frame-system = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+pallet-scheduler = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+log = { version = "0.4.14", default-features = false }
 
 module-evm = { path = "../../modules/evm", default-features = false }
 
@@ -26,11 +27,11 @@ primitives = { package = "reef-primitives", path = "../../primitives", default-f
 [dev-dependencies]
 serde_json = "1.0.41"
 hex-literal = "0.3.1"
-sp-io = "3.0.0"
-pallet-timestamp = "3.0.0"
-pallet-balances = "3.0.0"
-pallet-proxy = "3.0.0"
-pallet-utility = "3.0.0"
+sp-io = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+pallet-proxy = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+pallet-utility = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
 orml-tokens = { path = "../../orml/tokens", default-features = false }
 module-currencies = { path = "../../modules/currencies" }
 module-evm-bridge = { path = "../../modules/evm-bridge" }
