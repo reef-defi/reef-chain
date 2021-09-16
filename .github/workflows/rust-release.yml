@@ -1,0 +1,24 @@
+name: Rust Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Init
+      run: make init
+    - name: Build
+      run: make release
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          target/release/reef-node
+          LICENSE
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
