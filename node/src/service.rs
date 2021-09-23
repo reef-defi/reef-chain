@@ -9,6 +9,7 @@ use sc_executor::native_executor_instance;
 pub use sc_executor::NativeExecutor;
 use sc_finality_grandpa::SharedVoterState;
 use sc_keystore::LocalKeystore;
+use sc_telemetry::{Telemetry, TelemetryWorker};
 
 use sc_finality_grandpa::FinalityProofProvider;
 
@@ -40,16 +41,32 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 		>,
 		sc_finality_grandpa::LinkHalf<Block, FullClient, FullSelectChain>,
 		sc_consensus_babe::BabeLink<Block>,
+		Option<Telemetry>
 	)
 >, ServiceError> {
 	if config.keystore_remote.is_some() {
 		return Err(ServiceError::Other("Remote Keystores are not supported.".to_string()))
 	}
-	// let inherent_data_providers = sp_inherents::InherentData::new();
+
+	let telemetry = config
+		.telemetry_endpoints
+		.clone()
+		.filter(|x| !x.is_empty())
+		.map(|endpoints| -> Result<_, sc_telemetry::Error> {
+			let worker = TelemetryWorker::new(16)?;
+			let telemetry = worker.handle().new_telemetry(endpoints);
+			Ok((worker, telemetry))
+		})
+		.transpose()?;
 
 	let (client, backend, keystore_container, task_manager) =
-		sc_service::new_full_parts::<Block, RuntimeApi, Executor>(&config, None)?;
+		sc_service::new_full_parts::<Block, RuntimeApi, Executor>(&config, telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()))?;
 	let client = Arc::new(client);
+
+	let telemetry = telemetry.map(|(worker, telemetry)| {
+		task_manager.spawn_handle().spawn("telemetry", worker.run());
+		telemetry
+	});
 
 	let select_chain = sc_consensus::LongestChain::new(backend.clone());
 
@@ -62,7 +79,7 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 	);
 
 	let (grandpa_block_import, grandpa_link) = sc_finality_grandpa::block_import(
-		client.clone(), &(client.clone() as Arc<_>), select_chain.clone(), None
+		client.clone(), &(client.clone() as Arc<_>), select_chain.clone(), telemetry.as_ref().map(|x| x.handle())
 	)?;
 
 	let (block_import, babe_link) = sc_consensus_babe::block_import(
@@ -94,7 +111,7 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 			&task_manager.spawn_essential_handle(),
 			config.prometheus_registry(),
 			sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone()),
-			None
+			telemetry.as_ref().map(|x| x.handle())
 		)?;
 
 	Ok(sc_service::PartialComponents {
@@ -105,7 +122,7 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 		keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (block_import, grandpa_link, babe_link),
+		other: (block_import, grandpa_link, babe_link, telemetry),
 	})
 }
 
@@ -126,7 +143,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		mut keystore_container,
 		select_chain,
 		transaction_pool,
-		other: (block_import, grandpa_link, babe_link),
+		other: (block_import, grandpa_link, babe_link, mut telemetry),
 	} = new_partial(&config)?;
 
 	if let Some(url) = &config.keystore_remote {
@@ -228,7 +245,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 			backend,
 			system_rpc_tx,
 			config,
-			telemetry: None
+			telemetry: telemetry.as_mut()
 		},
 	)?;
 
@@ -239,11 +256,10 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 			client.clone(),
 			transaction_pool.clone(),
 			prometheus_registry.as_ref(),
-			None
+			telemetry.as_ref().map(|x| x.handle())
 		);
 
 		let can_author_with = sp_consensus::CanAuthorWithNativeVersion::new(client.executor().clone());
-		// let inherent_data_providers = sp_inherents::InherentData::new();
 		let slot_duration = babe_link.config().slot_duration();
 		let babe_config = sc_consensus_babe::BabeParams {
 			keystore: keystore_container.sync_keystore(),
@@ -272,7 +288,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 			// TODO What are sensible values?
 			block_proposal_slot_portion: sc_consensus_babe::SlotProportion::new(2f32 / 3f32),
 			max_block_proposal_slot_portion: None,
-			telemetry: None
+			telemetry: telemetry.as_ref().map(|x| x.handle())
 		};
 
 		let babe = sc_consensus_babe::start_babe(babe_config)?;
@@ -296,7 +312,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		name: Some(name),
 		observer_enabled: false,
 		keystore,
-		telemetry: None,
+		telemetry: telemetry.as_ref().map(|x| x.handle()),
 		local_role: role
 	};
 
@@ -311,7 +327,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 			config: grandpa_config,
 			link: grandpa_link,
 			network: network.clone(),
-			telemetry: None,
+			telemetry: telemetry.as_ref().map(|x| x.handle()),
 			voting_rule: sc_finality_grandpa::VotingRulesBuilder::default().build(),
 			prometheus_registry,
 			shared_voter_state: SharedVoterState::empty(),
@@ -331,8 +347,24 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 
 /// Builds a new service for a light client.
 pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError> {
+		let telemetry = config
+			.telemetry_endpoints
+			.clone()
+			.filter(|x| !x.is_empty())
+			.map(|endpoints| -> Result<_, sc_telemetry::Error> {
+				let worker = TelemetryWorker::new(16)?;
+				let telemetry = worker.handle().new_telemetry(endpoints);
+				Ok((worker, telemetry))
+			})
+			.transpose()?;
+
 	let (client, backend, keystore_container, mut task_manager, on_demand) =
-		sc_service::new_light_parts::<Block, RuntimeApi, Executor>(&config, None)?;
+		sc_service::new_light_parts::<Block, RuntimeApi, Executor>(&config, telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()))?;
+
+	let mut telemetry = telemetry.map(|(worker, telemetry)| {
+		task_manager.spawn_handle().spawn("telemetry", worker.run());
+		telemetry
+	});
 
 	config.network.extra_sets.push(sc_finality_grandpa::grandpa_peers_set_config());
 
@@ -350,7 +382,7 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
 		client.clone(),
 		&(client.clone() as Arc<_>),
 		select_chain.clone(),
-		None
+		telemetry.as_ref().map(|x| x.handle()),
 	)?;
 	let justification_import = grandpa_block_import.clone();
 
@@ -383,7 +415,7 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
 			&task_manager.spawn_essential_handle(),
 			config.prometheus_registry(),
 			sp_consensus::NeverCanAuthor,
-			None
+			telemetry.as_ref().map(|x| x.handle()),
 		)?;
 
 	let warp_sync = Arc::new(sc_finality_grandpa::warp_proof::NetworkProvider::new(
@@ -421,7 +453,7 @@ pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError>
 		backend,
 		network,
 		system_rpc_tx,
-		telemetry: None
+		telemetry: telemetry.as_mut(),
 	})?;
 
 	 network_starter.start_network();
