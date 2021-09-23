@@ -24,7 +24,7 @@ orml-traits = { path = "../../orml/traits", default-features = false }
 
 
 [dev-dependencies]
-sp-core = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.9" }
 smallvec = "1.4.1"
 
 [features]

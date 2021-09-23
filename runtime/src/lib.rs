@@ -92,8 +92,8 @@ pub use primitives::{currency::*, time::*};
 
 mod weights;
 
-// #[cfg(feature = "runtime-benchmarks")]
-// mod benchmarking;
+#[cfg(feature = "runtime-benchmarks")]
+mod benchmarking;
 
 //
 // formerly authority.rs
@@ -1177,6 +1177,30 @@ impl_runtime_apis! {
 
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
+		fn benchmark_metadata(extra: bool) -> (
+			Vec<frame_benchmarking::BenchmarkList>,
+			Vec<frame_support::traits::StorageInfo>,
+		) {
+			use frame_benchmarking::{list_benchmark, Benchmarking, BenchmarkList};
+			use frame_support::traits::StorageInfoTrait;
+			use frame_system_benchmarking::Pallet as SystemBench;
+			use orml_benchmarking::{list_benchmark as orml_list_benchmark};
+
+			let mut list = Vec::<BenchmarkList>::new();
+
+			list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
+			list_benchmark!(list, extra, pallet_balances, Balances);
+			list_benchmark!(list, extra, pallet_timestamp, Timestamp);
+			list_benchmark!(list, extra, module_poc, Poc);
+
+			orml_list_benchmark!(list, extra, evm, benchmarking::evm);
+			orml_list_benchmark!(list, extra, evm_accounts, benchmarking::evm_accounts);
+
+			let storage_info = AllPalletsWithSystem::storage_info();
+
+			return (list, storage_info)
+		}
+
 		fn dispatch_benchmark(
 			config: frame_benchmarking::BenchmarkConfig
 		) -> Result<Vec<frame_benchmarking::BenchmarkBatch>, sp_runtime::RuntimeString> {
@@ -1207,9 +1231,8 @@ impl_runtime_apis! {
 			add_benchmark!(params, batches, pallet_timestamp, Timestamp);
 			add_benchmark!(params, batches, module_poc, Poc);
 
-			// TODO: reinstate benchmarking
-			// orml_add_benchmark!(params, batches, evm, benchmarking::evm);
-			// orml_add_benchmark!(params, batches, evm_accounts, benchmarking::evm_accounts);
+			orml_add_benchmark!(params, batches, evm, benchmarking::evm);
+			orml_add_benchmark!(params, batches, evm_accounts, benchmarking::evm_accounts);
 
 			if batches.is_empty() { return Err("Benchmark not found for this pallet.".into()) }
 			Ok(batches)

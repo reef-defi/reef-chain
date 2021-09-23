@@ -22,7 +22,7 @@ primitives = { package = "reef-primitives", path = "../../primitives", default-f
 module-support = { path = "../support", default-features = false }
 
 [dev-dependencies]
-pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.9" }
 orml-currencies = { path = "../../orml/currencies" }
 orml-tokens = { path = "../../orml/tokens" }
 

@@ -25,9 +25,9 @@ primitives = { package = "reef-primitives", path = "../../primitives", default-f
 support = { package = "module-support", path = "../support", default-features = false }
 
 [dev-dependencies]
-sp-core = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
-pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
-pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.9" }
+pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.9" }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.9" }
 tokens = { package = "orml-tokens", path = "../../orml/tokens" }
 module-evm = { path = "../evm" }
 

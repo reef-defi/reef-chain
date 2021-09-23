@@ -26,8 +26,8 @@ module-evm = { path = "../evm", default-features = false }
 hex-literal = { version = "0.3.1" }
 
 [dev-dependencies]
-pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
-pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.9" }
+pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.9" }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.9" }
 
 [features]
 default = ["std"]
