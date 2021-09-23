@@ -530,7 +530,7 @@ fn create_network_contract_works() {
 			U256::from_str("02").unwrap()
 		);
 
-		let created_event = Event::evm_mod(crate::Event::Created(H160::from_low_u64_be(primitives::NETWORK_CONTRACT_START)));
+		let created_event = Event::EVM(crate::Event::Created(H160::from_low_u64_be(primitives::NETWORK_CONTRACT_START)));
 		assert!(System::events().iter().any(|record| record.event == created_event));
 
 		assert_eq!(EVM::network_contract_index(), primitives::NETWORK_CONTRACT_START + 1);
@@ -598,7 +598,7 @@ fn should_transfer_maintainer() {
 			result.address,
 			bob()
 		));
-		let event = Event::evm_mod(crate::Event::TransferredMaintainer(result.address, bob()));
+		let event = Event::EVM(crate::Event::TransferredMaintainer(result.address, bob()));
 		assert!(System::events().iter().any(|record| record.event == event));
 		assert_eq!(balance(bob()), INITIAL_BALANCE);
 

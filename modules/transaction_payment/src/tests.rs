@@ -13,7 +13,7 @@ use mock::{
 	REEF, RUSD, ALICE, BOB
 };
 use orml_traits::MultiCurrency;
-use sp_runtime::testing::TestXt;
+use sp_runtime::{testing::TestXt, traits::One};
 
 const CALL: &<Runtime as frame_system::Config>::Call =
 	&Call::Currencies(module_currencies::Call::transfer(BOB, RUSD, 12));
@@ -183,7 +183,7 @@ fn compute_fee_works_without_multiplier() {
 		.build()
 		.execute_with(|| {
 			// Next fee multiplier is zero
-			assert_eq!(NextFeeMultiplier::<Runtime>::get(), Multiplier::one());
+			assert_eq!(NextFeeMultiplier::<Runtime>::get(), <Multiplier as One>::one());
 
 			// Tip only, no fees works
 			let dispatch_info = DispatchInfo {

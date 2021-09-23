@@ -88,7 +88,7 @@ impl ExtBuilder {
 		.unwrap();
 
 		orml_tokens::GenesisConfig::<Runtime> {
-			endowed_accounts: self
+			balances: self
 				.endowed_accounts
 				.into_iter()
 				.filter(|(_, currency_id, _)| *currency_id != native_currency_id)
@@ -156,7 +156,7 @@ fn deploy_contract(account: AccountId) -> Result<H160, DispatchError> {
 	Evm::create(Origin::signed(account), contract, 0, 1000000000, 1000000000)
 		.map_or_else(|e| Err(e.error), |_| Ok(()))?;
 
-	if let Event::module_evm(module_evm::Event::Created(address)) = System::events().iter().last().unwrap().event {
+	if let Event::Evm(module_evm::Event::Created(address)) = System::events().iter().last().unwrap().event {
 		Ok(address)
 	} else {
 		Err("deploy_contract failed".into())
@@ -409,7 +409,7 @@ fn test_evm_accounts_module() {
 				EvmAccounts::eth_address(&alice()),
 				EvmAccounts::eth_sign(&alice(), &AccountId::from(ALICE).encode(), &[][..]).unwrap()
 			));
-			let event = Event::module_evm_accounts(module_evm_accounts::Event::ClaimAccount(
+			let event = Event::EvmAccounts(module_evm_accounts::Event::ClaimAccount(
 				AccountId::from(ALICE),
 				EvmAccounts::eth_address(&alice()),
 			));
@@ -452,7 +452,7 @@ fn test_evm_module() {
 			let bob_address = EvmAccounts::eth_address(&bob());
 
 			let contract = deploy_contract(alice_account_id()).unwrap();
-			let event = Event::module_evm(module_evm::Event::Created(contract));
+			let event = Event::Evm(module_evm::Event::Created(contract));
 			assert_eq!(last_event(), event);
 
 			assert_ok!(Evm::transfer_maintainer(
@@ -460,7 +460,7 @@ fn test_evm_module() {
 				contract,
 				bob_address
 			));
-			let event = Event::module_evm(module_evm::Event::TransferredMaintainer(contract, bob_address));
+			let event = Event::Evm(module_evm::Event::TransferredMaintainer(contract, bob_address));
 			assert_eq!(last_event(), event);
 
 			// test EvmAccounts Lookup

@@ -26,9 +26,17 @@ use hex_literal::hex;
 use sp_core::{crypto::UncheckedInto, bytes::from_hex};
 
 use reef_primitives::{AccountPublic, Balance, Nonce};
+use sc_consensus_slots::CheckedHeader::Deferred;
 
 // The URL for the telemetry server.
 const TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
+
+/// The BABE epoch configuration at genesis.
+pub const BABE_GENESIS_EPOCH_CONFIG: sp_consensus_babe::BabeEpochConfiguration =
+	sp_consensus_babe::BabeEpochConfiguration {
+		c: node_runtime::constants::time::PRIMARY_PROBABILITY, // 1 in 4 blocks will be BABE
+		allowed_slots: sp_consensus_babe::AllowedSlots::PrimaryAndSecondaryVRFSlots,
+	};
 
 /// Node `ChainSpec` extensions.
 ///
@@ -361,14 +369,14 @@ fn testnet_genesis(
 		.collect::<Vec<(AccountId, Balance)>>();
 
 	GenesisConfig {
-		frame_system: Some(SystemConfig {
+		system: SystemConfig {
 			// Add Wasm runtime to storage.
 			code: wasm_binary.to_vec(),
 			changes_trie_config: Default::default(),
-		}),
-		pallet_indices: Some(IndicesConfig { indices: vec![] }),
-		pallet_balances: Some(BalancesConfig { balances }),
-		pallet_session: Some(SessionConfig {
+		},
+		indices: IndicesConfig { indices: vec![] },
+		balances: BalancesConfig { balances },
+		session: SessionConfig {
 			keys: initial_authorities
 				.iter()
 				.map(|x| (
@@ -381,8 +389,8 @@ fn testnet_genesis(
 							x.5.clone(), // authority-discovery
 						)))
 				.collect::<Vec<_>>(),
-		}),
-		pallet_staking: Some(StakingConfig {
+		},
+		staking: StakingConfig {
 			validator_count: initial_authorities.len() as u32 * 2,
 			minimum_validator_count: initial_authorities.len() as u32,
 			stakers: initial_authorities
@@ -392,13 +400,13 @@ fn testnet_genesis(
 			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
 			slash_reward_fraction: sp_runtime::Perbill::from_percent(10),
 			..Default::default()
-		}),
-		pallet_babe: Some(BabeConfig { authorities: vec![] }),
-		pallet_grandpa: Some(GrandpaConfig { authorities: vec![] }),
-		pallet_authority_discovery: Some(AuthorityDiscoveryConfig { keys: vec![] }),
-		pallet_im_online: Default::default(),
-		orml_tokens: Some(TokensConfig {
-			endowed_accounts: endowed_accounts
+		},
+		babe: BabeConfig { authorities: Default::default(), epoch_config: Some(BABE_GENESIS_EPOCH_CONFIG) },
+		grandpa: Default::default(),
+		authority_discovery: AuthorityDiscoveryConfig { keys: vec![] },
+		im_online: Default::default(),
+		tokens: TokensConfig {
+			balances: endowed_accounts
 				.iter()
 				.flat_map(|x| {
 					vec![
@@ -406,12 +414,12 @@ fn testnet_genesis(
 					]
 				})
 				.collect(),
-		}),
-		module_evm: Some(EvmConfig {
+		},
+		evm: EvmConfig {
 			accounts: evm_genesis_accounts,
-		}),
-		pallet_sudo: Some(SudoConfig { key: root_key }),
-		pallet_collective_Instance1: Some(Default::default()),
+		},
+		sudo: SudoConfig { key: root_key },
+		tech_council: Default::default(),
 	}
 }
 
@@ -453,14 +461,14 @@ fn mainnet_genesis(
 		.collect::<Vec<(AccountId, Balance)>>();
 
 	GenesisConfig {
-		frame_system: Some(SystemConfig {
+		system: SystemConfig {
 			// Add Wasm runtime to storage.
 			code: wasm_binary.to_vec(),
 			changes_trie_config: Default::default(),
-		}),
-		pallet_indices: Some(IndicesConfig { indices: vec![] }),
-		pallet_balances: Some(BalancesConfig { balances }),
-		pallet_session: Some(SessionConfig {
+		},
+		indices: IndicesConfig { indices: vec![] },
+		balances: BalancesConfig { balances },
+		session: SessionConfig {
 			keys: initial_authorities
 				.iter()
 				.map(|x| (
@@ -473,8 +481,8 @@ fn mainnet_genesis(
 							x.5.clone(), // authority-discovery
 						)))
 				.collect::<Vec<_>>(),
-		}),
-		pallet_staking: Some(StakingConfig {
+		},
+		staking: StakingConfig {
 			validator_count: initial_authorities.len() as u32 * 2,
 			minimum_validator_count: initial_authorities.len() as u32,
 			stakers: initial_authorities
@@ -484,19 +492,19 @@ fn mainnet_genesis(
 			invulnerables: initial_authorities.iter().map(|x| x.0.clone()).collect(),
 			slash_reward_fraction: sp_runtime::Perbill::from_percent(10),
 			..Default::default()
-		}),
-		pallet_babe: Some(BabeConfig { authorities: vec![] }),
-		pallet_grandpa: Some(GrandpaConfig { authorities: vec![] }),
-		pallet_authority_discovery: Some(AuthorityDiscoveryConfig { keys: vec![] }),
-		pallet_im_online: Default::default(),
-		orml_tokens: Some(TokensConfig {
-			endowed_accounts: vec![]
-		}),
-		module_evm: Some(EvmConfig {
+		},
+		babe: BabeConfig { authorities: Default::default(), epoch_config: Some(BABE_GENESIS_EPOCH_CONFIG) },
+		grandpa: Default::default(),
+		authority_discovery: AuthorityDiscoveryConfig { keys: vec![] },
+		im_online: Default::default(),
+		tokens: TokensConfig {
+			balances: vec![]
+		},
+		evm: EvmConfig {
 			accounts: evm_genesis_accounts,
-		}),
-		pallet_sudo: Some(SudoConfig { key: root_key }),
-		pallet_collective_Instance1: Some(Default::default()),
+		},
+		sudo: SudoConfig { key: root_key },
+		tech_council: Default::default(),
 	}
 }
 

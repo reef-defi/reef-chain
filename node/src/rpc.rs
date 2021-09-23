@@ -11,7 +11,7 @@ use sp_api::ProvideRuntimeApi;
 use sp_blockchain::{Error as BlockChainError, HeaderMetadata, HeaderBackend};
 use sp_block_builder::BlockBuilder;
 pub use sc_rpc_api::DenyUnsafe;
-use sp_transaction_pool::TransactionPool;
+use sc_transaction_pool_api::TransactionPool;
 
 use reef_runtime::{
 	AccountId, Balance, Nonce, BlockNumber, Hash,
@@ -73,7 +73,7 @@ pub struct FullDeps<C, P, SC, B> {
 /// Instantiate all full RPC extensions.
 pub fn create_full<C, P, SC, B>(
 	deps: FullDeps<C, P, SC, B>,
-) -> jsonrpc_core::IoHandler<sc_rpc::Metadata> where
+) -> Result<jsonrpc_core::IoHandler<sc_rpc::Metadata>, Box<dyn std::error::Error + Send + Sync>> where
 	C: ProvideRuntimeApi<Block>,
 	C: HeaderBackend<Block> + HeaderMetadata<Block, Error=BlockChainError> + 'static,
 	C: Send + Sync + 'static,
@@ -147,5 +147,5 @@ pub fn create_full<C, P, SC, B>(
 	)));
 	io.extend_with(EVMApiServer::to_delegate(EVMApi::new(client)));
 
-	io
+	Ok(io)
 }

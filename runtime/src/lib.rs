@@ -37,6 +37,7 @@ pub use sp_runtime::{
 use sp_api::impl_runtime_apis;
 use pallet_grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
 use pallet_grandpa::fg_primitives;
+use frame_election_provider_support::onchain;
 pub use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 pub use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
 
@@ -91,8 +92,8 @@ pub use primitives::{currency::*, time::*};
 
 mod weights;
 
-#[cfg(feature = "runtime-benchmarks")]
-mod benchmarking;
+// #[cfg(feature = "runtime-benchmarks")]
+// mod benchmarking;
 
 //
 // formerly authority.rs
@@ -254,7 +255,7 @@ parameter_types! {
 
 impl frame_system::Config for Runtime {
 	/// The basic call filter to use in dispatchable.
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	/// Block & extrinsics weights: base values and limits.
 	type BlockWeights = BlockWeights;
 	/// The maximum length of a block (in bytes).
@@ -351,19 +352,11 @@ parameter_types! {
 	pub const BondingDuration: pallet_staking::EraIndex = 28; // 28 days
 	pub const SlashDeferDuration: pallet_staking::EraIndex = 27; // 27 days
 	pub const RewardCurve: &'static PiecewiseLinear<'static> = &REWARD_CURVE;
-	// only top N nominators get paid for each validator
 	pub const MaxNominatorRewardedPerValidator: u32 = 64;
-	pub const ElectionLookahead: BlockNumber = EPOCH_DURATION_IN_BLOCKS / 4;
-	pub const MaxIterations: u32 = 5;
-	// 0.05%. The higher the value, the more strict solution acceptance becomes.
-	pub MinSolutionScoreBump: Perbill = Perbill::from_rational_approximation(5 as u32, 10_000);
-	// offchain tx signing
-	pub const StakingUnsignedPriority: TransactionPriority = TransactionPriority::max_value() / 2;
 }
 
 impl pallet_staking::Config for Runtime {
-	// TODO: confirm max nominations
-	const MAX_NOMINATIONS: u32 = 42;
+	const MAX_NOMINATIONS: u32 = 16;
 	type Currency = Balances;
 	type UnixTime = Timestamp;
 	type CurrencyToVote = U128CurrencyToVote;
@@ -376,19 +369,20 @@ impl pallet_staking::Config for Runtime {
 	type SlashDeferDuration = SlashDeferDuration;
 	type SlashCancelOrigin = EnsureRootOrThreeFourthsTechCouncil;
 	type SessionInterface = Self;
-	// type RewardCurve = RewardCurve;
 	type NextNewSession = Session;
-	// type ElectionLookahead = ElectionLookahead;
-	// type Call = Call;
-	// type MaxIterations = MaxIterations;
-	// type MinSolutionScoreBump = MinSolutionScoreBump;
 	type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
-	// type UnsignedPriority = StakingUnsignedPriority;
 	type WeightInfo = ();
-	// type OffchainSolutionWeightLimit = OffchainSolutionWeightLimit;
-	type ElectionProvider = ();
-	type EraPayout = ();
-	type GenesisElectionProvider = ();
+	type ElectionProvider = onchain::OnChainSequentialPhragmen<Self>;
+	type EraPayout = pallet_staking::ConvertCurve<RewardCurve>;
+	type GenesisElectionProvider = onchain::OnChainSequentialPhragmen<Self>;
+}
+
+impl onchain::Config for Runtime {
+	type BlockWeights = BlockWeights;
+	type AccountId = AccountId;
+	type BlockNumber = BlockNumber;
+	type Accuracy = sp_runtime::Perbill;
+	type DataProvider = Staking;
 }
 
 
@@ -763,6 +757,8 @@ impl module_poc::Config for Runtime {
 	type WeightInfo = ();
 }
 
+impl pallet_randomness_collective_flip::Config for Runtime {}
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 
@@ -966,8 +962,9 @@ impl_runtime_apis! {
 		fn validate_transaction(
 			source: TransactionSource,
 			tx: <Block as BlockT>::Extrinsic,
+			block_hash: <Block as BlockT>::Hash,
 		) -> TransactionValidity {
-			Executive::validate_transaction(source, tx)
+			Executive::validate_transaction(source, tx, block_hash)
 		}
 	}
 
@@ -1046,6 +1043,10 @@ impl_runtime_apis! {
 	impl fg_primitives::GrandpaApi<Block> for Runtime {
 		fn grandpa_authorities() -> GrandpaAuthorityList {
 			Grandpa::grandpa_authorities()
+		}
+
+		fn current_set_id() -> fg_primitives::SetId {
+			Grandpa::current_set_id()
 		}
 
 		fn submit_report_equivocation_unsigned_extrinsic(
