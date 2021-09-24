@@ -398,7 +398,7 @@ impl pallet_babe::Config for Runtime {
 	type HandleEquivocation =
 		pallet_babe::EquivocationHandler<Self::KeyOwnerIdentification, Offences, ReportLongevity>;
 	type WeightInfo = ();
-	type DisabledValidators = ();
+	type DisabledValidators = Session;
 }
 
 impl pallet_grandpa::Config for Runtime {
@@ -524,7 +524,7 @@ impl orml_tokens::Config for Runtime {
 	type ExistentialDeposits = ExistentialDeposits;
 	type OnDust = orml_tokens::BurnDust<Runtime>;
 	type DustRemovalWhitelist = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 }
 
 parameter_types! {
@@ -650,6 +650,7 @@ parameter_types! {
 	pub const NativeTokenExistentialDeposit: Balance =       1 * REEF;
 	pub const MaxNativeTokenExistentialDeposit: Balance = 1000 * REEF;
 	pub const MaxLocks: u32 = 50;
+	pub const MaxReserves: u32 = 50;
 }
 
 impl pallet_balances::Config for Runtime {
@@ -661,8 +662,8 @@ impl pallet_balances::Config for Runtime {
 	type ExistentialDeposit = NativeTokenExistentialDeposit;
 	type AccountStore = frame_system::Pallet<Runtime>;
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
-	type MaxReserves = ();
-	type ReserveIdentifier = ();
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = [u8; 8];
 }
 
 

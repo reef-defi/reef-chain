@@ -12,7 +12,7 @@ parameter_types!(
 	pub const BlockHashCount: u32 = 250;
 );
 impl frame_system::Config for Runtime {
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type Origin = Origin;
 	type Index = u64;
 	type BlockNumber = u64;
@@ -40,9 +40,10 @@ impl frame_system::Config for Runtime {
 
 parameter_types! {
 	pub const ExistentialDeposit: u64 = 1;
+	pub const MaxLocks: u32 = 50;
 }
 impl pallet_balances::Config for Runtime {
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 	type Balance = u64;
 	type Event = Event;
 	type DustRemoval = ();
@@ -50,7 +51,7 @@ impl pallet_balances::Config for Runtime {
 	type AccountStore = System;
 	type WeightInfo = ();
 	type MaxReserves = ();
-	type ReserveIdentifier = ();
+	type ReserveIdentifier = [u8; 8];
 }
 
 parameter_types! {

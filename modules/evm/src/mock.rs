@@ -24,7 +24,7 @@ parameter_types! {
 }
 
 impl frame_system::Config for Test {
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
 	type BlockLength = ();
 	type Origin = Origin;
@@ -51,6 +51,7 @@ impl frame_system::Config for Test {
 
 parameter_types! {
 	pub const ExistentialDeposit: u64 = 1;
+	pub const MaxLocks: u32 = 50;
 }
 impl pallet_balances::Config for Test {
 	type Balance = u64;
@@ -59,9 +60,9 @@ impl pallet_balances::Config for Test {
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 	type MaxReserves = ();
-	type ReserveIdentifier = ();
+	type ReserveIdentifier = [u8; 8];
 }
 
 parameter_types! {
@@ -89,7 +90,7 @@ impl orml_tokens::Config for Test {
 	type ExistentialDeposits = ExistentialDeposits;
 	type OnDust = ();
 	type DustRemovalWhitelist = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 }
 
 parameter_types! {

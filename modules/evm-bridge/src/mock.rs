@@ -24,7 +24,7 @@ parameter_types! {
 }
 
 impl frame_system::Config for Runtime {
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type Origin = Origin;
 	type Call = Call;
 	type Index = u64;
@@ -51,6 +51,7 @@ impl frame_system::Config for Runtime {
 
 parameter_types! {
 	pub const ExistentialDeposit: u64 = 1;
+	pub const MaxLocks: u32 = 50;
 }
 
 impl pallet_balances::Config for Runtime {
@@ -60,9 +61,9 @@ impl pallet_balances::Config for Runtime {
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 	type MaxReserves = ();
-	type ReserveIdentifier = ();
+	type ReserveIdentifier = [u8; 8];
 }
 
 parameter_types! {

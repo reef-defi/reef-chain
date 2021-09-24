@@ -28,7 +28,7 @@ parameter_types! {
 	pub const BlockHashCount: u32 = 250;
 }
 impl frame_system::Config for Test {
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = BlockWeights;
 	type BlockLength = ();
 	type Origin = Origin;
@@ -75,12 +75,13 @@ impl orml_tokens::Config for Test {
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
 	type OnDust = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 	type DustRemovalWhitelist = ();
 }
 
 parameter_types! {
 	pub const ExistentialDeposit: Balance = 1;
+	pub const MaxLocks: u32 = 50;
 }
 
 impl pallet_balances::Config for Test {
@@ -90,9 +91,9 @@ impl pallet_balances::Config for Test {
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 	type MaxReserves = ();
-	type ReserveIdentifier = ();
+	type ReserveIdentifier = [u8; 8];
 }
 
 pub const REEF: CurrencyId = CurrencyId::Token(TokenSymbol::REEF);

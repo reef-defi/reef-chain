@@ -49,7 +49,7 @@ impl frame_system::Config for Runtime {
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type DbWeight = ();
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
 	type OnSetCode = ();
@@ -65,7 +65,7 @@ parameter_type_with_key! {
 
 parameter_types! {
 	pub DustAccount: AccountId = PalletId(*b"orml/dst").into_account();
-	pub const MaxLocks: u32 = 16;
+	pub const MaxLocks: u32 = 50;
 }
 
 impl tokens::Config for Runtime {
@@ -98,9 +98,9 @@ impl pallet_balances::Config for Runtime {
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 	type MaxReserves = ();
-	type ReserveIdentifier = ();
+	type ReserveIdentifier = [u8; 8];
 }
 
 pub type PalletBalances = pallet_balances::Pallet<Runtime>;

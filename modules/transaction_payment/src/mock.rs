@@ -64,7 +64,7 @@ impl frame_system::Config for Runtime {
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type DbWeight = ();
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
 	type OnSetCode = ();
@@ -84,12 +84,13 @@ impl orml_tokens::Config for Runtime {
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
 	type OnDust = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 	type DustRemovalWhitelist = ();
 }
 
 parameter_types! {
 	pub const NativeTokenExistentialDeposit: Balance = 0;
+	pub const MaxLocks: u32 = 50;
 }
 
 impl pallet_balances::Config for Runtime {
@@ -98,9 +99,9 @@ impl pallet_balances::Config for Runtime {
 	type Event = Event;
 	type ExistentialDeposit = NativeTokenExistentialDeposit;
 	type AccountStore = System;
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
 	type WeightInfo = ();
-	type ReserveIdentifier = ();
+	type ReserveIdentifier = [u8; 8];
 	type MaxReserves = ();
 }
 
