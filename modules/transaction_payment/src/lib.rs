@@ -31,7 +31,6 @@ use sp_runtime::{
 };
 use sp_std::{prelude::*, vec};
 use support::{TransactionPayment};
-// TODO: Assess the usage of these types
 use frame_support::traits::SameOrOther;
 
 mod default_weight;

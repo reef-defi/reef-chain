@@ -95,7 +95,6 @@ pub fn new_partial(config: &Configuration) -> PartialResult {
 			Some(Box::new(grandpa_block_import)),
 			client.clone(),
 			select_chain.clone(),
-			// inherent_data_providers,
 			move |_, ()| async move {
 				let timestamp = sp_timestamp::InherentDataProvider::from_system_time();
 
@@ -279,12 +278,10 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 
 				Ok((timestamp, slot))
 			},
-			// create_inherent_data_providers: inherent_data_providers,
 			force_authoring,
 			backoff_authoring_blocks,
 			babe_link,
 			can_author_with,
-			// TODO What are sensible values?
 			block_proposal_slot_portion: sc_consensus_babe::SlotProportion::new(2f32 / 3f32),
 			max_block_proposal_slot_portion: None,
 			telemetry: telemetry.as_ref().map(|x| x.handle())
@@ -346,16 +343,16 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 
 /// Builds a new service for a light client.
 pub fn new_light(mut config: Configuration) -> Result<TaskManager, ServiceError> {
-		let telemetry = config
-			.telemetry_endpoints
-			.clone()
-			.filter(|x| !x.is_empty())
-			.map(|endpoints| -> Result<_, sc_telemetry::Error> {
-				let worker = TelemetryWorker::new(16)?;
-				let telemetry = worker.handle().new_telemetry(endpoints);
-				Ok((worker, telemetry))
-			})
-			.transpose()?;
+	let telemetry = config
+		.telemetry_endpoints
+		.clone()
+		.filter(|x| !x.is_empty())
+		.map(|endpoints| -> Result<_, sc_telemetry::Error> {
+			let worker = TelemetryWorker::new(16)?;
+			let telemetry = worker.handle().new_telemetry(endpoints);
+			Ok((worker, telemetry))
+		})
+		.transpose()?;
 
 	let (client, backend, keystore_container, mut task_manager, on_demand) =
 		sc_service::new_light_parts::<Block, RuntimeApi, Executor>(&config, telemetry.as_ref().map(|(_, telemetry)| telemetry.handle()))?;
