@@ -1,7 +1,7 @@
 use sp_core::{Pair, Public, sr25519, H160, Bytes};
 use reef_runtime::{
 	AccountId, CurrencyId,
-	BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
+	BabeConfig, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig,
 	IndicesConfig, EvmConfig, StakingConfig, SessionConfig, AuthorityDiscoveryConfig,
 	WASM_BINARY,
 	TokenSymbol, TokensConfig, REEF,
@@ -26,7 +26,6 @@ use hex_literal::hex;
 use sp_core::{crypto::UncheckedInto, bytes::from_hex};
 
 use reef_primitives::{AccountPublic, Balance, Nonce};
-use sc_consensus_slots::CheckedHeader::Deferred;
 
 // The URL for the telemetry server.
 const TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";

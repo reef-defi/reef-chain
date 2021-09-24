@@ -80,7 +80,7 @@ fn should_create_and_call_contract() {
 
 		assert_eq!(contract_address, H160::from_str("5f8bd49cd9f0cb2bd5bb9d4320dfe9b61023249d").unwrap());
 
-		assert_eq!(Module::<Test>::account_basic(&caller).nonce, U256::from_str("02").unwrap());
+		assert_eq!(Pallet::<Test>::account_basic(&caller).nonce, U256::from_str("02").unwrap());
 
 		// multiply(2, 3)
 		let multiply = from_hex("0x165c4a1600000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000003").unwrap();
@@ -101,9 +101,9 @@ fn should_create_and_call_contract() {
 			U256::from(result.output.as_slice())
 		);
 
-		assert_eq!(Module::<Test>::account_basic(&caller).nonce, U256::from_str("03").unwrap());
+		assert_eq!(Pallet::<Test>::account_basic(&caller).nonce, U256::from_str("03").unwrap());
 
-		assert_eq!(Module::<Test>::account_basic(&contract_address).nonce, U256::from_str("01").unwrap());
+		assert_eq!(Pallet::<Test>::account_basic(&contract_address).nonce, U256::from_str("01").unwrap());
 	});
 }
 
@@ -182,7 +182,7 @@ fn call_reverts_with_message() {
 		let message  = String::from_utf8_lossy(&result.output);
 		assert!(message.contains("error message"));
 
-		assert_eq!(Module::<Test>::account_basic(&caller).nonce, U256::from_str("03").unwrap());
+		assert_eq!(Pallet::<Test>::account_basic(&caller).nonce, U256::from_str("03").unwrap());
 	});
 }
 
@@ -526,7 +526,7 @@ fn create_network_contract_works() {
 		));
 
 		assert_eq!(
-			Module::<Test>::account_basic(&NetworkContractSource::get()).nonce,
+			Pallet::<Test>::account_basic(&NetworkContractSource::get()).nonce,
 			U256::from_str("02").unwrap()
 		);
 

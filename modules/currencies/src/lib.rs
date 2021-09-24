@@ -41,7 +41,6 @@ mod mock;
 mod tests;
 
 pub use module::*;
-use frame_support::traits::fungible::Transfer;
 
 pub trait WeightInfo {
 	fn transfer_non_native_currency() -> Weight;

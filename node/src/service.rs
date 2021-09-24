@@ -24,10 +24,7 @@ native_executor_instance!(
 type FullClient = sc_service::TFullClient<Block, RuntimeApi, Executor>;
 type FullBackend = sc_service::TFullBackend<Block>;
 type FullSelectChain = sc_consensus::LongestChain<FullBackend, Block>;
-
-// TODO: Result structure is very complex. Consider factoring parts into `type` definitions.
-// After this TODO will be resolved, remove the suppresion of `type-complexity` warnings in the Makefile.
-pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponents<
+type PartialResult = Result<sc_service::PartialComponents<
 	FullClient,
 	FullBackend,
 	FullSelectChain,
@@ -43,7 +40,9 @@ pub fn new_partial(config: &Configuration) -> Result<sc_service::PartialComponen
 		sc_consensus_babe::BabeLink<Block>,
 		Option<Telemetry>
 	)
->, ServiceError> {
+>, ServiceError>;
+
+pub fn new_partial(config: &Configuration) -> PartialResult {
 	if config.keystore_remote.is_some() {
 		return Err(ServiceError::Other("Remote Keystores are not supported.".to_string()))
 	}
@@ -254,7 +253,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		let proposer = sc_basic_authorship::ProposerFactory::new(
 			task_manager.spawn_handle(),
 			client.clone(),
-			transaction_pool.clone(),
+			transaction_pool,
 			prometheus_registry.as_ref(),
 			telemetry.as_ref().map(|x| x.handle())
 		);
@@ -263,7 +262,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		let slot_duration = babe_link.config().slot_duration();
 		let babe_config = sc_consensus_babe::BabeParams {
 			keystore: keystore_container.sync_keystore(),
-			client: client.clone(),
+			client,
 			select_chain,
 			env: proposer,
 			block_import,
@@ -326,7 +325,7 @@ pub fn new_full(mut config: Configuration) -> Result<TaskManager, ServiceError> 
 		let grandpa_config = sc_finality_grandpa::GrandpaParams {
 			config: grandpa_config,
 			link: grandpa_link,
-			network: network.clone(),
+			network,
 			telemetry: telemetry.as_ref().map(|x| x.handle()),
 			voting_rule: sc_finality_grandpa::VotingRulesBuilder::default().build(),
 			prometheus_registry,

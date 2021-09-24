@@ -197,7 +197,7 @@ pub mod fee {
 		constants::ExtrinsicBaseWeight, WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
 	};
 	use smallvec::smallvec;
-	use sp_runtime::Perbill;
+	use sp_runtime::PerThing;
 
 	/// Handles converting a weight scalar to a fee value, based on the scale
 	/// and granularity of the node's balance type.
@@ -220,7 +220,7 @@ pub mod fee {
 			smallvec![WeightToFeeCoefficient {
 				degree: 1,
 				negative: false,
-				coeff_frac: Perbill::from_rational_approximation(p % q, q),
+				coeff_frac: PerThing::from_rational(p % q, q),
 				coeff_integer: p / q,
 			}]
 		}
@@ -850,7 +850,7 @@ pub type Executive = frame_executive::Executive<
 	Block,
 	frame_system::ChainContext<Runtime>,
 	Runtime,
-	AllModules,
+	AllPallets,
 >;
 
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime

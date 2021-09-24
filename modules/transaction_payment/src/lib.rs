@@ -32,7 +32,7 @@ use sp_runtime::{
 use sp_std::{prelude::*, vec};
 use support::{TransactionPayment};
 // TODO: Assess the usage of these types
-use frame_support::traits::SameOrOther::{Same, Other};
+use frame_support::traits::SameOrOther;
 
 mod default_weight;
 mod mock;
@@ -724,9 +724,9 @@ where
 					// The refund cannot be larger than the up front payed max weight.
 					// `PostDispatchInfo::calc_unspent` guards against such a case.
 					match payed.offset(refund_imbalance) {
-						// TODO: Assess proper usage of these types
-						Same(actual_payment) => actual_payment,
-						_ => return Err(InvalidTransaction::Payment.into()),
+						SameOrOther::Same(actual_payment) => actual_payment,
+						SameOrOther::None => NegativeImbalanceOf::<T>::zero(),
+						SameOrOther::Other(_) => return Err(InvalidTransaction::Payment.into()),
 					}
 				}
 				// We do not recreate the account using the refund. The up front payment
@@ -788,9 +788,9 @@ where
 			Ok(refund_imbalance) => {
 				// The refund cannot be larger than the up front payed max weight.
 				match payed.offset(refund_imbalance) {
-					// TODO: Assess proper usage of these types
-					Same(actual_payment) => actual_payment,
-					_ => return Err(InvalidTransaction::Payment.into()),
+					SameOrOther::Same(actual_payment) => actual_payment,
+					SameOrOther::None => NegativeImbalanceOf::<T>::zero(),
+					SameOrOther::Other(_) => return Err(InvalidTransaction::Payment.into()),
 				}
 			}
 			// We do not recreate the account using the refund. The up front payment

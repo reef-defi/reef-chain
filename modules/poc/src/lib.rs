@@ -16,7 +16,7 @@ use frame_support::{
 	ensure,
 	transactional,
 };
-use sp_runtime::Perbill;
+use sp_runtime::{Perbill, PerThing};
 use frame_support::sp_runtime::traits::{
 	Zero, Saturating,
 	CheckedAdd, CheckedDiv
@@ -571,7 +571,7 @@ impl<T: Config> Pallet<T> {
 
 	/// example: 7/365
 	pub fn proportion_of_era_to_year() -> Perbill {
-		Perbill::from_rational_approximation(
+		PerThing::from_rational(
 			T::EraDuration::get(),
 			365 * primitives::time::DAYS
 		)
