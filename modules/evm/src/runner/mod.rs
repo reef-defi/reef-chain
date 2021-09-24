@@ -5,10 +5,7 @@ use crate::{AddressMapping, BalanceOf, CallInfo, Config, CreateInfo, Error, Pall
 use evm::{CreateScheme, ExitError, ExitReason};
 use evm_runtime::Handler as HandlerT;
 use evm_gasometer::{self as gasometer};
-use frame_support::{
-	debug,
-	traits::{Currency, ExistenceRequirement, Get},
-};
+use frame_support::traits::{Currency, ExistenceRequirement, Get};
 use handler::Handler;
 use primitive_types::{H160, H256, U256};
 use sha3::{Digest, Keccak256};
@@ -32,7 +29,7 @@ impl<T: Config> Runner<T> {
 		tag: &'static str,
 		config: &evm::Config,
 	) -> Result<CreateInfo, DispatchError> {
-		debug::debug!(
+		log::debug!(
 			target: "evm",
 			"{:?}: source {:?}, gas_limit: {:?}, storage_limit: {:?}",
 			tag,
@@ -97,7 +94,7 @@ impl<T: Config> Runner<T> {
 					used_storage: substate.used_storage(),
 				};
 
-				debug::debug!(
+				log::debug!(
 					target: "evm",
 					"{:?}-result: create_info {:?}",
 					tag,
@@ -161,7 +158,7 @@ impl<T: Config> Runner<T> {
 		storage_limit: u32,
 		config: &evm::Config,
 	) -> Result<CallInfo, DispatchError> {
-		debug::debug!(
+		log::debug!(
 			target: "evm",
 			"call: sender:{:?}, origin: {:?}, target: {:?}, input: {:?}, gas_limit: {:?}, storage_limit: {:?}",
 			sender,
@@ -206,7 +203,7 @@ impl<T: Config> Runner<T> {
 				used_storage: substate.used_storage(),
 			};
 
-			debug::debug!(
+			log::debug!(
 				target: "evm",
 				"call-result: call_info {:?}",
 				call_info

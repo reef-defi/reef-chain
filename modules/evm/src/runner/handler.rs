@@ -4,13 +4,13 @@ use crate::{
 	precompiles::Precompiles,
 	runner::storage_meter::{StorageMeter, StorageMeterHandler},
 	AccountInfo, AccountStorages, Accounts, AddressMapping, Codes, Config, ContractInfo, Error, Event, Log,
-	MergeAccount, Pallet, Vicinity,
+	TransferAll, Pallet, Vicinity,
 };
 use evm::{Capture, Context, CreateScheme, ExitError, ExitReason, Opcode, Runtime, Stack, Transfer};
 use evm_gasometer::{self as gasometer, Gasometer};
 use evm_runtime::{Config as EvmRuntimeConfig, Handler as HandlerT};
 use frame_support::{
-	debug, require_transactional,
+	require_transactional,
 	traits::{BalanceStatus, Currency, ExistenceRequirement, Get, ReservableCurrency},
 };
 use primitive_types::{H160, H256, U256};
@@ -327,12 +327,12 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 			H256::default()
 		} else {
 			let number = T::BlockNumber::from(number.as_u32());
-			H256::from_slice(frame_system::Module::<T>::block_hash(number).as_ref())
+			H256::from_slice(frame_system::Pallet::<T>::block_hash(number).as_ref())
 		}
 	}
 
 	fn block_number(&self) -> U256 {
-		let number: u128 = frame_system::Module::<T>::block_number().unique_saturated_into();
+		let number: u128 = frame_system::Pallet::<T>::block_number().unique_saturated_into();
 		U256::from(number)
 	}
 
@@ -341,7 +341,7 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 	}
 
 	fn block_timestamp(&self) -> U256 {
-		let now: u128 = pallet_timestamp::Module::<T>::get().unique_saturated_into();
+		let now: u128 = pallet_timestamp::Pallet::<T>::get().unique_saturated_into();
 		U256::from(now / 1000)
 	}
 
@@ -424,7 +424,7 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 			.refund(size.saturating_add(T::NewContractExtraBytes::get()))
 			.map_err(|_| ExitError::Other("RefundStorageError".into()))?;
 
-		T::MergeAccount::merge_account(&source, &dest).map_err(|_| ExitError::Other("MergeAccountError".into()))
+		T::TransferAll::transfer_all(&source, &dest).map_err(|_| ExitError::Other("TransferAllError".into()))
 	}
 
 	fn create(
@@ -435,7 +435,7 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 		init_code: Vec<u8>,
 		target_gas: Option<u64>,
 	) -> Capture<(ExitReason, Option<H160>, Vec<u8>), Self::CreateInterrupt> {
-		debug::debug!(
+		log::debug!(
 			target: "evm",
 			"handler: create: caller {:?}",
 			caller,
@@ -527,7 +527,7 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 		is_static: bool,
 		context: Context,
 	) -> Capture<(ExitReason, Vec<u8>), Self::CallInterrupt> {
-		debug::debug!(
+		log::debug!(
 			target: "evm",
 			"handler: call: source {:?} code_address {:?} input: {:?} target_gas {:?} gas_left {:?}",
 			context.caller,
@@ -572,7 +572,7 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 				try_or_rollback!(gasometer.record_cost(target_gas));
 
 				if let Some(ret) = T::Precompiles::execute(code_address, &input, Some(target_gas), &context) {
-					debug::debug!(
+					log::debug!(
 						target: "evm",
 						"handler: call-result: precompile result {:?}",
 						ret
@@ -600,7 +600,7 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 					input,
 				);
 
-				debug::debug!(
+				log::debug!(
 					target: "evm",
 					"handler: call-result: reason {:?} out {:?} gas_left {:?}",
 					reason, out, substate.gas_left()
@@ -653,7 +653,7 @@ impl<T: Config> StorageMeterHandler for StorageMeterHandlerImpl<T> {
 			return Ok(());
 		}
 
-		debug::debug!(
+		log::debug!(
 			target: "evm",
 			"reserve_storage: from {:?} limit {:?}",
 			self.origin, limit,
@@ -673,7 +673,7 @@ impl<T: Config> StorageMeterHandler for StorageMeterHandlerImpl<T> {
 			return Ok(());
 		}
 
-		debug::debug!(
+		log::debug!(
 			target: "evm",
 			"unreserve_storage: from {:?} used {:?} refunded {:?} unused {:?}",
 			self.origin, used, refunded, unused
@@ -695,7 +695,7 @@ impl<T: Config> StorageMeterHandler for StorageMeterHandlerImpl<T> {
 			return Ok(());
 		}
 
-		debug::debug!(
+		log::debug!(
 			target: "evm",
 			"charge_storage: from {:?} contract {:?} used {:?} refunded {:?}",
 			&self.origin, contract, used, refunded

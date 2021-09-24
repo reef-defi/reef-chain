@@ -1,7 +1,7 @@
 use crate::Balance;
 use codec::{Decode, Encode};
 use evm::ExitReason;
-use sp_core::{H160, U256};
+use ethereum_types::{H160, U256};
 use sp_runtime::RuntimeDebug;
 use sp_std::vec::Vec;
 
@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 
 
 /// Evm Address.
-pub type EvmAddress = sp_core::H160;
+pub type EvmAddress = H160;
 
 #[derive(Clone, Eq, PartialEq, Encode, Decode, Default)]
 #[cfg_attr(feature = "std", derive(Debug, Serialize, Deserialize))]

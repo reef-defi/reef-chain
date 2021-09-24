@@ -12,7 +12,7 @@ fn set_dummy_work() {
 		assert_ok!(Example::set_dummy(Origin::root(), 20));
 		assert_eq!(Example::dummy(), Some(20));
 
-		let set_dummy_event = Event::example(crate::Event::Dummy(20));
+		let set_dummy_event = Event::Example(crate::Event::Dummy(20));
 		assert!(System::events().iter().any(|record| record.event == set_dummy_event));
 	});
 }
