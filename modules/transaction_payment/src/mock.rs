@@ -91,6 +91,7 @@ impl orml_tokens::Config for Runtime {
 parameter_types! {
 	pub const NativeTokenExistentialDeposit: Balance = 0;
 	pub const MaxLocks: u32 = 50;
+	pub const MaxReserves: u32 = 50;
 }
 
 impl pallet_balances::Config for Runtime {
@@ -102,7 +103,7 @@ impl pallet_balances::Config for Runtime {
 	type MaxLocks = MaxLocks;
 	type WeightInfo = ();
 	type ReserveIdentifier = [u8; 8];
-	type MaxReserves = ();
+	type MaxReserves = MaxReserves;
 }
 
 pub type AdaptedBasicCurrency = module_currencies::BasicCurrencyAdapter<Runtime, PalletBalances, Amount, BlockNumber>;
