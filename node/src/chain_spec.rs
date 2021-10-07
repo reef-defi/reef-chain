@@ -2,7 +2,7 @@ use sp_core::{Pair, Public, sr25519, H160, Bytes};
 use reef_runtime::{
 	AccountId, CurrencyId,
 	BabeConfig, BalancesConfig, GenesisConfig, GrandpaConfig, SudoConfig, SystemConfig,
-	IndicesConfig, EvmConfig, StakingConfig, SessionConfig, AuthorityDiscoveryConfig,
+	IndicesConfig, EVMConfig, StakingConfig, SessionConfig, AuthorityDiscoveryConfig,
 	WASM_BINARY,
 	TokenSymbol, TokensConfig, REEF,
 	StakerStatus,
@@ -407,7 +407,7 @@ fn testnet_genesis(
 				})
 				.collect(),
 		}),
-		module_evm: Some(EvmConfig {
+		module_evm: Some(EVMConfig {
 			accounts: evm_genesis_accounts,
 		}),
 		pallet_sudo: Some(SudoConfig { key: root_key }),
@@ -492,7 +492,7 @@ fn mainnet_genesis(
 		orml_tokens: Some(TokensConfig {
 			endowed_accounts: vec![]
 		}),
-		module_evm: Some(EvmConfig {
+		module_evm: Some(EVMConfig {
 			accounts: evm_genesis_accounts,
 		}),
 		pallet_sudo: Some(SudoConfig { key: root_key }),
