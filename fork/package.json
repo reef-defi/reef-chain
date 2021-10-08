@@ -1,0 +1,36 @@
+{
+  "name": "fork",
+  "version": "1.0.0",
+  "description": "This script allows bootstrapping a new substrate chain with the current state of a live chain",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maxsam4/fork-off-substrate.git"
+  },
+  "keywords": [
+    "substrate",
+    "polkadot",
+    "kusama",
+    "fork"
+  ],
+  "author": "Mudit Gupta <hi@mudit.blog>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/maxsam4/fork-off-substrate/issues"
+  },
+  "homepage": "https://github.com/maxsam4/fork-off-substrate#readme",
+  "dependencies": {
+    "@polkadot/api": "^4.17.1",
+    "@reef-defi/api": "^0.1.9-0",
+    "@reef-defi/api-derive": "^0.1.8",
+    "@reef-defi/type-definitions": "^0.1.8",
+    "@reef-defi/types": "^0.1.8",
+    "chalk": "^4.1.1",
+    "cli-progress": "^3.9.0",
+    "dotenv": "^10.0.0"
+  }
+}

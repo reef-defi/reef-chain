@@ -79,3 +79,14 @@ cargo-update:
 	cargo update --manifest-path node/Cargo.toml
 	make test
 
+.PHONY: fork
+fork:
+	npm i --prefix fork fork
+ifeq (,$(wildcard fork/data))
+	mkdir fork/data
+endif
+	cp target/release/reef-node fork/data/binary
+	cp target/release/wbuild/reef-runtime/reef_runtime.compact.wasm fork/data/runtime.wasm
+	cp assets/types.json fork/data/schema.json
+	cp assets/chain_spec_$(chain)_raw.json fork/data/genesis.json
+	cd fork && npm start && cd ..
