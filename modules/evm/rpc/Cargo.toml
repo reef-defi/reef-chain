@@ -7,25 +7,26 @@ edition = "2018"
 [dependencies]
 jsonrpc-core = "15.0.0"
 jsonrpc-derive = "15.0.0"
-ethereum-types = "0.11.0"
-sp-api = { version = "3.0.0" }
-sp-blockchain = { version = "3.0.0" }
-sp-core = { version = "3.0.0" }
-sp-io = { version = "3.0.0" }
-sp-rpc = { version = "3.0.0" }
-sp-runtime = { version = "3.0.0" }
-sp-storage = { version = "3.0.0" }
-sp-transaction-pool = { version = "3.0.0" }
-sc-service = { version = "0.9.0" }
-sc-client-api = { version = "3.0.0" }
-sc-rpc = { version = "3.0.0" }
-sc-network = { version = "0.9.0" }
+ethereum-types = "0.12.0"
+sp-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sp-core = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sp-io = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sp-rpc = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sp-storage = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sp-transaction-pool = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sc-service = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sc-client-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sc-rpc = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+sc-network = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
 rustc-hex = "2.1.0"
 serde = { version = "1.0", features = ["derive"] }
 module-evm-rpc-runtime-api = { path = "runtime_api" }
 module-evm = { path = ".." }
-pallet-transaction-payment-rpc-runtime-api = "3.0.0"
-frame-support = "3.0.0"
+pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+log = { version = "0.4.14", default-features = false }
 
 [dev-dependencies]
 serde_json = "1.0.41"

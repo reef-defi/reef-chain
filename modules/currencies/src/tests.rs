@@ -259,7 +259,7 @@ fn call_event_should_work() {
 			assert_eq!(Currencies::free_balance(X_TOKEN_ID, &ALICE), 50);
 			assert_eq!(Currencies::free_balance(X_TOKEN_ID, &BOB), 150);
 
-			let transferred_event = Event::currencies(crate::Event::Transferred(X_TOKEN_ID, ALICE, BOB, 50));
+			let transferred_event = Event::Currencies(crate::Event::Transferred(X_TOKEN_ID, ALICE, BOB, 50));
 			assert!(System::events().iter().any(|record| record.event == transferred_event));
 
 			assert_ok!(<Currencies as MultiCurrency<AccountId>>::transfer(
@@ -268,7 +268,7 @@ fn call_event_should_work() {
 			assert_eq!(Currencies::free_balance(X_TOKEN_ID, &ALICE), 40);
 			assert_eq!(Currencies::free_balance(X_TOKEN_ID, &BOB), 160);
 
-			let transferred_event = Event::currencies(crate::Event::Transferred(X_TOKEN_ID, ALICE, BOB, 10));
+			let transferred_event = Event::Currencies(crate::Event::Transferred(X_TOKEN_ID, ALICE, BOB, 10));
 			assert!(System::events().iter().any(|record| record.event == transferred_event));
 
 			assert_ok!(<Currencies as MultiCurrency<AccountId>>::deposit(
@@ -276,7 +276,7 @@ fn call_event_should_work() {
 			));
 			assert_eq!(Currencies::free_balance(X_TOKEN_ID, &ALICE), 140);
 
-			let transferred_event = Event::currencies(crate::Event::Deposited(X_TOKEN_ID, ALICE, 100));
+			let transferred_event = Event::Currencies(crate::Event::Deposited(X_TOKEN_ID, ALICE, 100));
 			assert!(System::events().iter().any(|record| record.event == transferred_event));
 
 			assert_ok!(<Currencies as MultiCurrency<AccountId>>::withdraw(
@@ -284,7 +284,7 @@ fn call_event_should_work() {
 			));
 			assert_eq!(Currencies::free_balance(X_TOKEN_ID, &ALICE), 120);
 
-			let transferred_event = Event::currencies(crate::Event::Withdrawn(X_TOKEN_ID, ALICE, 20));
+			let transferred_event = Event::Currencies(crate::Event::Withdrawn(X_TOKEN_ID, ALICE, 20));
 			assert!(System::events().iter().any(|record| record.event == transferred_event));
 		});
 }

@@ -22,7 +22,6 @@
   "forkBlocks": null,
   "badBlocks": null,
   "consensusEngine": null,
-  "lightSyncState": null,
   "genesis": {
     "raw": {
       "top": {

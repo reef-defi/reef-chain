@@ -2,14 +2,14 @@
 
 #![cfg(test)]
 
-use frame_support::{ord_parameter_types, parameter_types, traits::GenesisBuild};
+use frame_support::{ord_parameter_types, parameter_types, traits::GenesisBuild, PalletId};
 use orml_traits::parameter_type_with_key;
 use primitives::{evm::AddressMapping, mocks::MockAddressMapping, CurrencyId, TokenSymbol};
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
 	traits::{AccountIdConversion, IdentityLookup},
-	AccountId32, ModuleId, Perbill,
+	AccountId32, Perbill,
 };
 
 use super::*;
@@ -49,9 +49,10 @@ impl frame_system::Config for Runtime {
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type DbWeight = ();
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
+	type OnSetCode = ();
 }
 
 type Balance = u128;
@@ -63,7 +64,8 @@ parameter_type_with_key! {
 }
 
 parameter_types! {
-	pub DustAccount: AccountId = ModuleId(*b"orml/dst").into_account();
+	pub DustAccount: AccountId = PalletId(*b"orml/dst").into_account();
+	pub const MaxLocks: u32 = 50;
 }
 
 impl tokens::Config for Runtime {
@@ -74,6 +76,8 @@ impl tokens::Config for Runtime {
 	type ExistentialDeposits = ExistentialDeposits;
 	type OnDust = tokens::TransferDust<Runtime, DustAccount>;
 	type WeightInfo = ();
+	type DustRemovalWhitelist = ();
+	type MaxLocks = MaxLocks;
 }
 
 pub const NATIVE_CURRENCY_ID: CurrencyId = CurrencyId::Token(TokenSymbol::REEF);
@@ -85,6 +89,7 @@ parameter_types! {
 
 parameter_types! {
 	pub const ExistentialDeposit: u64 = 1;
+	pub const MaxReserves: u32 = 50;
 }
 
 impl pallet_balances::Config for Runtime {
@@ -94,10 +99,12 @@ impl pallet_balances::Config for Runtime {
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = [u8; 8];
 }
 
-pub type PalletBalances = pallet_balances::Module<Runtime>;
+pub type PalletBalances = pallet_balances::Pallet<Runtime>;
 
 parameter_types! {
 	pub const MinimumPeriod: u64 = 1000;
@@ -126,7 +133,7 @@ ord_parameter_types! {
 impl module_evm::Config for Runtime {
 	type AddressMapping = MockAddressMapping;
 	type Currency = PalletBalances;
-	type MergeAccount = ();
+	type TransferAll = ();
 	type NewContractExtraBytes = NewContractExtraBytes;
 	type StorageDepositPerByte = StorageDepositPerByte;
 	type MaxCodeSize = MaxCodeSize;
@@ -173,12 +180,12 @@ frame_support::construct_runtime!(
 	NodeBlock = Block,
 	UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
-		Tokens: tokens::{Module, Storage, Event<T>, Config<T>},
-		Currencies: currencies::{Module, Call, Event<T>},
-		EVM: module_evm::{Module, Config<T>, Call, Storage, Event<T>},
-		EVMBridge: module_evm_bridge::{Module},
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+		Tokens: tokens::{Pallet, Storage, Event<T>, Config<T>},
+		Currencies: currencies::{Pallet, Call, Event<T>},
+		EVM: module_evm::{Pallet, Config<T>, Call, Storage, Event<T>},
+		EVMBridge: module_evm_bridge::{Pallet},
 	}
 );
 
@@ -248,7 +255,7 @@ impl ExtBuilder {
 		.unwrap();
 
 		tokens::GenesisConfig::<Runtime> {
-			endowed_accounts: self
+			balances: self
 				.endowed_accounts
 				.into_iter()
 				.filter(|(_, currency_id, _)| *currency_id != NATIVE_CURRENCY_ID)

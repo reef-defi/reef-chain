@@ -15,7 +15,7 @@ fn claim_account_work() {
 			EvmAccountsModule::eth_address(&alice()),
 			EvmAccountsModule::eth_sign(&alice(), &ALICE.encode(), &[][..]).unwrap()
 		));
-		let event = Event::evm_accounts(crate::Event::ClaimAccount(
+		let event = Event::EvmAccountsModule(crate::Event::ClaimAccount(
 			ALICE,
 			EvmAccountsModule::eth_address(&alice()),
 		));

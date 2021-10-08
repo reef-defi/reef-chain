@@ -37,6 +37,7 @@ pub use sp_runtime::{
 use sp_api::impl_runtime_apis;
 use pallet_grandpa::{AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList};
 use pallet_grandpa::fg_primitives;
+use frame_election_provider_support::onchain;
 pub use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 pub use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
 
@@ -50,7 +51,7 @@ use sp_version::NativeVersion;
 pub use pallet_timestamp::Call as TimestampCall;
 pub use pallet_balances::Call as BalancesCall;
 pub use frame_support::{
-	construct_runtime, parameter_types, debug,
+	construct_runtime, parameter_types,
 	StorageValue,
 	traits::{
 		WithdrawReasons,
@@ -196,7 +197,7 @@ pub mod fee {
 		constants::ExtrinsicBaseWeight, WeightToFeeCoefficient, WeightToFeeCoefficients, WeightToFeePolynomial,
 	};
 	use smallvec::smallvec;
-	use sp_runtime::Perbill;
+	use sp_runtime::PerThing;
 
 	/// Handles converting a weight scalar to a fee value, based on the scale
 	/// and granularity of the node's balance type.
@@ -219,7 +220,7 @@ pub mod fee {
 			smallvec![WeightToFeeCoefficient {
 				degree: 1,
 				negative: false,
-				coeff_frac: Perbill::from_rational_approximation(p % q, q),
+				coeff_frac: PerThing::from_rational(p % q, q),
 				coeff_integer: p / q,
 			}]
 		}
@@ -230,8 +231,8 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("reef"),
 	impl_name: create_runtime_str!("reef"),
 	authoring_version: 1,
-	spec_version: 7,
-	impl_version: 7,
+	spec_version: 8,
+	impl_version: 8,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 };
@@ -254,7 +255,7 @@ parameter_types! {
 
 impl frame_system::Config for Runtime {
 	/// The basic call filter to use in dispatchable.
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	/// Block & extrinsics weights: base values and limits.
 	type BlockWeights = BlockWeights;
 	/// The maximum length of a block (in bytes).
@@ -300,6 +301,8 @@ impl frame_system::Config for Runtime {
 	type SystemWeightInfo = ();
 	/// This is used as an identifier of the chain. 42 is the generic substrate prefix.
 	type SS58Prefix = SS58Prefix;
+	/// This is a hook that is use when setCode is called - not require unless using cumulus.
+	type OnSetCode = ();
 }
 
 
@@ -349,17 +352,11 @@ parameter_types! {
 	pub const BondingDuration: pallet_staking::EraIndex = 28; // 28 days
 	pub const SlashDeferDuration: pallet_staking::EraIndex = 27; // 27 days
 	pub const RewardCurve: &'static PiecewiseLinear<'static> = &REWARD_CURVE;
-	// only top N nominators get paid for each validator
 	pub const MaxNominatorRewardedPerValidator: u32 = 64;
-	pub const ElectionLookahead: BlockNumber = EPOCH_DURATION_IN_BLOCKS / 4;
-	pub const MaxIterations: u32 = 5;
-	// 0.05%. The higher the value, the more strict solution acceptance becomes.
-	pub MinSolutionScoreBump: Perbill = Perbill::from_rational_approximation(5 as u32, 10_000);
-	// offchain tx signing
-	pub const StakingUnsignedPriority: TransactionPriority = TransactionPriority::max_value() / 2;
 }
 
 impl pallet_staking::Config for Runtime {
+	const MAX_NOMINATIONS: u32 = 16;
 	type Currency = Balances;
 	type UnixTime = Timestamp;
 	type CurrencyToVote = U128CurrencyToVote;
@@ -372,16 +369,20 @@ impl pallet_staking::Config for Runtime {
 	type SlashDeferDuration = SlashDeferDuration;
 	type SlashCancelOrigin = EnsureRootOrThreeFourthsTechCouncil;
 	type SessionInterface = Self;
-	type RewardCurve = RewardCurve;
 	type NextNewSession = Session;
-	type ElectionLookahead = ElectionLookahead;
-	type Call = Call;
-	type MaxIterations = MaxIterations;
-	type MinSolutionScoreBump = MinSolutionScoreBump;
 	type MaxNominatorRewardedPerValidator = MaxNominatorRewardedPerValidator;
-	type UnsignedPriority = StakingUnsignedPriority;
 	type WeightInfo = ();
-	type OffchainSolutionWeightLimit = OffchainSolutionWeightLimit;
+	type ElectionProvider = onchain::OnChainSequentialPhragmen<Self>;
+	type EraPayout = pallet_staking::ConvertCurve<RewardCurve>;
+	type GenesisElectionProvider = onchain::OnChainSequentialPhragmen<Self>;
+}
+
+impl onchain::Config for Runtime {
+	type BlockWeights = BlockWeights;
+	type AccountId = AccountId;
+	type BlockNumber = BlockNumber;
+	type Accuracy = sp_runtime::Perbill;
+	type DataProvider = Staking;
 }
 
 
@@ -397,6 +398,7 @@ impl pallet_babe::Config for Runtime {
 	type HandleEquivocation =
 		pallet_babe::EquivocationHandler<Self::KeyOwnerIdentification, Offences, ReportLongevity>;
 	type WeightInfo = ();
+	type DisabledValidators = Session;
 }
 
 impl pallet_grandpa::Config for Runtime {
@@ -443,7 +445,6 @@ impl pallet_offences::Config for Runtime {
 	type Event = Event;
 	type IdentificationTuple = pallet_session::historical::IdentificationTuple<Self>;
 	type OnOffenceHandler = Staking;
-	type WeightSoftLimit = OffencesWeightSoftLimit;
 }
 
 impl pallet_authority_discovery::Config for Runtime {}
@@ -452,15 +453,11 @@ parameter_types! {
 	pub const ImOnlineUnsignedPriority: TransactionPriority = TransactionPriority::max_value();
 }
 
-parameter_types! {
-	pub SessionDuration: BlockNumber = 1 * primitives::time::HOURS;
-}
-
 impl pallet_im_online::Config for Runtime {
 	type AuthorityId = ImOnlineId;
 	type Event = Event;
 	type ValidatorSet = Historical;
-	type SessionDuration = SessionDuration;
+	type NextSessionRotation = Babe;
 	type ReportUnresponsiveness = Offences;
 	type UnsignedPriority = ImOnlineUnsignedPriority;
 	type WeightInfo = ();
@@ -526,6 +523,8 @@ impl orml_tokens::Config for Runtime {
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
 	type OnDust = orml_tokens::BurnDust<Runtime>;
+	type DustRemovalWhitelist = ();
+	type MaxLocks = MaxLocks;
 }
 
 parameter_types! {
@@ -576,7 +575,7 @@ impl module_evm_accounts::Config for Runtime {
 	type Event = Event;
 	type Currency = Balances;
 	type AddressMapping = EvmAddressMapping<Runtime>;
-	type MergeAccount = Currencies;
+	type TransferAll = Currencies;
 	type OnClaim = EvmAccountsOnClaimHandler;
 	type WeightInfo = weights::evm_accounts::WeightInfo<Runtime>;
 }
@@ -614,7 +613,7 @@ pub type ScheduleCallPrecompile = runtime_common::ScheduleCallPrecompile<
 impl module_evm::Config for Runtime {
 	type AddressMapping = EvmAddressMapping<Runtime>;
 	type Currency = Balances;
-	type MergeAccount = Currencies;
+	type TransferAll = Currencies;
 	type NewContractExtraBytes = NewContractExtraBytes;
 	type StorageDepositPerByte = StorageDepositPerByte;
 	type MaxCodeSize = MaxCodeSize;
@@ -651,6 +650,7 @@ parameter_types! {
 	pub const NativeTokenExistentialDeposit: Balance =       1 * REEF;
 	pub const MaxNativeTokenExistentialDeposit: Balance = 1000 * REEF;
 	pub const MaxLocks: u32 = 50;
+	pub const MaxReserves: u32 = 50;
 }
 
 impl pallet_balances::Config for Runtime {
@@ -660,8 +660,10 @@ impl pallet_balances::Config for Runtime {
 	type Balance = Balance;
 	type DustRemoval = (); // burn
 	type ExistentialDeposit = NativeTokenExistentialDeposit;
-	type AccountStore = frame_system::Module<Runtime>;
+	type AccountStore = frame_system::Pallet<Runtime>;
 	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = [u8; 8];
 }
 
 
@@ -754,6 +756,8 @@ impl module_poc::Config for Runtime {
 	type WeightInfo = ();
 }
 
+impl pallet_randomness_collective_flip::Config for Runtime {}
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 
@@ -769,46 +773,46 @@ construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
 		// Core
-		System: frame_system::{Module, Call, Config, Storage, Event<T>} = 0,
-		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Call, Storage} = 1,
-		Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent} = 2,
-		Sudo: pallet_sudo::{Module, Call, Config<T>, Storage, Event<T>} = 3,
-		Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>} = 4,
+		System: frame_system::{Pallet, Call, Config, Storage, Event<T>} = 0,
+		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage} = 1,
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 2,
+		Sudo: pallet_sudo::{Pallet, Call, Config<T>, Storage, Event<T>} = 3,
+		Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>} = 4,
 
 		// Account lookup
-		Indices: pallet_indices::{Module, Call, Storage, Config<T>, Event<T>} = 5,
+		Indices: pallet_indices::{Pallet, Call, Storage, Config<T>, Event<T>} = 5,
 
 		// Tokens & Fees
-		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>} = 6,
-		Currencies: module_currencies::{Module, Call, Event<T>} = 7,
-		Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>} = 8,
-		TransactionPayment: module_transaction_payment::{Module, Call, Storage} = 9,
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 6,
+		Currencies: module_currencies::{Pallet, Call, Event<T>} = 7,
+		Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>} = 8,
+		TransactionPayment: module_transaction_payment::{Pallet, Call, Storage} = 9,
 
 		// Authorization
-		Authority: orml_authority::{Module, Call, Event<T>, Origin<T>} = 10,
+		Authority: orml_authority::{Pallet, Call, Event<T>, Origin<T>} = 10,
 
 		// Smart contracts
-		EvmAccounts: module_evm_accounts::{Module, Call, Storage, Event<T>} = 20,
-		EVM: module_evm::{Module, Config<T>, Call, Storage, Event<T>} = 21,
-		EVMBridge: module_evm_bridge::{Module} = 22,
+		EvmAccounts: module_evm_accounts::{Pallet, Call, Storage, Event<T>} = 20,
+		EVM: module_evm::{Pallet, Config<T>, Call, Storage, Event<T>} = 21,
+		EVMBridge: module_evm_bridge::{Pallet} = 22,
 
 		// Consensus
-		Authorship: pallet_authorship::{Module, Call, Storage, Inherent} = 30,
-		Babe: pallet_babe::{Module, Call, Storage, Config, Inherent, ValidateUnsigned} = 31,
-		Grandpa: pallet_grandpa::{Module, Call, Storage, Config, Event, ValidateUnsigned} = 32,
-		Staking: pallet_staking::{Module, Call, Config<T>, Storage, Event<T>} = 33,
-		Session: pallet_session::{Module, Call, Storage, Event, Config<T>} = 34,
-		Historical: pallet_session_historical::{Module} = 35,
-		Offences: pallet_offences::{Module, Call, Storage, Event} = 36,
-		ImOnline: pallet_im_online::{Module, Call, Storage, Event<T>, ValidateUnsigned, Config<T>} = 37,
-		AuthorityDiscovery: pallet_authority_discovery::{Module, Call, Config} = 38,
+		Authorship: pallet_authorship::{Pallet, Call, Storage, Inherent} = 30,
+		Babe: pallet_babe::{Pallet, Call, Storage, Config, ValidateUnsigned} = 31,
+		Grandpa: pallet_grandpa::{Pallet, Call, Storage, Config, Event, ValidateUnsigned} = 32,
+		Staking: pallet_staking::{Pallet, Call, Config<T>, Storage, Event<T>} = 33,
+		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>} = 34,
+		Historical: pallet_session_historical::{Pallet} = 35,
+		Offences: pallet_offences::{Pallet, Storage, Event} = 36,
+		ImOnline: pallet_im_online::{Pallet, Call, Storage, Event<T>, ValidateUnsigned, Config<T>} = 37,
+		AuthorityDiscovery: pallet_authority_discovery::{Pallet, Config} = 38,
 
 		// Identity
-		Identity: pallet_identity::{Module, Call, Storage, Event<T>} = 40,
+		Identity: pallet_identity::{Pallet, Call, Storage, Event<T>} = 40,
 
 		// Proof of Commitment
-		TechCouncil: pallet_collective::<Instance1>::{Module, Call, Storage, Origin<T>, Event<T>, Config<T>} = 50,
-		Poc: module_poc::{Module, Call, Storage, Event<T>} = 51,
+		TechCouncil: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>} = 50,
+		Poc: module_poc::{Pallet, Call, Storage, Event<T>} = 51,
 	}
 );
 
@@ -845,7 +849,7 @@ pub type Executive = frame_executive::Executive<
 	Block,
 	frame_system::ChainContext<Runtime>,
 	Runtime,
-	AllModules,
+	AllPallets,
 >;
 
 impl<LocalCall> frame_system::offchain::CreateSignedTransaction<LocalCall> for Runtime
@@ -884,7 +888,7 @@ where
 		);
 		let raw_payload = SignedPayload::new(call, extra)
 			.map_err(|e| {
-				debug::warn!("Unable to create signed payload: {:?}", e);
+				log::warn!("Unable to create signed payload: {:?}", e);
 			})
 			.ok()?;
 		let signature = raw_payload.using_encoded(|payload| C::sign(payload, public))?;
@@ -947,18 +951,15 @@ impl_runtime_apis! {
 		) -> sp_inherents::CheckInherentsResult {
 			data.check_extrinsics(&block)
 		}
-
-		fn random_seed() -> <Block as BlockT>::Hash {
-			RandomnessCollectiveFlip::random_seed()
-		}
 	}
 
 	impl sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block> for Runtime {
 		fn validate_transaction(
 			source: TransactionSource,
 			tx: <Block as BlockT>::Extrinsic,
+			block_hash: <Block as BlockT>::Hash,
 		) -> TransactionValidity {
-			Executive::validate_transaction(source, tx)
+			Executive::validate_transaction(source, tx, block_hash)
 		}
 	}
 
@@ -1037,6 +1038,10 @@ impl_runtime_apis! {
 	impl fg_primitives::GrandpaApi<Block> for Runtime {
 		fn grandpa_authorities() -> GrandpaAuthorityList {
 			Grandpa::grandpa_authorities()
+		}
+
+		fn current_set_id() -> fg_primitives::SetId {
+			Grandpa::current_set_id()
 		}
 
 		fn submit_report_equivocation_unsigned_extrinsic(
@@ -1167,13 +1172,37 @@ impl_runtime_apis! {
 
 	#[cfg(feature = "runtime-benchmarks")]
 	impl frame_benchmarking::Benchmark<Block> for Runtime {
+		fn benchmark_metadata(extra: bool) -> (
+			Vec<frame_benchmarking::BenchmarkList>,
+			Vec<frame_support::traits::StorageInfo>,
+		) {
+			use frame_benchmarking::{list_benchmark, Benchmarking, BenchmarkList};
+			use frame_support::traits::StorageInfoTrait;
+			use frame_system_benchmarking::Pallet as SystemBench;
+			use orml_benchmarking::{list_benchmark as orml_list_benchmark};
+
+			let mut list = Vec::<BenchmarkList>::new();
+
+			list_benchmark!(list, extra, frame_system, SystemBench::<Runtime>);
+			list_benchmark!(list, extra, pallet_balances, Balances);
+			list_benchmark!(list, extra, pallet_timestamp, Timestamp);
+			list_benchmark!(list, extra, module_poc, Poc);
+
+			orml_list_benchmark!(list, extra, evm, benchmarking::evm);
+			orml_list_benchmark!(list, extra, evm_accounts, benchmarking::evm_accounts);
+
+			let storage_info = AllPalletsWithSystem::storage_info();
+
+			return (list, storage_info)
+		}
+
 		fn dispatch_benchmark(
 			config: frame_benchmarking::BenchmarkConfig
 		) -> Result<Vec<frame_benchmarking::BenchmarkBatch>, sp_runtime::RuntimeString> {
 			use frame_benchmarking::{Benchmarking, BenchmarkBatch, add_benchmark, TrackedStorageKey};
 			use orml_benchmarking::{add_benchmark as orml_add_benchmark};
 
-			use frame_system_benchmarking::Module as SystemBench;
+			use frame_system_benchmarking::Pallet as SystemBench;
 			impl frame_system_benchmarking::Config for Runtime {}
 
 			let whitelist: Vec<TrackedStorageKey> = vec![

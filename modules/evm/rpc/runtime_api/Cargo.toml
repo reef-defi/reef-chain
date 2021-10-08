@@ -5,11 +5,11 @@ authors = ["Reef Developers"]
 edition = "2018"
 
 [dependencies]
-sp-runtime = { version = "3.0.0", default-features = false }
-sp-api = { version = "3.0.0", default-features = false }
-sp-std = { version = "3.0.0", default-features = false }
-sp-core = { version = "3.0.0", default-features = false }
-ethereum-types = { version = "0.11.0", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
+sp-api = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
+sp-core = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
+ethereum-types = { version = "0.12.0", default-features = false }
 primitives = { package = "reef-primitives", path = "../../../../primitives", default-features = false }
 
 [features]

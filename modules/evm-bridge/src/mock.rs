@@ -24,7 +24,7 @@ parameter_types! {
 }
 
 impl frame_system::Config for Runtime {
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type Origin = Origin;
 	type Call = Call;
 	type Index = u64;
@@ -46,10 +46,13 @@ impl frame_system::Config for Runtime {
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
+	type OnSetCode = ();
 }
 
 parameter_types! {
 	pub const ExistentialDeposit: u64 = 1;
+	pub const MaxLocks: u32 = 50;
+	pub const MaxReserves: u32 = 50;
 }
 
 impl pallet_balances::Config for Runtime {
@@ -59,7 +62,9 @@ impl pallet_balances::Config for Runtime {
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = [u8; 8];
 }
 
 parameter_types! {
@@ -90,7 +95,7 @@ ord_parameter_types! {
 impl module_evm::Config for Runtime {
 	type AddressMapping = MockAddressMapping;
 	type Currency = Balances;
-	type MergeAccount = ();
+	type TransferAll = ();
 	type NewContractExtraBytes = NewContractExtraBytes;
 	type StorageDepositPerByte = StorageDepositPerByte;
 	type MaxCodeSize = MaxCodeSize;
@@ -113,7 +118,7 @@ impl module_evm::Config for Runtime {
 impl Config for Runtime {
 	type EVM = EVM;
 }
-pub type EvmBridgeModule = Module<Runtime>;
+pub type EvmBridgeModule = Pallet<Runtime>;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Runtime>;
 type Block = frame_system::mocking::MockBlock<Runtime>;
@@ -124,10 +129,10 @@ construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system::{Module, Call, Storage, Config, Event<T>},
-		EVMBridge: evm_bridge::{Module},
-		EVM: module_evm::{Module, Config<T>, Call, Storage, Event<T>},
-		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
+		System: frame_system::{Pallet, Call, Storage, Config, Event<T>},
+		EVMBridge: evm_bridge::{Pallet},
+		EVM: module_evm::{Pallet, Config<T>, Call, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
 	}
 );
 

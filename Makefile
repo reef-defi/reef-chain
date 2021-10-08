@@ -1,9 +1,9 @@
 .PHONY: configure-rust
 configure-rust:
-	rustup install 1.51.0
-	rustup default 1.51.0
-	rustup toolchain install nightly-2021-05-09
-	rustup target add wasm32-unknown-unknown --toolchain nightly-2021-05-09
+	rustup install 1.53.0
+	rustup default 1.53.0
+	rustup toolchain install nightly-2021-05-21
+	rustup target add wasm32-unknown-unknown --toolchain nightly-2021-05-21
 	rustup component add clippy
 
 .PHONY: init
@@ -39,7 +39,7 @@ check:
 
 .PHONY: clippy
 clippy:
-	SKIP_WASM_BUILD=1 cargo clippy -- -D warnings -A clippy::from-over-into -A clippy::type-complexity -A clippy::unnecessary-cast -A clippy::identity-op -A clippy::upper-case-acronyms
+	SKIP_WASM_BUILD=1 cargo clippy -- -D warnings -A clippy::from-over-into -A clippy::unnecessary-cast -A clippy::identity-op -A clippy::upper-case-acronyms
 
 .PHONY: watch
 watch:

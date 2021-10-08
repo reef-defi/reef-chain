@@ -24,7 +24,7 @@ parameter_types! {
 }
 
 impl frame_system::Config for Test {
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = ();
 	type BlockLength = ();
 	type Origin = Origin;
@@ -46,10 +46,13 @@ impl frame_system::Config for Test {
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
+	type OnSetCode = ();
 }
 
 parameter_types! {
 	pub const ExistentialDeposit: u64 = 1;
+	pub const MaxLocks: u32 = 50;
+	pub const MaxReserves: u32 = 50;
 }
 impl pallet_balances::Config for Test {
 	type Balance = u64;
@@ -58,7 +61,9 @@ impl pallet_balances::Config for Test {
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = [u8; 8];
 }
 
 parameter_types! {
@@ -85,6 +90,8 @@ impl orml_tokens::Config for Test {
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
 	type OnDust = ();
+	type DustRemovalWhitelist = ();
+	type MaxLocks = MaxLocks;
 }
 
 parameter_types! {
@@ -126,7 +133,7 @@ ord_parameter_types! {
 impl Config for Test {
 	type AddressMapping = MockAddressMapping;
 	type Currency = Balances;
-	type MergeAccount = Currencies;
+	type TransferAll = Currencies;
 	type NewContractExtraBytes = NewContractExtraBytes;
 	type StorageDepositPerByte = StorageDepositPerByte;
 	type MaxCodeSize = MaxCodeSize;
@@ -155,11 +162,11 @@ construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system::{Module, Call, Storage, Config, Event<T>},
-		EVM: evm_mod::{Module, Config<T>, Call, Storage, Event<T>},
-		Tokens: orml_tokens::{Module, Storage, Event<T>},
-		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
-		Currencies: orml_currencies::{Module, Call, Event<T>},
+		System: frame_system::{Pallet, Call, Storage, Config, Event<T>},
+		EVM: evm_mod::{Pallet, Config<T>, Call, Storage, Event<T>},
+		Tokens: orml_tokens::{Pallet, Storage, Event<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+		Currencies: orml_currencies::{Pallet, Call, Event<T>},
 	}
 );
 

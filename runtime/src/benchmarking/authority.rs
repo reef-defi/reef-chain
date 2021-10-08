@@ -5,12 +5,11 @@ use sp_std::prelude::*;
 
 use frame_support::traits::{schedule::DispatchTime, OriginTrait};
 use frame_system::RawOrigin;
+use frame_benchmarking::Box;
 use orml_benchmarking::runtime_benchmarks;
 
 runtime_benchmarks! {
 	{ Runtime, orml_authority }
-
-	_ {}
 
 	// dispatch a dispatchable as other origin
 	dispatch_as {
@@ -62,7 +61,7 @@ runtime_benchmarks! {
 		};
 
 		let pallets_origin = schedule_origin.caller().clone();
-	}: fast_track_scheduled_dispatch(RawOrigin::Root, pallets_origin, 0, DispatchTime::At(4))
+	}: fast_track_scheduled_dispatch(RawOrigin::Root, Box::new(pallets_origin), 0, DispatchTime::At(4))
 
 	// delay a scheduled dispatchable.
 	delay_scheduled_dispatch {
@@ -90,7 +89,7 @@ runtime_benchmarks! {
 		};
 
 		let pallets_origin = schedule_origin.caller().clone();
-	}: _(RawOrigin::Root, pallets_origin, 0, 5)
+	}: _(RawOrigin::Root, Box::new(pallets_origin), 0, 5)
 
 	// cancel a scheduled dispatchable
 	cancel_scheduled_dispatch {
@@ -118,7 +117,7 @@ runtime_benchmarks! {
 		};
 
 		let pallets_origin = schedule_origin.caller().clone();
-	}: _(RawOrigin::Root, pallets_origin, 0)
+	}: _(RawOrigin::Root, Box::new(pallets_origin), 0)
 }
 
 #[cfg(test)]

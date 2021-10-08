@@ -12,7 +12,7 @@ parameter_types!(
 );
 
 impl frame_system::Config for Runtime {
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type Origin = Origin;
 	type Index = u64;
 	type BlockNumber = u64;
@@ -34,6 +34,7 @@ impl frame_system::Config for Runtime {
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
+	type OnSetCode = ();
 }
 
 impl example::Config for Runtime {
@@ -51,9 +52,9 @@ construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic
 	{
-		System: frame_system::{Module, Call, Event<T>},
+		System: frame_system::{Pallet, Call, Event<T>},
 		// NOTE: name Example here is needed in order to have same module prefix
-		Example: example::{Module, Call, Event<T>, Config<T>, Storage},
+		Example: example::{Pallet, Call, Event<T>, Config<T>, Storage},
 	}
 );
 

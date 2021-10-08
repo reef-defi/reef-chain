@@ -1,7 +1,7 @@
 #![cfg(test)]
 
 use crate::{AllPrecompiles, BlockWeights, SystemContractsFilter, Weight};
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	assert_ok, ord_parameter_types, parameter_types,
 	traits::{GenesisBuild, InstanceFilter, OnFinalize, OnInitialize},
@@ -28,7 +28,7 @@ parameter_types! {
 	pub const BlockHashCount: u32 = 250;
 }
 impl frame_system::Config for Test {
-	type BaseCallFilter = ();
+	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockWeights = BlockWeights;
 	type BlockLength = ();
 	type Origin = Origin;
@@ -50,6 +50,7 @@ impl frame_system::Config for Test {
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
+	type OnSetCode = ();
 }
 
 
@@ -74,10 +75,14 @@ impl orml_tokens::Config for Test {
 	type WeightInfo = ();
 	type ExistentialDeposits = ExistentialDeposits;
 	type OnDust = ();
+	type MaxLocks = MaxLocks;
+	type DustRemovalWhitelist = ();
 }
 
 parameter_types! {
 	pub const ExistentialDeposit: Balance = 1;
+	pub const MaxLocks: u32 = 50;
+	pub const MaxReserves: u32 = 50;
 }
 
 impl pallet_balances::Config for Test {
@@ -87,7 +92,9 @@ impl pallet_balances::Config for Test {
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
 	type WeightInfo = ();
-	type MaxLocks = ();
+	type MaxLocks = MaxLocks;
+	type MaxReserves = MaxReserves;
+	type ReserveIdentifier = [u8; 8];
 }
 
 pub const REEF: CurrencyId = CurrencyId::Token(TokenSymbol::REEF);
@@ -139,7 +146,7 @@ parameter_types! {
 	pub const AnnouncementDepositFactor: u64 = 1;
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode, RuntimeDebug, MaxEncodedLen)]
 pub enum ProxyType {
 	Any,
 	JustTransfer,
@@ -241,7 +248,7 @@ impl Convert<u64, Weight> for GasToWeight {
 impl module_evm::Config for Test {
 	type AddressMapping = MockAddressMapping;
 	type Currency = Balances;
-	type MergeAccount = Currencies;
+	type TransferAll = Currencies;
 	type NewContractExtraBytes = NewContractExtraBytes;
 	type StorageDepositPerByte = StorageDepositPerByte;
 	type MaxCodeSize = MaxCodeSize;
@@ -306,17 +313,17 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system::{Module, Call, Storage, Config, Event<T>},
-		Timestamp: pallet_timestamp::{Module, Call, Storage, Inherent},
-		Tokens: orml_tokens::{Module, Storage, Event<T>, Config<T>},
-		Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
-		Currencies: module_currencies::{Module, Call, Event<T>},
-		EVMBridge: module_evm_bridge::{Module},
-		TransactionPayment: module_transaction_payment::{Module, Call, Storage},
-		Proxy: pallet_proxy::{Module, Call, Storage, Event<T>},
-		Utility: pallet_utility::{Module, Call, Event},
-		Scheduler: pallet_scheduler::{Module, Call, Storage, Event<T>},
-		ModuleEVM: module_evm::{Module, Config<T>, Call, Storage, Event<T>},
+		System: frame_system::{Pallet, Call, Storage, Config, Event<T>},
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
+		Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>},
+		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
+		Currencies: module_currencies::{Pallet, Call, Event<T>},
+		EVMBridge: module_evm_bridge::{Pallet},
+		TransactionPayment: module_transaction_payment::{Pallet, Call, Storage},
+		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>},
+		Utility: pallet_utility::{Pallet, Call, Event},
+		Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>},
+		ModuleEVM: module_evm::{Pallet, Config<T>, Call, Storage, Event<T>},
 	}
 );
 

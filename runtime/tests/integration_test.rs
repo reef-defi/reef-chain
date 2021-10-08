@@ -27,10 +27,10 @@ use primitives::currency::*;
 const ALICE: [u8; 32] = [4u8; 32];
 const BOB: [u8; 32] = [5u8; 32];
 
-pub type SystemModule = frame_system::Module<Runtime>;
-pub type AuthorityModule = orml_authority::Module<Runtime>;
-pub type Currencies = module_currencies::Module<Runtime>;
-pub type SchedulerModule = pallet_scheduler::Module<Runtime>;
+pub type SystemModule = frame_system::Pallet<Runtime>;
+pub type AuthorityModule = orml_authority::Pallet<Runtime>;
+pub type Currencies = module_currencies::Pallet<Runtime>;
+pub type SchedulerModule = pallet_scheduler::Pallet<Runtime>;
 
 fn run_to_block(n: u32) {
 	while SystemModule::block_number() < n {
@@ -88,7 +88,7 @@ impl ExtBuilder {
 		.unwrap();
 
 		orml_tokens::GenesisConfig::<Runtime> {
-			endowed_accounts: self
+			balances: self
 				.endowed_accounts
 				.into_iter()
 				.filter(|(_, currency_id, _)| *currency_id != native_currency_id)
@@ -156,7 +156,7 @@ fn deploy_contract(account: AccountId) -> Result<H160, DispatchError> {
 	EVM::create(Origin::signed(account), contract, 0, 1000000000, 1000000000)
 		.map_or_else(|e| Err(e.error), |_| Ok(()))?;
 
-	if let Event::module_evm(module_evm::Event::Created(address)) = System::events().iter().last().unwrap().event {
+	if let Event::EVM(module_evm::Event::Created(address)) = System::events().iter().last().unwrap().event {
 		Ok(address)
 	} else {
 		Err("deploy_contract failed".into())
@@ -409,7 +409,7 @@ fn test_evm_accounts_module() {
 				EvmAccounts::eth_address(&alice()),
 				EvmAccounts::eth_sign(&alice(), &AccountId::from(ALICE).encode(), &[][..]).unwrap()
 			));
-			let event = Event::module_evm_accounts(module_evm_accounts::Event::ClaimAccount(
+			let event = Event::EvmAccounts(module_evm_accounts::Event::ClaimAccount(
 				AccountId::from(ALICE),
 				EvmAccounts::eth_address(&alice()),
 			));
@@ -452,7 +452,7 @@ fn test_evm_module() {
 			let bob_address = EvmAccounts::eth_address(&bob());
 
 			let contract = deploy_contract(alice_account_id()).unwrap();
-			let event = Event::module_evm(module_evm::Event::Created(contract));
+			let event = Event::EVM(module_evm::Event::Created(contract));
 			assert_eq!(last_event(), event);
 
 			assert_ok!(EVM::transfer_maintainer(
@@ -460,7 +460,7 @@ fn test_evm_module() {
 				contract,
 				bob_address
 			));
-			let event = Event::module_evm(module_evm::Event::TransferredMaintainer(contract, bob_address));
+			let event = Event::EVM(module_evm::Event::TransferredMaintainer(contract, bob_address));
 			assert_eq!(last_event(), event);
 
 			// test EvmAccounts Lookup
