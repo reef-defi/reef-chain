@@ -3,7 +3,7 @@
 use crate::{
 	precompiles::Precompiles,
 	runner::storage_meter::{StorageMeter, StorageMeterHandler},
-	AccountInfo, AccountStorages, Accounts, AddressMapping, Codes, Config, ContractInfo, Error, Event, Log,
+	EvmAccountInfo, AccountStorages, Accounts, AddressMapping, Codes, Config, ContractInfo, Error, Event, Log,
 	TransferAll, Pallet, Vicinity,
 };
 use evm::{Capture, Context, CreateScheme, ExitError, ExitReason, Opcode, Runtime, Stack, Transfer};
@@ -184,7 +184,7 @@ impl<'vicinity, 'config, T: Config> Handler<'vicinity, 'config, '_, T> {
 			if let Some(account) = maybe_account.as_mut() {
 				account.nonce += One::one()
 			} else {
-				let mut account_info = <AccountInfo<T>>::new(Default::default(), None);
+				let mut account_info = <EvmAccountInfo<T>>::new(Default::default(), None);
 				account_info.nonce += One::one();
 				*maybe_account = Some(account_info);
 			}
@@ -226,7 +226,7 @@ impl<'vicinity, 'config, T: Config> Handler<'vicinity, 'config, '_, T> {
 
 	// is contract && not deployed
 	pub fn is_undeployed_contract(address: &H160) -> bool {
-		if let Some(AccountInfo {
+		if let Some(EvmAccountInfo {
 			contract_info: Some(ContractInfo { deployed, .. }),
 			..
 		}) = Accounts::<T>::get(address)
@@ -238,7 +238,7 @@ impl<'vicinity, 'config, T: Config> Handler<'vicinity, 'config, '_, T> {
 	}
 
 	pub fn has_permission_to_call(address: &H160) -> bool {
-		if let Some(AccountInfo {
+		if let Some(EvmAccountInfo {
 			contract_info,
 			developer_deposit,
 			..

@@ -2,7 +2,7 @@ use sp_core::{Pair, Public, sr25519, H160, Bytes};
 use reef_runtime::{
 	AccountId, CurrencyId,
 	BabeConfig, BalancesConfig, GenesisConfig, SudoConfig, SystemConfig,
-	IndicesConfig, EvmConfig, StakingConfig, SessionConfig, AuthorityDiscoveryConfig,
+	IndicesConfig, EVMConfig, StakingConfig, SessionConfig, AuthorityDiscoveryConfig,
 	WASM_BINARY,
 	TokenSymbol, TokensConfig, REEF,
 	StakerStatus,
@@ -414,7 +414,7 @@ fn testnet_genesis(
 				})
 				.collect(),
 		},
-		evm: EvmConfig {
+		evm: EVMConfig {
 			accounts: evm_genesis_accounts,
 		},
 		sudo: SudoConfig { key: root_key },
@@ -499,7 +499,7 @@ fn mainnet_genesis(
 		tokens: TokensConfig {
 			balances: vec![]
 		},
-		evm: EvmConfig {
+		evm: EVMConfig {
 			accounts: evm_genesis_accounts,
 		},
 		sudo: SudoConfig { key: root_key },

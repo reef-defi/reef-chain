@@ -598,7 +598,7 @@ parameter_types! {
 
 pub type MultiCurrencyPrecompile =
 	runtime_common::MultiCurrencyPrecompile<AccountId, EvmAddressMapping<Runtime>, Currencies>;
-pub type StateRentPrecompile = runtime_common::StateRentPrecompile<AccountId, EvmAddressMapping<Runtime>, Evm>;
+pub type StateRentPrecompile = runtime_common::StateRentPrecompile<AccountId, EvmAddressMapping<Runtime>, EVM>;
 pub type ScheduleCallPrecompile = runtime_common::ScheduleCallPrecompile<
 	AccountId,
 	EvmAddressMapping<Runtime>,
@@ -641,7 +641,7 @@ impl module_evm::Config for Runtime {
 }
 
 impl module_evm_bridge::Config for Runtime {
-	type EVM = Evm;
+	type EVM = EVM;
 }
 
 parameter_types! {
@@ -793,7 +793,7 @@ construct_runtime!(
 
 		// Smart contracts
 		EvmAccounts: module_evm_accounts::{Pallet, Call, Storage, Event<T>} = 20,
-		Evm: module_evm::{Pallet, Config<T>, Call, Storage, Event<T>} = 21,
+		EVM: module_evm::{Pallet, Config<T>, Call, Storage, Event<T>} = 21,
 		EVMBridge: module_evm_bridge::{Pallet} = 22,
 
 		// Consensus
@@ -1142,7 +1142,7 @@ impl_runtime_apis! {
 				.map_err(|_| sp_runtime::DispatchError::Other("Invalid parameter extrinsic, decode failed"))?;
 
 			let request = match utx.function {
-				Call::Evm(module_evm::Call::call(to, data, value, gas_limit, storage_limit)) => {
+				Call::EVM(module_evm::Call::call(to, data, value, gas_limit, storage_limit)) => {
 					Some(EstimateResourcesRequest {
 						from: None,
 						to: Some(to),
@@ -1152,7 +1152,7 @@ impl_runtime_apis! {
 						data: Some(data),
 					})
 				}
-				Call::Evm(module_evm::Call::create(data, value, gas_limit, storage_limit)) => {
+				Call::EVM(module_evm::Call::create(data, value, gas_limit, storage_limit)) => {
 					Some(EstimateResourcesRequest {
 						from: None,
 						to: None,

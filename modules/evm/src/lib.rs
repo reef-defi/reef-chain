@@ -184,13 +184,13 @@ pub mod module {
 	}
 
 	#[derive(Clone, Eq, PartialEq, RuntimeDebug, Encode, Decode)]
-	pub struct AccountInfo<T: Config> {
+	pub struct EvmAccountInfo<T: Config> {
 		pub nonce: T::Index,
 		pub contract_info: Option<ContractInfo>,
 		pub developer_deposit: Option<BalanceOf<T>>,
 	}
 
-	impl<T: Config> AccountInfo<T> {
+	impl<T: Config> EvmAccountInfo<T> {
 		pub fn new(nonce: T::Index, contract_info: Option<ContractInfo>) -> Self {
 			Self {
 				nonce,
@@ -223,7 +223,7 @@ pub mod module {
 	/// Accounts info.
 	#[pallet::storage]
 	#[pallet::getter(fn accounts)]
-	pub type Accounts<T: Config> = StorageMap<_, Twox64Concat, EvmAddress, AccountInfo<T>>;
+	pub type Accounts<T: Config> = StorageMap<_, Twox64Concat, EvmAddress, EvmAccountInfo<T>>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn account_storages)]
@@ -268,7 +268,7 @@ pub mod module {
 			self.accounts.iter().for_each(|(address, account)| {
 				let account_id = T::AddressMapping::get_account_id(address);
 
-				let account_info = <AccountInfo<T>>::new(account.nonce, None);
+				let account_info = <EvmAccountInfo<T>>::new(account.nonce, None);
 				<Accounts<T>>::insert(address, account_info);
 
 				T::Currency::deposit_creating(&account_id, account.balance);
@@ -610,7 +610,7 @@ pub mod module {
 					);
 					account_info.developer_deposit = Some(T::DeveloperDeposit::get());
 				} else {
-					let mut account_info = AccountInfo::<T>::new(Default::default(), None);
+					let mut account_info = EvmAccountInfo::<T>::new(Default::default(), None);
 					account_info.developer_deposit = Some(T::DeveloperDeposit::get());
 					*maybe_account_info = Some(account_info);
 				}
@@ -670,7 +670,7 @@ impl<T: Config> Pallet<T> {
 		let mut size = 0u32;
 
 		// Deref code, and remove it if ref count is zero.
-		if let Some(AccountInfo {
+		if let Some(EvmAccountInfo {
 			contract_info: Some(contract_info),
 			..
 		}) = Self::accounts(address)
@@ -708,7 +708,7 @@ impl<T: Config> Pallet<T> {
 
 	/// Get code hash at given address.
 	pub fn code_hash_at_address(address: &EvmAddress) -> H256 {
-		if let Some(AccountInfo {
+		if let Some(EvmAccountInfo {
 			contract_info: Some(contract_info),
 			..
 		}) = Self::accounts(address)
@@ -766,7 +766,7 @@ impl<T: Config> Pallet<T> {
 			if let Some(account_info) = maybe_account_info.as_mut() {
 				account_info.contract_info = Some(contract_info.clone());
 			} else {
-				let account_info = AccountInfo::<T>::new(Default::default(), Some(contract_info.clone()));
+				let account_info = EvmAccountInfo::<T>::new(Default::default(), Some(contract_info.clone()));
 				*maybe_account_info = Some(account_info);
 			}
 		});
@@ -803,7 +803,7 @@ impl<T: Config> Pallet<T> {
 	/// If maintainer is provider then it will check maintainer
 	fn mark_deployed(contract: EvmAddress, maintainer: Option<EvmAddress>) -> DispatchResult {
 		Accounts::<T>::mutate(contract, |maybe_account_info| -> DispatchResult {
-			if let Some(AccountInfo {
+			if let Some(EvmAccountInfo {
 				contract_info: Some(contract_info),
 				..
 			}) = maybe_account_info.as_mut()
