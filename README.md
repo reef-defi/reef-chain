@@ -129,11 +129,11 @@ Build the wasm runtime with:
 make wasm
 ```
 
-### Fork reef chain
+### Fork reef-chain
 
 You can create a fork of a live chain (testnet / mainnet) for development purposes.
 
-1) Build binary and sync with target chain, you will need to use unsafe rpc.
+1) Build binary and sync with target chain on localhost defaults. You will need to use unsafe rpc.
 2) Execute the `Make` command ensuring to specify chain name (testnet / mainnet).
 ```bash
 make chain=testnet fork
