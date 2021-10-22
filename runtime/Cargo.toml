@@ -5,13 +5,13 @@ homepage = 'https://reef.finance'
 license = 'Unlicense'
 name = 'reef-runtime'
 repository = 'https://github.com/reef-defi/reef-chain'
-version = '3.0.0'
+version = '4.0.0'
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
 
 [build-dependencies]
-substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
+substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
 
 # alias "parity-scale-code" to "codec"
 [dependencies.codec]

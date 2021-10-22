@@ -26,16 +26,10 @@ use hex_literal::hex;
 use sp_core::{crypto::UncheckedInto, bytes::from_hex};
 
 use reef_primitives::{AccountPublic, Balance, Nonce};
+use reef_runtime::BABE_GENESIS_EPOCH_CONFIG;
 
 // The URL for the telemetry server.
 const TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
-
-/// The BABE epoch configuration at genesis.
-pub const BABE_GENESIS_EPOCH_CONFIG: sp_consensus_babe::BabeEpochConfiguration =
-	sp_consensus_babe::BabeEpochConfiguration {
-		c: node_runtime::constants::time::PRIMARY_PROBABILITY, // 1 in 4 blocks will be BABE
-		allowed_slots: sp_consensus_babe::AllowedSlots::PrimaryAndSecondaryVRFSlots,
-	};
 
 /// Node `ChainSpec` extensions.
 ///

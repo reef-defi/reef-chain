@@ -7,7 +7,7 @@ homepage = 'https://reef.finance'
 license = 'Unlicense'
 name = 'reef-node'
 repository = 'https://github.com/reef-defi/reef-chain'
-version = '3.0.1'
+version = '4.0.0'
 
 [[bin]]
 name = 'reef-node'
@@ -76,7 +76,7 @@ evm-rpc = { path = "../modules/evm/rpc" }
 reef-primitives = { path = "../primitives" }
 
 # runtime
-reef-runtime = { path = '../runtime', version = '3.0.0' }
+reef-runtime = { path = '../runtime', version = '4.0.0' }
 
 [features]
 default = []
