@@ -830,6 +830,7 @@ impl pallet_babe::migrations::BabePalletPrefix for Runtime {
 pub struct BabeEpochConfigMigrations;
 impl frame_support::traits::OnRuntimeUpgrade for BabeEpochConfigMigrations {
 	fn on_runtime_upgrade() -> Weight {
+		log::info!("Migrating Babe pallet - adding epoch config");
 		pallet_babe::migrations::add_epoch_configuration::<Runtime>(
 			BABE_GENESIS_EPOCH_CONFIG
 		)
@@ -840,6 +841,7 @@ impl frame_support::traits::OnRuntimeUpgrade for BabeEpochConfigMigrations {
 pub struct MigratePalletVersionToStorageVersion;
 impl frame_support::traits::OnRuntimeUpgrade for MigratePalletVersionToStorageVersion {
 	fn on_runtime_upgrade() -> frame_support::weights::Weight {
+		log::info!("Migrating PalletVersion to new StorageVersion pattern");
 		frame_support::migrations::migrate_from_pallet_version_to_storage_version::<AllPalletsWithSystem>(
 				&RocksDbWeight::get()
 		)
@@ -850,6 +852,7 @@ impl frame_support::traits::OnRuntimeUpgrade for MigratePalletVersionToStorageVe
 pub struct MigratePalletStakingV5toV7;
 impl frame_support::traits::OnRuntimeUpgrade for MigratePalletStakingV5toV7 {
 	fn on_runtime_upgrade() -> Weight {
+		log::info!("Migrating staking from V5 to V7");
 		let mut weight = 0;
 		weight += pallet_staking::migrations::v6::migrate::<Runtime>();
 		weight += pallet_staking::migrations::v7::migrate::<Runtime>();
