@@ -761,6 +761,12 @@ impl module_poc::Config for Runtime {
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
+impl pallet_utility::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+}
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 
@@ -816,6 +822,7 @@ construct_runtime!(
 		// Proof of Commitment
 		TechCouncil: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>} = 50,
 		Poc: module_poc::{Pallet, Call, Storage, Event<T>} = 51,
+		Utility: pallet_utility::{Pallet, Call, Event} = 52,
 	}
 );
 
