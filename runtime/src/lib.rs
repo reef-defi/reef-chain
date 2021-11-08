@@ -822,6 +822,8 @@ construct_runtime!(
 		// Proof of Commitment
 		TechCouncil: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>} = 50,
 		Poc: module_poc::{Pallet, Call, Storage, Event<T>} = 51,
+
+		// Utility
 		Utility: pallet_utility::{Pallet, Call, Event} = 52,
 	}
 );
