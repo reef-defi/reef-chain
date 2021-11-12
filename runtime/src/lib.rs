@@ -761,6 +761,12 @@ impl module_poc::Config for Runtime {
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
+impl pallet_utility::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+}
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 
@@ -791,8 +797,9 @@ construct_runtime!(
 		Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>} = 8,
 		TransactionPayment: module_transaction_payment::{Pallet, Call, Storage} = 9,
 
-		// Authorization
+		// Authorization + Utility
 		Authority: orml_authority::{Pallet, Call, Event<T>, Origin<T>} = 10,
+		Utility: pallet_utility::{Pallet, Call, Event} = 11,
 
 		// Smart contracts
 		EvmAccounts: module_evm_accounts::{Pallet, Call, Storage, Event<T>} = 20,
