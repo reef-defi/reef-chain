@@ -816,8 +816,9 @@ construct_runtime!(
 		Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>} = 8,
 		TransactionPayment: module_transaction_payment::{Pallet, Call, Storage} = 9,
 
-		// Authorization
+		// Authorization + Utility
 		Authority: orml_authority::{Pallet, Call, Event<T>, Origin<T>} = 10,
+		Utility: pallet_utility::{Pallet, Call, Event} = 11,
 
 		// Smart contracts
 		EvmAccounts: module_evm_accounts::{Pallet, Call, Storage, Event<T>} = 20,
