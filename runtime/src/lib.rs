@@ -819,6 +819,7 @@ construct_runtime!(
 		// Authorization + Utility
 		Authority: orml_authority::{Pallet, Call, Event<T>, Origin<T>} = 10,
 		Utility: pallet_utility::{Pallet, Call, Event} = 11,
+		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>} = 12,
 
 		// Smart contracts
 		EvmAccounts: module_evm_accounts::{Pallet, Call, Storage, Event<T>} = 20,
@@ -842,10 +843,6 @@ construct_runtime!(
 		// Proof of Commitment
 		TechCouncil: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>} = 50,
 		Poc: module_poc::{Pallet, Call, Storage, Event<T>} = 51,
-
-		// Utility
-		Utility: pallet_utility::{Pallet, Call, Event} = 52,
-		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>} = 53,
 	}
 );
 
