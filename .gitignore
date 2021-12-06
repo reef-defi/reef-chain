@@ -14,3 +14,5 @@
 
 **/fork/data/
 **/fork/node_modules/
+
+Cargo.lock
