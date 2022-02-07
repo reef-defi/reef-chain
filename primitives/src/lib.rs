@@ -49,6 +49,10 @@ pub mod currency {
 	pub const REEF: Balance = DOLLARS;
 	pub const MILLI_REEF: Balance = REEF / 1_000;
 	pub const MICRO_REEF: Balance = REEF / 1_000_000;
+	
+	pub const fn deposit(items: u32, bytes: u32) -> Balance {
+		items as Balance * 20 * REEF + (bytes as Balance) * 100 * MILLI_REEF
+	}
 }
 
 /// Time and blocks.

@@ -6092,6 +6092,7 @@ dependencies = [
  "pallet-identity",
  "pallet-im-online",
  "pallet-indices",
+ "pallet-multisig",
  "pallet-offences",
  "pallet-randomness-collective-flip",
  "pallet-scheduler",
