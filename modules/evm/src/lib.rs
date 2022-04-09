@@ -1,3 +1,4 @@
+#![feature(in_band_lifetimes)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::or_fun_call)]
@@ -49,6 +50,7 @@ pub mod runner;
 mod default_weight;
 mod mock;
 mod tests;
+mod tracing;
 
 pub use module::*;
 
@@ -386,7 +388,8 @@ pub mod module {
 			let who = ensure_signed(origin)?;
 			let source = T::AddressMapping::get_or_create_evm_address(&who);
 
-			let info = Runner::<T>::call(
+			let tracer = tracing::EvmTracer::new();
+			let info = tracer.trace(|| -> Result<CallInfo, DispatchError> { Runner::<T>::call(
 				source,
 				source,
 				target,
@@ -395,7 +398,7 @@ pub mod module {
 				gas_limit,
 				storage_limit,
 				T::config(),
-			)?;
+			)})?;
 
 			if info.exit_reason.is_succeed() {
 				Pallet::<T>::deposit_event(Event::<T>::Executed(target));
