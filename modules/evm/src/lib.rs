@@ -1,4 +1,3 @@
-#![feature(in_band_lifetimes)]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::too_many_arguments)]
 #![allow(clippy::or_fun_call)]

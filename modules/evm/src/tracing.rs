@@ -1,12 +1,3 @@
-//! Substrate EVM tracing.
-//!
-//! The purpose of this crate is enable tracing the EVM opcode execution and will be used by
-//! both Dapp developers - to get a granular view on their transactions - and indexers to access
-//! the EVM callstack (internal transactions).
-//!
-//! Proxies EVM messages to the host functions.
-
-use codec::Encode;
 use evm_runtime::tracing::{using as runtime_using, EventListener as RuntimeListener, Event};
 use evm_runtime::Opcode;
 use sp_std::{cell::RefCell, rc::Rc, vec::Vec};
