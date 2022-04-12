@@ -49,6 +49,22 @@ fn should_calculate_contract_address() {
 	});
 }
 
+// #[test]
+// fn should_deposit_create_event_for_create_extrinsic() {
+// 	// pragma solidity ^0.5.0;
+// 	//
+// 	// contract Test {
+// 	//	 function multiply(uint a, uint b) public pure returns(uint) {
+// 	// 	 	return a * b;
+// 	// 	 }
+// 	// }
+// 	let contract = from_hex("0x608060405234801561001057600080fd5b5060b88061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063165c4a1614602d575b600080fd5b606060048036036040811015604157600080fd5b8101908080359060200190929190803590602001909291905050506076565b6040518082815260200191505060405180910390f35b600081830290509291505056fea265627a7a723158201f3db7301354b88b310868daf4395a6ab6cd42d16b1d8e68cdf4fdd9d34fffbf64736f6c63430005110032").unwrap();
+//
+// 	new_test_ext().execute_with(|| {
+// 		EVM::Create()
+// 	})
+// }
+
 #[test]
 fn should_create_and_call_contract() {
 	// pragma solidity ^0.5.0;
@@ -241,6 +257,10 @@ fn should_deploy_payable_contract() {
 
 		assert_eq!(balance(alice()), alice_balance - amount);
 		assert_eq!(balance(contract_address), 2 * amount);
+
+		// assert_eq!(<frame_system::Pallet<Test>>::events().len(), 5);
+		// println!("{:?}", <frame_system::Pallet<Test>>::events());
+		// assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x == Event::EVM(crate::Event::Created((contract_address)))));
 	});
 }
 
@@ -709,6 +729,57 @@ fn should_deploy() {
 		assert_noop!(EVM::deploy(Origin::signed(alice_account_id), contract_address), Error::<Test>::ContractAlreadyDeployed);
 	});
 }
+
+#[test]
+fn create_extrinisic_should_deposit_create_event() {
+	// pragma solidity ^0.5.0;
+	//
+	// contract Test {
+	//	 function multiply(uint a, uint b) public pure returns(uint) {
+	// 	 	return a * b;
+	// 	 }
+	// }
+	let contract = from_hex("0x608060405234801561001057600080fd5b5060b88061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063165c4a1614602d575b600080fd5b606060048036036040811015604157600080fd5b8101908080359060200190929190803590602001909291905050506076565b6040518082815260200191505060405180910390f35b600081830290509291505056fea265627a7a723158201f3db7301354b88b310868daf4395a6ab6cd42d16b1d8e68cdf4fdd9d34fffbf64736f6c63430005110032").unwrap();
+
+	new_test_ext().execute_with(|| {
+		let alice_account_id = <Test as Config>::AddressMapping::get_account_id(&alice());
+		assert_ok!(EVM::create(
+			Origin::signed(alice_account_id),
+			contract,
+			0,
+			1000000,
+			1000000
+		));
+		assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == mock::Event::from(crate::Event::Created(H160::from_str("0x5f8bd49cd9f0cb2bd5bb9d4320dfe9b61023249d").unwrap()))));
+	});
+}
+
+#[test]
+fn create2_extrinisic_should_deposit_create_event() {
+	// pragma solidity ^0.5.0;
+	//
+	// contract Test {
+	//	 function multiply(uint a, uint b) public pure returns(uint) {
+	// 	 	return a * b;
+	// 	 }
+	// }
+	let contract = from_hex("0x608060405234801561001057600080fd5b5060b88061001f6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c8063165c4a1614602d575b600080fd5b606060048036036040811015604157600080fd5b8101908080359060200190929190803590602001909291905050506076565b6040518082815260200191505060405180910390f35b600081830290509291505056fea265627a7a723158201f3db7301354b88b310868daf4395a6ab6cd42d16b1d8e68cdf4fdd9d34fffbf64736f6c63430005110032").unwrap();
+
+	new_test_ext().execute_with(|| {
+		let alice_account_id = <Test as Config>::AddressMapping::get_account_id(&alice());
+		assert_ok!(EVM::create2(
+			Origin::signed(alice_account_id),
+			contract,
+			H256::from_str("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141").unwrap(),
+			0,
+			1000000,
+			1000000
+		));
+		assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == mock::Event::from(crate::Event::Created(H160::from_str("0x182f69c8cd38252a33d1a38c48c6fcf8a1742086").unwrap()))));
+	});
+}
+
+
 
 #[test]
 fn should_deploy_free() {
