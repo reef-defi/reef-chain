@@ -49,8 +49,6 @@ pub mod runner;
 mod default_weight;
 mod mock;
 mod tests;
-#[cfg(feature = "evm-tracing")]
-mod tracing;
 
 pub use module::*;
 
