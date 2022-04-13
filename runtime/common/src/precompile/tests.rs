@@ -84,7 +84,7 @@ fn precompile_filter_does_not_work_on_non_system_contracts() {
 	);
 }
 
-
+#[cfg(not(feature = "with-ethereum-compatibility"))]
 #[test]
 fn schedule_call_precompile_should_work() {
 	new_test_ext().execute_with(|| {
@@ -212,6 +212,7 @@ fn schedule_call_precompile_should_work() {
 	});
 }
 
+#[cfg(not(feature = "with-ethereum-compatibility"))]
 #[test]
 fn schedule_call_precompile_should_handle_invalid_input() {
 	new_test_ext().execute_with(|| {
