@@ -248,6 +248,14 @@ pub mod module {
 	#[pallet::getter(fn extrinsic_origin)]
 	pub type ExtrinsicOrigin<T: Config> = StorageValue<_, T::AccountId>;
 
+	#[pallet::type_value]
+	pub fn EmptyEventVec<T: Config>() -> Vec<Event<T>> { Vec::new() }
+
+	/// Queued Events
+	#[pallet::storage]
+	#[pallet::getter(fn queued_events)]
+	pub type QueuedEvents<T: Config> = StorageValue<_, Vec<Event<T>>, ValueQuery, EmptyEventVec<T>>;
+
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		pub accounts: std::collections::BTreeMap<EvmAddress, GenesisAccount<BalanceOf<T>, T::Index>>,
@@ -387,14 +395,14 @@ pub mod module {
 			let source = T::AddressMapping::get_or_create_evm_address(&who);
 
 			let info = Runner::<T>::call(
-				source,
-				source,
-				target,
-				input,
-				value,
-				gas_limit,
-				storage_limit,
-				T::config(),
+					source,
+					source,
+					target,
+					input,
+					value,
+					gas_limit,
+					storage_limit,
+					T::config(),
 			)?;
 
 			if info.exit_reason.is_succeed() {
@@ -402,6 +410,8 @@ pub mod module {
 			} else {
 				Pallet::<T>::deposit_event(Event::<T>::ExecutedFailed(target, info.exit_reason, info.output));
 			}
+
+			Self::process_queued_events();
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -460,6 +470,8 @@ pub mod module {
 				}
 			}
 
+			Self::process_queued_events();
+
 			Ok(PostDispatchInfo {
 				actual_weight: Some(T::GasToWeight::convert(used_gas)),
 				pays_fee: Pays::Yes,
@@ -481,11 +493,11 @@ pub mod module {
 
 			let info = Runner::<T>::create(source, init, value, gas_limit, storage_limit, T::config())?;
 
-			if info.exit_reason.is_succeed() {
-				Pallet::<T>::deposit_event(Event::<T>::Created(info.address));
-			} else {
+			if !info.exit_reason.is_succeed() {
 				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
 			}
+
+			Self::process_queued_events();
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -510,11 +522,11 @@ pub mod module {
 
 			let info = Runner::<T>::create2(source, init, salt, value, gas_limit, storage_limit, T::config())?;
 
-			if info.exit_reason.is_succeed() {
-				Pallet::<T>::deposit_event(Event::<T>::Created(info.address));
-			} else {
+			if !info.exit_reason.is_succeed() {
 				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
 			}
+
+			Self::process_queued_events();
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -543,11 +555,11 @@ pub mod module {
 
 			NetworkContractIndex::<T>::mutate(|v| *v = v.saturating_add(One::one()));
 
-			if info.exit_reason.is_succeed() {
-				Pallet::<T>::deposit_event(Event::<T>::Created(info.address));
-			} else {
+			if !info.exit_reason.is_succeed() {
 				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
 			}
+
+			Self::process_queued_events();
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -665,6 +677,14 @@ pub mod module {
 }
 
 impl<T: Config> Pallet<T> {
+	/// Process queued events
+	pub fn process_queued_events() {
+		for event in Self::queued_events() {
+			Pallet::<T>::deposit_event(event);
+		}
+		QueuedEvents::<T>::kill();
+	}
+
 	/// Remove an account.
 	pub fn remove_account(address: &EvmAddress) -> Result<u32, ExitError> {
 		let mut size = 0u32;
@@ -734,7 +754,7 @@ impl<T: Config> Pallet<T> {
 		maintainer: &EvmAddress,
 		code: Vec<u8>,
 	) -> Result<(), ExitError> {
-		let code_hash = code_hash(&code.as_slice());
+		let code_hash = code_hash(code.as_slice());
 		let contract_info = ContractInfo {
 			code_hash,
 			maintainer: *maintainer,
@@ -770,6 +790,8 @@ impl<T: Config> Pallet<T> {
 				*maybe_account_info = Some(account_info);
 			}
 		});
+
+		QueuedEvents::<T>::mutate(|v| v.push(Event::<T>::Created(*address)));
 
 		Ok(())
 	}
@@ -835,7 +857,7 @@ impl<T: Config> Pallet<T> {
 			}
 
 			let code_size = code.len() as u32;
-			let code_hash = code_hash(&code.as_slice());
+			let code_hash = code_hash(code.as_slice());
 			if code_hash == contract_info.code_hash {
 				return Ok(());
 			}

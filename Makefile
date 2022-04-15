@@ -47,6 +47,7 @@ watch:
 
 .PHONY: test
 test:
+	SKIP_WASM_BUILD=1 cargo test --features with-ethereum-compatibility --all
 	SKIP_WASM_BUILD=1 cargo test --all
 
 .PHONY: debug
