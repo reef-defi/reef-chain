@@ -316,7 +316,7 @@ pub mod module {
 					if reward > zero {
 						for winner in winners.iter() {
 							// ignore failed cases
-							T::Currency::deposit_into_existing(&winner, reward).ok();
+							T::Currency::deposit_into_existing(winner, reward).ok();
 						}
 					}
 				}
