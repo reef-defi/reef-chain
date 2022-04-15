@@ -761,6 +761,28 @@ impl module_poc::Config for Runtime {
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
+impl pallet_utility::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+}
+
+parameter_types! {
+	pub const DepositBase: Balance = deposit(1, 88);
+	pub const DepositFactor: Balance = deposit(0, 32);
+	pub const MaxSignatories: u16 = 100;
+}
+
+impl pallet_multisig::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type Currency = Balances;
+	type DepositBase = DepositBase;
+	type DepositFactor = DepositFactor;
+	type MaxSignatories = MaxSignatories;
+	type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
+}
+
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 
@@ -791,8 +813,10 @@ construct_runtime!(
 		Tokens: orml_tokens::{Pallet, Storage, Event<T>, Config<T>} = 8,
 		TransactionPayment: module_transaction_payment::{Pallet, Call, Storage} = 9,
 
-		// Authorization
+		// Authorization + Utility
 		Authority: orml_authority::{Pallet, Call, Event<T>, Origin<T>} = 10,
+		Utility: pallet_utility::{Pallet, Call, Event} = 11,
+		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>} = 12,
 
 		// Smart contracts
 		EvmAccounts: module_evm_accounts::{Pallet, Call, Storage, Event<T>} = 20,
