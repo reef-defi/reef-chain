@@ -751,12 +751,12 @@ where
 	fn reserve_fee(who: &T::AccountId, weight: Weight) -> Result<PalletBalanceOf<T>, DispatchError> {
 		let fee = Pallet::<T>::weight_to_fee(weight);
 		Pallet::<T>::ensure_can_charge_fee(who, fee, WithdrawReasons::TRANSACTION_PAYMENT);
-		<T as Config>::Currency::reserve(&who, fee)?;
+		<T as Config>::Currency::reserve(who, fee)?;
 		Ok(fee)
 	}
 
 	fn unreserve_fee(who: &T::AccountId, fee: PalletBalanceOf<T>) {
-		<T as Config>::Currency::unreserve(&who, fee);
+		<T as Config>::Currency::unreserve(who, fee);
 	}
 
 	fn unreserve_and_charge_fee(
@@ -764,7 +764,7 @@ where
 		weight: Weight,
 	) -> Result<(PalletBalanceOf<T>, NegativeImbalanceOf<T>), TransactionValidityError> {
 		let fee = Pallet::<T>::weight_to_fee(weight);
-		<T as Config>::Currency::unreserve(&who, fee);
+		<T as Config>::Currency::unreserve(who, fee);
 
 		match <T as Config>::Currency::withdraw(
 			who,
@@ -783,7 +783,7 @@ where
 		payed: NegativeImbalanceOf<T>,
 	) -> Result<(), TransactionValidityError> {
 		let refund = Pallet::<T>::weight_to_fee(refund_weight);
-		let actual_payment = match <T as Config>::Currency::deposit_into_existing(&who, refund) {
+		let actual_payment = match <T as Config>::Currency::deposit_into_existing(who, refund) {
 			Ok(refund_imbalance) => {
 				// The refund cannot be larger than the up front payed max weight.
 				match payed.offset(refund_imbalance) {

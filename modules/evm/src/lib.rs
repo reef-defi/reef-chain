@@ -754,7 +754,7 @@ impl<T: Config> Pallet<T> {
 		maintainer: &EvmAddress,
 		code: Vec<u8>,
 	) -> Result<(), ExitError> {
-		let code_hash = code_hash(&code.as_slice());
+		let code_hash = code_hash(code.as_slice());
 		let contract_info = ContractInfo {
 			code_hash,
 			maintainer: *maintainer,
@@ -857,7 +857,7 @@ impl<T: Config> Pallet<T> {
 			}
 
 			let code_size = code.len() as u32;
-			let code_hash = code_hash(&code.as_slice());
+			let code_hash = code_hash(code.as_slice());
 			if code_hash == contract_info.code_hash {
 				return Ok(());
 			}

@@ -634,7 +634,7 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 			self.gasometer.record_cost(cost)?;
 		} else {
 			let (gas_cost, memory_cost) =
-				gasometer::dynamic_opcode_cost(context.address, opcode, stack, self.is_static, &self.config, self)?;
+				gasometer::dynamic_opcode_cost(context.address, opcode, stack, self.is_static, self.config, self)?;
 
 			self.gasometer.record_dynamic_cost(gas_cost, memory_cost)?;
 		}

@@ -79,7 +79,7 @@ where
 					EVM::query_maintainer(contract).map_err(|e| ExitError::Other(Cow::Borrowed(e.into())))?;
 
 				let mut address = [0u8; 32];
-				address[12..].copy_from_slice(&maintainer.as_bytes().to_vec());
+				address[12..].copy_from_slice(maintainer.as_bytes());
 
 				Ok((ExitSucceed::Returned, address.to_vec(), 0))
 			}
