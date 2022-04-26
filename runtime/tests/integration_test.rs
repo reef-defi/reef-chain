@@ -464,7 +464,7 @@ fn test_evm_module() {
 			assert_eq!(last_event(), event);
 
 			// test EvmAccounts Lookup
-			assert_eq!(Balances::free_balance(alice_account_id()), 999999999999989633000000000000000);
+			assert_eq!(Balances::free_balance(alice_account_id()), 999999999999896330000000000000000);
 			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF));
 			let to = EvmAccounts::eth_address(&alice());
 			assert_ok!(Currencies::transfer(
@@ -473,7 +473,7 @@ fn test_evm_module() {
 				CurrencyId::Token(TokenSymbol::REEF),
 				amount(10 * MICRO_REEF)
 			));
-			assert_eq!(Balances::free_balance(alice_account_id()), 1009999999999989633000000000000000);
+			assert_eq!(Balances::free_balance(alice_account_id()), 1009999999999896330000000000000000);
 			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF) - amount(10 * MICRO_REEF));
 		});
 }
