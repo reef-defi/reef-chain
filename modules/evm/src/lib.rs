@@ -411,7 +411,7 @@ pub mod module {
 				Pallet::<T>::deposit_event(Event::<T>::ExecutedFailed(target, info.exit_reason, info.output));
 			}
 
-			Self::process_queued_events();
+			Self::process_queued_events()?;
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -470,7 +470,7 @@ pub mod module {
 				}
 			}
 
-			Self::process_queued_events();
+			Self::process_queued_events()?;
 
 			Ok(PostDispatchInfo {
 				actual_weight: Some(T::GasToWeight::convert(used_gas)),
@@ -497,7 +497,7 @@ pub mod module {
 				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
 			}
 
-			Self::process_queued_events();
+			Self::process_queued_events()?;
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -526,7 +526,7 @@ pub mod module {
 				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
 			}
 
-			Self::process_queued_events();
+			Self::process_queued_events()?;
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -559,7 +559,7 @@ pub mod module {
 				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
 			}
 
-			Self::process_queued_events();
+			Self::process_queued_events()?;
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -680,12 +680,11 @@ impl<T: Config> Pallet<T> {
 	/// Process queued events
 	pub fn process_queued_events() -> DispatchResult {
 		for event in Self::queued_events() {
-			match event {
-				Event::<T>::ContractSelfdestructed(contract, caller) => {
+
+			if let Event::<T>::ContractSelfdestructed(contract, caller) = event {
 					Self::remove_contract(&caller, &contract)?;
-				},
-				_ => {}
-			}
+			};
+
 			Pallet::<T>::deposit_event(event);
 		}
 		QueuedEvents::<T>::kill();
@@ -925,7 +924,7 @@ impl<T: Config> Pallet<T> {
 				}
 			});
 
-			let contract_account_id = T::AddressMapping::get_account_id(&contract);
+			let contract_account_id = T::AddressMapping::get_account_id(contract);
 			T::Currency::unreserve(
 				&contract_account_id,
 				T::Currency::reserved_balance(&contract_account_id),
