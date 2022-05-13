@@ -340,8 +340,8 @@ pub mod module {
 		ContractDeployed(EvmAddress),
 		/// Set contract code. \[contract\]
 		ContractSetCode(EvmAddress),
-		/// Selfdestructed contract code. \[contract\]
-		ContractSelfdestructed(EvmAddress),
+		/// Selfdestructed contract code. \[contract, address\]
+		ContractSelfdestructed(EvmAddress, EvmAddress),
 	}
 
 	#[pallet::error]
@@ -666,10 +666,10 @@ pub mod module {
 		#[transactional]
 		pub fn selfdestruct(origin: OriginFor<T>, contract: EvmAddress) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			let maintainer = T::AddressMapping::get_evm_address(&who).ok_or(Error::<T>::AddressNotMapped)?;
-			Self::do_selfdestruct(who, &maintainer, contract)?;
+			let caller = T::AddressMapping::get_evm_address(&who).ok_or(Error::<T>::AddressNotMapped)?;
+			Self::do_selfdestruct(&caller, contract)?;
 
-			Pallet::<T>::deposit_event(Event::<T>::ContractSelfdestructed(contract));
+			Pallet::<T>::deposit_event(Event::<T>::ContractSelfdestructed(contract, caller));
 
 			Ok(().into())
 		}
@@ -681,6 +681,13 @@ impl<T: Config> Pallet<T> {
 	pub fn process_queued_events() {
 		for event in Self::queued_events() {
 			Pallet::<T>::deposit_event(event);
+
+			// match event {
+			// 	Event::<T>::ContractSelfdestructed(*EvmAddress) => {
+			//
+			// 	},
+			// 	_ => {}
+			// }
 		}
 		QueuedEvents::<T>::kill();
 	}
@@ -887,16 +894,23 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn do_selfdestruct(who: T::AccountId, maintainer: &EvmAddress, contract: EvmAddress) -> DispatchResult {
-		Accounts::<T>::mutate_exists(contract, |maybe_account_info| -> DispatchResult {
-			let account_info = maybe_account_info.take().ok_or(Error::<T>::ContractNotFound)?;
-			let contract_info = account_info
-				.contract_info
-				.as_ref()
-				.ok_or(Error::<T>::ContractNotFound)?;
+	fn do_selfdestruct(caller: &EvmAddress, contract: EvmAddress) -> DispatchResult {
+		let account_info = Self::accounts(contract).ok_or(Error::<T>::ContractNotFound)?;
+		let contract_info = account_info
+			.contract_info
+			.as_ref()
+			.ok_or(Error::<T>::ContractNotFound)?;
 
-			ensure!(contract_info.maintainer == *maintainer, Error::<T>::NoPermission);
-			ensure!(!contract_info.deployed, Error::<T>::ContractAlreadyDeployed);
+		ensure!(contract_info.maintainer == *caller, Error::<T>::NoPermission);
+		ensure!(!contract_info.deployed, Error::<T>::ContractAlreadyDeployed);
+
+		Self::remove_contract(caller, &contract)
+	}
+
+	fn remove_contract(caller: &EvmAddress, contract: &EvmAddress) -> DispatchResult {
+		Accounts::<T>::mutate_exists(contract, |account_info| -> DispatchResult {
+			let account_info = account_info.as_mut().ok_or(Error::<T>::ContractNotFound)?;
+			let contract_info = account_info.contract_info.take().ok_or(Error::<T>::ContractNotFound)?;
 
 			AccountStorages::<T>::remove_prefix(contract, None);
 
@@ -915,6 +929,7 @@ impl<T: Config> Pallet<T> {
 				&contract_account_id,
 				T::Currency::reserved_balance(&contract_account_id),
 			);
+			let who = T::AddressMapping::get_account_id(caller);
 			T::TransferAll::transfer_all(&contract_account_id, &who)?;
 
 			Ok(())

@@ -1066,7 +1066,7 @@ fn should_selfdestruct() {
 			Error::<Test>::NoPermission
 		);
 		assert_ok!(EVM::selfdestruct(Origin::signed(alice_account_id), contract_address));
-		let event = Event::EVM(crate::Event::ContractSelfdestructed(contract_address));
+		let event = Event::EVM(crate::Event::ContractSelfdestructed(contract_address, alice()));
 		assert!(System::events().iter().any(|record| record.event == event));
 	});
 }
@@ -1116,7 +1116,7 @@ fn should_selfdestruct_via_evm_call() {
 			1000000,
 			1000000,
 		));
-		let event = Event::EVM(crate::Event::ContractSelfdestructed(contract_address));
+		let event = Event::EVM(crate::Event::ContractSelfdestructed(contract_address, alice()));
 		assert!(System::events().iter().any(|record| record.event == event));
 	});
 }
