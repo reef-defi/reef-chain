@@ -678,17 +678,19 @@ pub mod module {
 
 impl<T: Config> Pallet<T> {
 	/// Process queued events
-	pub fn process_queued_events() {
+	pub fn process_queued_events() -> DispatchResult {
 		for event in Self::queued_events() {
 			match event {
 				Event::<T>::ContractSelfdestructed(contract, caller) => {
-					Self::remove_contract(&caller, &contract);
+					Self::remove_contract(&caller, &contract)?;
 				},
 				_ => {}
 			}
 			Pallet::<T>::deposit_event(event);
 		}
 		QueuedEvents::<T>::kill();
+
+		Ok(())
 	}
 
 	/// Remove an account.

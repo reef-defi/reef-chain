@@ -415,18 +415,9 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 			return Err(ExitError::OutOfGas);
 		}
 
-		let source = T::AddressMapping::get_account_id(&address);
-		let dest = T::AddressMapping::get_account_id(&target);
-
-		let size = Pallet::<T>::remove_account(&address)?;
-
-		self.storage_meter
-			.refund(size.saturating_add(T::NewContractExtraBytes::get()))
-			.map_err(|_| ExitError::Other("RefundStorageError".into()))?;
-
 		QueuedEvents::mutate(|v| v.push(Event::<T>::ContractSelfdestructed(address, target)));
 
-		T::TransferAll::transfer_all(&source, &dest).map_err(|_| ExitError::Other("TransferAllError".into()))
+		Ok(())
 	}
 
 	fn create(
