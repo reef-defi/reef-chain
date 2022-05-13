@@ -680,14 +680,13 @@ impl<T: Config> Pallet<T> {
 	/// Process queued events
 	pub fn process_queued_events() {
 		for event in Self::queued_events() {
+			match event {
+				Event::<T>::ContractSelfdestructed(contract, caller) => {
+					Self::remove_contract(&caller, &contract);
+				},
+				_ => {}
+			}
 			Pallet::<T>::deposit_event(event);
-
-			// match event {
-			// 	Event::<T>::ContractSelfdestructed(*EvmAddress) => {
-			//
-			// 	},
-			// 	_ => {}
-			// }
 		}
 		QueuedEvents::<T>::kill();
 	}
