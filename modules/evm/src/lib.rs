@@ -679,7 +679,7 @@ pub mod module {
 impl<T: Config> Pallet<T> {
 	/// Process queued events
 	pub fn process_queued_events() -> DispatchResult {
-		for event in Self::queued_events() {
+		for event in Self::queued_events().drain(..) {
 
 			if let Event::<T>::ContractSelfdestructed(contract, caller) = event {
 					Self::remove_contract(&caller, &contract)?;
@@ -687,7 +687,6 @@ impl<T: Config> Pallet<T> {
 
 			Pallet::<T>::deposit_event(event);
 		}
-		QueuedEvents::<T>::kill();
 
 		Ok(())
 	}
