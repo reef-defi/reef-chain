@@ -1056,6 +1056,7 @@ fn should_selfdestruct() {
 		)
 		.unwrap();
 		let contract_address = result.address;
+		let code_hash = Accounts::<Test>::get(contract_address).unwrap().contract_info.unwrap().code_hash;
 		assert_eq!(result.used_storage, 284);
 		let alice_balance = INITIAL_BALANCE - 284 * <Test as Config>::StorageDepositPerByte::get();
 
@@ -1068,6 +1069,15 @@ fn should_selfdestruct() {
 		assert_ok!(EVM::selfdestruct(Origin::signed(alice_account_id), contract_address));
 		let event = Event::EVM(crate::Event::ContractSelfdestructed(contract_address, alice()));
 		assert!(System::events().iter().any(|record| record.event == event));
+
+		// assert storage cleanup successful
+		assert_eq!(Accounts::<Test>::get(contract_address).unwrap().contract_info, None);
+		assert_eq!(AccountStorages::<Test>::iter_key_prefix(contract_address).count(), 0);
+		assert_eq!(CodeInfos::<Test>::get(code_hash), None);
+		assert_eq!(Codes::<Test>::get(code_hash), Vec::<u8>::new());
+
+		// assert refund of resereved balance
+		assert_eq!(balance(alice()), INITIAL_BALANCE);
 	});
 }
 
@@ -1103,6 +1113,7 @@ fn should_selfdestruct_via_evm_call() {
 		)
 		.unwrap();
 		let contract_address = result.address;
+		let code_hash = Accounts::<Test>::get(contract_address).unwrap().contract_info.unwrap().code_hash;
 		assert_eq!(result.used_storage, 328);
 		let alice_balance = INITIAL_BALANCE - 328 * <Test as Config>::StorageDepositPerByte::get();
 
@@ -1118,6 +1129,15 @@ fn should_selfdestruct_via_evm_call() {
 		));
 		let event = Event::EVM(crate::Event::ContractSelfdestructed(contract_address, alice()));
 		assert!(System::events().iter().any(|record| record.event == event));
+
+		// assert storage cleanup successful
+		assert_eq!(Accounts::<Test>::get(contract_address).unwrap().contract_info, None);
+		assert_eq!(AccountStorages::<Test>::iter_key_prefix(contract_address).count(), 0);
+		assert_eq!(CodeInfos::<Test>::get(code_hash), None);
+		assert_eq!(Codes::<Test>::get(code_hash), Vec::<u8>::new());
+
+		// assert refund of resereved balance
+		assert_eq!(balance(alice()), INITIAL_BALANCE);
 	});
 }
 

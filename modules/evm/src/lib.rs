@@ -383,6 +383,7 @@ pub mod module {
 		/// Issue an EVM call operation. This is similar to a message call
 		/// transaction in Ethereum.
 		#[pallet::weight(T::GasToWeight::convert(*gas_limit))]
+		#[transactional]
 		pub fn call(
 			origin: OriginFor<T>,
 			target: EvmAddress,
@@ -481,6 +482,7 @@ pub mod module {
 		/// Issue an EVM create operation. This is similar to a contract
 		/// creation transaction in Ethereum.
 		#[pallet::weight(T::GasToWeight::convert(*gas_limit))]
+		#[transactional]
 		pub fn create(
 			origin: OriginFor<T>,
 			init: Vec<u8>,
@@ -509,6 +511,7 @@ pub mod module {
 
 		/// Issue an EVM create2 operation.
 		#[pallet::weight(T::GasToWeight::convert(*gas_limit))]
+		#[transactional]
 		pub fn create2(
 			origin: OriginFor<T>,
 			init: Vec<u8>,
@@ -539,6 +542,7 @@ pub mod module {
 		/// Issue an EVM create operation. The next available system contract
 		/// address will be used as created contract address.
 		#[pallet::weight(T::GasToWeight::convert(*gas_limit))]
+		#[transactional]
 		pub fn create_network_contract(
 			origin: OriginFor<T>,
 			init: Vec<u8>,
@@ -906,8 +910,9 @@ impl<T: Config> Pallet<T> {
 		Self::remove_contract(caller, &contract)
 	}
 
+	#[transactional]
 	fn remove_contract(caller: &EvmAddress, contract: &EvmAddress) -> DispatchResult {
-		Accounts::<T>::mutate_exists(contract, |account_info| -> DispatchResult {
+		Accounts::<T>::try_mutate_exists(contract, |account_info| -> DispatchResult {
 			let account_info = account_info.as_mut().ok_or(Error::<T>::ContractNotFound)?;
 			let contract_info = account_info.contract_info.take().ok_or(Error::<T>::ContractNotFound)?;
 
