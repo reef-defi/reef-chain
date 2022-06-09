@@ -340,8 +340,8 @@ pub mod module {
 		ContractDeployed(EvmAddress),
 		/// Set contract code. \[contract\]
 		ContractSetCode(EvmAddress),
-		/// Selfdestructed contract code. \[contract\]
-		ContractSelfdestructed(EvmAddress),
+		/// Selfdestructed contract code. \[contract, address\]
+		ContractSelfdestructed(EvmAddress, EvmAddress),
 	}
 
 	#[pallet::error]
@@ -383,6 +383,7 @@ pub mod module {
 		/// Issue an EVM call operation. This is similar to a message call
 		/// transaction in Ethereum.
 		#[pallet::weight(T::GasToWeight::convert(*gas_limit))]
+		#[transactional]
 		pub fn call(
 			origin: OriginFor<T>,
 			target: EvmAddress,
@@ -411,7 +412,7 @@ pub mod module {
 				Pallet::<T>::deposit_event(Event::<T>::ExecutedFailed(target, info.exit_reason, info.output));
 			}
 
-			Self::process_queued_events();
+			Self::process_queued_events()?;
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -470,7 +471,7 @@ pub mod module {
 				}
 			}
 
-			Self::process_queued_events();
+			Self::process_queued_events()?;
 
 			Ok(PostDispatchInfo {
 				actual_weight: Some(T::GasToWeight::convert(used_gas)),
@@ -481,6 +482,7 @@ pub mod module {
 		/// Issue an EVM create operation. This is similar to a contract
 		/// creation transaction in Ethereum.
 		#[pallet::weight(T::GasToWeight::convert(*gas_limit))]
+		#[transactional]
 		pub fn create(
 			origin: OriginFor<T>,
 			init: Vec<u8>,
@@ -497,7 +499,7 @@ pub mod module {
 				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
 			}
 
-			Self::process_queued_events();
+			Self::process_queued_events()?;
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -509,6 +511,7 @@ pub mod module {
 
 		/// Issue an EVM create2 operation.
 		#[pallet::weight(T::GasToWeight::convert(*gas_limit))]
+		#[transactional]
 		pub fn create2(
 			origin: OriginFor<T>,
 			init: Vec<u8>,
@@ -526,7 +529,7 @@ pub mod module {
 				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
 			}
 
-			Self::process_queued_events();
+			Self::process_queued_events()?;
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -539,6 +542,7 @@ pub mod module {
 		/// Issue an EVM create operation. The next available system contract
 		/// address will be used as created contract address.
 		#[pallet::weight(T::GasToWeight::convert(*gas_limit))]
+		#[transactional]
 		pub fn create_network_contract(
 			origin: OriginFor<T>,
 			init: Vec<u8>,
@@ -559,7 +563,7 @@ pub mod module {
 				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
 			}
 
-			Self::process_queued_events();
+			Self::process_queued_events()?;
 
 			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
@@ -666,10 +670,10 @@ pub mod module {
 		#[transactional]
 		pub fn selfdestruct(origin: OriginFor<T>, contract: EvmAddress) -> DispatchResultWithPostInfo {
 			let who = ensure_signed(origin)?;
-			let maintainer = T::AddressMapping::get_evm_address(&who).ok_or(Error::<T>::AddressNotMapped)?;
-			Self::do_selfdestruct(who, &maintainer, contract)?;
+			let caller = T::AddressMapping::get_evm_address(&who).ok_or(Error::<T>::AddressNotMapped)?;
+			Self::do_selfdestruct(&caller, contract)?;
 
-			Pallet::<T>::deposit_event(Event::<T>::ContractSelfdestructed(contract));
+			Pallet::<T>::deposit_event(Event::<T>::ContractSelfdestructed(contract, caller));
 
 			Ok(().into())
 		}
@@ -678,11 +682,17 @@ pub mod module {
 
 impl<T: Config> Pallet<T> {
 	/// Process queued events
-	pub fn process_queued_events() {
-		for event in Self::queued_events() {
+	pub fn process_queued_events() -> DispatchResult {
+		for event in Self::queued_events().drain(..) {
+
+			if let Event::<T>::ContractSelfdestructed(contract, caller) = event {
+					Self::remove_contract(&caller, &contract)?;
+			};
+
 			Pallet::<T>::deposit_event(event);
 		}
-		QueuedEvents::<T>::kill();
+
+		Ok(())
 	}
 
 	/// Remove an account.
@@ -887,16 +897,24 @@ impl<T: Config> Pallet<T> {
 		Ok(())
 	}
 
-	fn do_selfdestruct(who: T::AccountId, maintainer: &EvmAddress, contract: EvmAddress) -> DispatchResult {
-		Accounts::<T>::mutate_exists(contract, |maybe_account_info| -> DispatchResult {
-			let account_info = maybe_account_info.take().ok_or(Error::<T>::ContractNotFound)?;
-			let contract_info = account_info
-				.contract_info
-				.as_ref()
-				.ok_or(Error::<T>::ContractNotFound)?;
+	fn do_selfdestruct(caller: &EvmAddress, contract: EvmAddress) -> DispatchResult {
+		let account_info = Self::accounts(contract).ok_or(Error::<T>::ContractNotFound)?;
+		let contract_info = account_info
+			.contract_info
+			.as_ref()
+			.ok_or(Error::<T>::ContractNotFound)?;
 
-			ensure!(contract_info.maintainer == *maintainer, Error::<T>::NoPermission);
-			ensure!(!contract_info.deployed, Error::<T>::ContractAlreadyDeployed);
+		ensure!(contract_info.maintainer == *caller, Error::<T>::NoPermission);
+		ensure!(!contract_info.deployed, Error::<T>::ContractAlreadyDeployed);
+
+		Self::remove_contract(caller, &contract)
+	}
+
+	#[transactional]
+	fn remove_contract(caller: &EvmAddress, contract: &EvmAddress) -> DispatchResult {
+		Accounts::<T>::try_mutate_exists(contract, |account_info| -> DispatchResult {
+			let account_info = account_info.as_mut().ok_or(Error::<T>::ContractNotFound)?;
+			let contract_info = account_info.contract_info.take().ok_or(Error::<T>::ContractNotFound)?;
 
 			AccountStorages::<T>::remove_prefix(contract, None);
 
@@ -910,11 +928,12 @@ impl<T: Config> Pallet<T> {
 				}
 			});
 
-			let contract_account_id = T::AddressMapping::get_account_id(&contract);
+			let contract_account_id = T::AddressMapping::get_account_id(contract);
 			T::Currency::unreserve(
 				&contract_account_id,
 				T::Currency::reserved_balance(&contract_account_id),
 			);
+			let who = T::AddressMapping::get_account_id(caller);
 			T::TransferAll::transfer_all(&contract_account_id, &who)?;
 
 			Ok(())

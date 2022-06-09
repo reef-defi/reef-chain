@@ -1056,6 +1056,7 @@ fn should_selfdestruct() {
 		)
 		.unwrap();
 		let contract_address = result.address;
+		let code_hash = Accounts::<Test>::get(contract_address).unwrap().contract_info.unwrap().code_hash;
 		assert_eq!(result.used_storage, 284);
 		let alice_balance = INITIAL_BALANCE - 284 * <Test as Config>::StorageDepositPerByte::get();
 
@@ -1066,6 +1067,77 @@ fn should_selfdestruct() {
 			Error::<Test>::NoPermission
 		);
 		assert_ok!(EVM::selfdestruct(Origin::signed(alice_account_id), contract_address));
+		let event = Event::EVM(crate::Event::ContractSelfdestructed(contract_address, alice()));
+		assert!(System::events().iter().any(|record| record.event == event));
+
+		// assert storage cleanup successful
+		assert_eq!(Accounts::<Test>::get(contract_address).unwrap().contract_info, None);
+		assert_eq!(AccountStorages::<Test>::iter_key_prefix(contract_address).count(), 0);
+		assert_eq!(CodeInfos::<Test>::get(code_hash), None);
+		assert_eq!(Codes::<Test>::get(code_hash), Vec::<u8>::new());
+
+		// assert refund of resereved balance
+		assert_eq!(balance(alice()), INITIAL_BALANCE);
+	});
+}
+
+#[cfg(feature = "with-ethereum-compatibility")]
+#[test]
+fn should_selfdestruct_via_evm_call() {
+	// pragma solidity ^0.8.4;
+	//
+	// contract Test {
+	// 	address payable private owner;
+	//
+	// 	constructor() {
+	// 		owner = payable(msg.sender);
+	// 	}
+	//
+	// 	function close () public {
+	// 		selfdestruct(owner);
+	// 	}
+	// }
+	let contract = from_hex("0x6080604052348015600f57600080fd5b50336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555060a48061005e6000396000f3fe6080604052348015600f57600080fd5b506004361060285760003560e01c806343d726d614602d575b600080fd5b60336035565b005b60008054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16fffea26469706673582212207dacfac5a65fdfa63f19717f68c02f0b95d1548af0cdb1fb3ffe5c7384ecc29b64736f6c63430008070033").unwrap();
+
+	new_test_ext().execute_with(|| {
+		let alice_account_id = <Test as Config>::AddressMapping::get_account_id(&alice());
+
+		// create contract
+		let result = Runner::<Test>::create(
+			alice(),
+			contract.clone(),
+			0,
+			21_000_000,
+			21_000_000,
+			<Test as Config>::config(),
+		)
+		.unwrap();
+		let contract_address = result.address;
+		let code_hash = Accounts::<Test>::get(contract_address).unwrap().contract_info.unwrap().code_hash;
+		assert_eq!(result.used_storage, 328);
+		let alice_balance = INITIAL_BALANCE - 328 * <Test as Config>::StorageDepositPerByte::get();
+
+		assert_eq!(balance(alice()), alice_balance);
+
+		assert_ok!(EVM::call(
+			Origin::signed(<Test as Config>::AddressMapping::get_account_id(&alice())),
+			contract_address,
+			from_hex("0x43d726d6").unwrap(), // Test.close()
+			0,
+			1000000,
+			1000000,
+		));
+		let event = Event::EVM(crate::Event::ContractSelfdestructed(contract_address, alice()));
+		assert!(System::events().iter().any(|record| record.event == event));
+
+		// assert storage cleanup successful
+		assert_eq!(Accounts::<Test>::get(contract_address).unwrap().contract_info, None);
+		assert_eq!(AccountStorages::<Test>::iter_key_prefix(contract_address).count(), 0);
+		assert_eq!(CodeInfos::<Test>::get(code_hash), None);
+		assert_eq!(Codes::<Test>::get(code_hash), Vec::<u8>::new());
+
+		// assert refund of resereved balance
+		assert_eq!(balance(alice()), INITIAL_BALANCE);
 	});
 }
 

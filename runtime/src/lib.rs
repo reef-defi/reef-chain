@@ -591,8 +591,8 @@ parameter_types! {
 	//Out[3]: 13939
 	pub const ChainId: u64 = 13939;
 	// 10 REEF minimum storage deposit
-	pub const NewContractExtraBytes: u32 = 10_000;
-	pub const StorageDepositPerByte: Balance = 1 * MILLI_REEF;
+	pub const NewContractExtraBytes: u32 = 1_000;
+	pub const StorageDepositPerByte: Balance = 10 * MILLI_REEF;
 	pub const MaxCodeSize: u32 = 60 * 1024;
 	pub NetworkContractSource: H160 = H160::from_low_u64_be(0);
 	pub const DeveloperDeposit: Balance = 1_000 * REEF;
