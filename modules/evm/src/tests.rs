@@ -1131,13 +1131,13 @@ fn should_selfdestruct_via_evm_call() {
 		assert!(System::events().iter().any(|record| record.event == event));
 
 		// assert storage cleanup successful
-		assert_eq!(Accounts::<Test>::get(contract_address).unwrap().contract_info, None);
+		assert_eq!(Accounts::<Test>::get(contract_address), None);
 		assert_eq!(AccountStorages::<Test>::iter_key_prefix(contract_address).count(), 0);
 		assert_eq!(CodeInfos::<Test>::get(code_hash), None);
 		assert_eq!(Codes::<Test>::get(code_hash), Vec::<u8>::new());
 
-		// assert refund of resereved balance
-		assert_eq!(balance(alice()), INITIAL_BALANCE);
+		// assert refund of resereved balance, minus storage deposit and storage costs
+		assert_eq!(balance(alice()), 999999996720);
 	});
 }
 

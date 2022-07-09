@@ -4,7 +4,7 @@ use crate::{
 	precompiles::Precompiles,
 	runner::storage_meter::{StorageMeter, StorageMeterHandler},
 	EvmAccountInfo, AccountStorages, Accounts, AddressMapping, Codes, Config, ContractInfo, Error, Event, Log,
-	Pallet, Vicinity, QueuedEvents
+	Pallet, Vicinity, QueuedEvents, TransferAll
 };
 use evm::{Capture, Context, CreateScheme, ExitError, ExitReason, Opcode, Runtime, Stack, Transfer};
 use evm_gasometer::{self as gasometer, Gasometer};
@@ -414,6 +414,12 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 		if self.is_static {
 			return Err(ExitError::OutOfGas);
 		}
+
+		let source = T::AddressMapping::get_account_id(&address);
+		let dest = T::AddressMapping::get_account_id(&target);
+
+		let _size = Pallet::<T>::remove_account(&address)?;
+		T::TransferAll::transfer_all(&source, &dest).map_err(|_| ExitError::Other("TransferAllError".into()))?;
 
 		QueuedEvents::mutate(|v| v.push(Event::<T>::ContractSelfdestructed(address, target)));
 

@@ -684,14 +684,8 @@ impl<T: Config> Pallet<T> {
 	/// Process queued events
 	pub fn process_queued_events() -> DispatchResult {
 		for event in Self::queued_events().drain(..) {
-
-			if let Event::<T>::ContractSelfdestructed(contract, caller) = event {
-					Self::remove_contract(&caller, &contract)?;
-			};
-
 			Pallet::<T>::deposit_event(event);
 		}
-
 		Ok(())
 	}
 
