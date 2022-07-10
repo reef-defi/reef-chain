@@ -126,7 +126,12 @@ impl<T: Config> Runner<T> {
 
 				create_info.used_storage = substate.used_storage();
 
-				if let Err(e) = <Pallet<T>>::on_contract_initialization(&address, &source, out) {
+				let used_gas_and_storage = (
+					create_info.used_gas.saturated_into(),
+					create_info.used_storage
+				);
+
+				if let Err(e) = <Pallet<T>>::on_contract_initialization(&address, &source, out, used_gas_and_storage) {
 					create_info.exit_reason = e.into();
 					return TransactionOutcome::Rollback(Ok(create_info));
 				}

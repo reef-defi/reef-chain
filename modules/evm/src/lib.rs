@@ -30,7 +30,7 @@ use primitive_types::{H256, U256};
 use serde::{Deserialize, Serialize};
 use sha3::{Digest, Keccak256};
 use sp_runtime::{
-	traits::{Convert, DispatchInfoOf, One, PostDispatchInfoOf, SignedExtension, UniqueSaturatedInto},
+	traits::{Convert, DispatchInfoOf, Zero, One, PostDispatchInfoOf, SignedExtension, UniqueSaturatedInto},
 	transaction_validity::TransactionValidityError,
 	Either, TransactionOutcome,
 };
@@ -283,7 +283,8 @@ pub mod module {
 
 				if !account.code.is_empty() {
 					// if code len > 0 then it's a contract
-					<Pallet<T>>::on_contract_initialization(address, &EvmAddress::default(), account.code.clone())
+					let used_gas_and_storage: (u64, i32) = (Zero::zero(), Zero::zero());
+					<Pallet<T>>::on_contract_initialization(address, &EvmAddress::default(), account.code.clone(), used_gas_and_storage)
 						.expect("Genesis contract shouldn't fail");
 
 					#[cfg(not(feature = "with-ethereum-compatibility"))]
@@ -304,16 +305,16 @@ pub mod module {
 	pub enum Event<T: Config> {
 		/// Ethereum events from contracts.
 		Log(Log),
-		/// A contract has been created at given \[address\].
-		Created(EvmAddress),
+		/// A new contract has been created. \[maintainer, contract, (gas_used, storage_used)\].
+		Created(EvmAddress, EvmAddress, (u64, i32)),
 		/// A contract was attempted to be created, but the execution failed.
-		/// \[contract, exit_reason, output\]
-		CreatedFailed(EvmAddress, ExitReason, Vec<u8>),
-		/// A \[contract\] has been executed successfully with states applied.
-		Executed(EvmAddress),
+		/// \[maintainer, contract, exit_reason, output, (gas_used, storage_used)\]
+		CreatedFailed(EvmAddress, EvmAddress, ExitReason, Vec<u8>, (u64, i32)),
+		/// A \[caller, contract, (gas_used, storage_used)\] has been executed successfully with states applied.
+		Executed(EvmAddress, EvmAddress, (u64, i32)),
 		/// A contract has been executed with errors. States are reverted with
-		/// only gas fees applied. \[contract, exit_reason, output\]
-		ExecutedFailed(EvmAddress, ExitReason, Vec<u8>),
+		/// only gas fees applied. \[caller, contract, exit_reason, output, (gas_used, storage_used)\]
+		ExecutedFailed(EvmAddress, EvmAddress, ExitReason, Vec<u8>, (u64, i32)),
 		/// A deposit has been made at a given address. \[sender, address,
 		/// value\]
 		BalanceDeposit(T::AccountId, EvmAddress, U256),
@@ -340,7 +341,7 @@ pub mod module {
 		ContractDeployed(EvmAddress),
 		/// Set contract code. \[contract\]
 		ContractSetCode(EvmAddress),
-		/// Selfdestructed contract code. \[contract, address\]
+		/// Selfdestructed contract code. \[caller, contract\]
 		ContractSelfdestructed(EvmAddress, EvmAddress),
 	}
 
@@ -405,16 +406,25 @@ pub mod module {
 				storage_limit,
 				T::config(),
 			)?;
+			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
 			if info.exit_reason.is_succeed() {
-				Pallet::<T>::deposit_event(Event::<T>::Executed(target));
+				Pallet::<T>::deposit_event(Event::<T>::Executed(
+					source,
+					target,
+					(used_gas, info.used_storage.unique_saturated_into())
+				));
 			} else {
-				Pallet::<T>::deposit_event(Event::<T>::ExecutedFailed(target, info.exit_reason, info.output));
+				Pallet::<T>::deposit_event(Event::<T>::ExecutedFailed(
+					source,
+					target,
+					info.exit_reason,
+					info.output,
+					(gas_limit, Zero::zero())
+				));
 			}
 
 			Self::process_queued_events()?;
-
-			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
 			Ok(PostDispatchInfo {
 				actual_weight: Some(T::GasToWeight::convert(used_gas)),
@@ -447,14 +457,24 @@ pub mod module {
 			}
 
 			let info = Runner::<T>::call(from, from, target, input, value, gas_limit, storage_limit, T::config())?;
+			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
 			if info.exit_reason.is_succeed() {
-				Pallet::<T>::deposit_event(Event::<T>::Executed(target));
+				Pallet::<T>::deposit_event(Event::<T>::Executed(
+					from,
+					target,
+					(used_gas, info.used_storage.unique_saturated_into())
+				));
 			} else {
-				Pallet::<T>::deposit_event(Event::<T>::ExecutedFailed(target, info.exit_reason, info.output));
+				Pallet::<T>::deposit_event(Event::<T>::ExecutedFailed(
+					from,
+					target,
+					info.exit_reason,
+					info.output,
+					(gas_limit, Zero::zero())
+				));
 			}
 
-			let used_gas: u64 = info.used_gas.unique_saturated_into();
 
 			#[cfg(not(feature = "with-ethereum-compatibility"))]
 			{
@@ -496,7 +516,13 @@ pub mod module {
 			let info = Runner::<T>::create(source, init, value, gas_limit, storage_limit, T::config())?;
 
 			if !info.exit_reason.is_succeed() {
-				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
+				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(
+					source,
+					info.address,
+					info.exit_reason,
+					info.output,
+					(gas_limit, Zero::zero())
+				));
 			}
 
 			Self::process_queued_events()?;
@@ -526,7 +552,13 @@ pub mod module {
 			let info = Runner::<T>::create2(source, init, salt, value, gas_limit, storage_limit, T::config())?;
 
 			if !info.exit_reason.is_succeed() {
-				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
+				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(
+					source,
+					info.address,
+					info.exit_reason,
+					info.output,
+					(gas_limit, Zero::zero())
+				));
 			}
 
 			Self::process_queued_events()?;
@@ -560,7 +592,13 @@ pub mod module {
 			NetworkContractIndex::<T>::mutate(|v| *v = v.saturating_add(One::one()));
 
 			if !info.exit_reason.is_succeed() {
-				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(info.address, info.exit_reason, info.output));
+				Pallet::<T>::deposit_event(Event::<T>::CreatedFailed(
+					source,
+					info.address,
+					info.exit_reason,
+					info.output,
+					(gas_limit, Zero::zero())
+				));
 			}
 
 			Self::process_queued_events()?;
@@ -673,7 +711,7 @@ pub mod module {
 			let caller = T::AddressMapping::get_evm_address(&who).ok_or(Error::<T>::AddressNotMapped)?;
 			Self::do_selfdestruct(&caller, contract)?;
 
-			Pallet::<T>::deposit_event(Event::<T>::ContractSelfdestructed(contract, caller));
+			Pallet::<T>::deposit_event(Event::<T>::ContractSelfdestructed(caller, contract));
 
 			Ok(().into())
 		}
@@ -757,6 +795,7 @@ impl<T: Config> Pallet<T> {
 		address: &EvmAddress,
 		maintainer: &EvmAddress,
 		code: Vec<u8>,
+		used_gas_and_storage: (u64, i32)
 	) -> Result<(), ExitError> {
 		let code_hash = code_hash(code.as_slice());
 		let contract_info = ContractInfo {
@@ -795,7 +834,7 @@ impl<T: Config> Pallet<T> {
 			}
 		});
 
-		QueuedEvents::<T>::mutate(|v| v.push(Event::<T>::Created(*address)));
+		QueuedEvents::<T>::mutate(|v| v.push(Event::<T>::Created(*maintainer, *address, used_gas_and_storage)));
 
 		Ok(())
 	}
@@ -973,13 +1012,19 @@ impl<T: Config> EVMTrait<T::AccountId> for Pallet<T> {
 				Ok(info) => match mode {
 					ExecutionMode::Execute => {
 						if info.exit_reason.is_succeed() {
-							Pallet::<T>::deposit_event(Event::<T>::Executed(context.contract));
+							Pallet::<T>::deposit_event(Event::<T>::Executed(
+								context.origin,
+								context.contract,
+								(info.used_gas.unique_saturated_into(), info.used_storage)
+							));
 							TransactionOutcome::Commit(Ok(info))
 						} else {
 							Pallet::<T>::deposit_event(Event::<T>::ExecutedFailed(
+								context.origin,
 								context.contract,
 								info.exit_reason.clone(),
 								info.output.clone(),
+								(gas_limit, Zero::zero())
 							));
 							TransactionOutcome::Rollback(Ok(info))
 						}

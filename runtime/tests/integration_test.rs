@@ -156,7 +156,7 @@ fn deploy_contract(account: AccountId) -> Result<H160, DispatchError> {
 	EVM::create(Origin::signed(account), contract, 0, 1000000000, 1000000000)
 		.map_or_else(|e| Err(e.error), |_| Ok(()))?;
 
-	if let Event::EVM(module_evm::Event::Created(address)) = System::events().iter().last().unwrap().event {
+	if let Event::EVM(module_evm::Event::Created(_, address, ..)) = System::events().iter().last().unwrap().event {
 		Ok(address)
 	} else {
 		Err("deploy_contract failed".into())
@@ -448,11 +448,15 @@ fn test_evm_module() {
 			assert_eq!(Balances::free_balance(alice_account_id()), amount(1 * MILLI_REEF));
 			assert_eq!(Balances::free_balance(bob_account_id()), amount(1 * MILLI_REEF));
 
-			let _alice_address = EvmAccounts::eth_address(&alice());
+			let alice_address = EvmAccounts::eth_address(&alice());
 			let bob_address = EvmAccounts::eth_address(&bob());
 
 			let contract = deploy_contract(alice_account_id()).unwrap();
-			let event = Event::EVM(module_evm::Event::Created(contract));
+			let event = Event::EVM(module_evm::Event::Created(
+				alice_address,
+				contract,
+				(61183, 284),
+			));
 			assert_eq!(last_event(), event);
 
 			assert_ok!(EVM::transfer_maintainer(

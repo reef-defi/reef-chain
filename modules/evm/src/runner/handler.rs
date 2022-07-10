@@ -421,7 +421,7 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 		let _size = Pallet::<T>::remove_account(&address)?;
 		T::TransferAll::transfer_all(&source, &dest).map_err(|_| ExitError::Other("TransferAllError".into()))?;
 
-		QueuedEvents::mutate(|v| v.push(Event::<T>::ContractSelfdestructed(address, target)));
+		QueuedEvents::mutate(|v| v.push(Event::<T>::ContractSelfdestructed(target, address)));
 
 		Ok(())
 	}
@@ -482,15 +482,19 @@ impl<'vicinity, 'config, 'meter, T: Config> HandlerT for Handler<'vicinity, 'con
 				match reason {
 					ExitReason::Succeed(s) => match substate.gasometer.record_deposit(out.len()) {
 						Ok(()) => {
-							try_or_rollback!(gasometer.record_stipend(substate.gasometer.gas()));
+							let gas_used = substate.gasometer.gas();
+							try_or_rollback!(gasometer.record_stipend(gas_used));
 							try_or_rollback!(gasometer.record_refund(substate.gasometer.refunded_gas()));
 
 							Handler::<T>::inc_nonce(address);
+							let storage_used = (out.len() as u32).saturating_add(T::NewContractExtraBytes::get());
 							try_or_rollback!(substate
 								.storage_meter
-								.charge((out.len() as u32).saturating_add(T::NewContractExtraBytes::get()))
+								.charge(storage_used)
 								.map_err(|_| ExitError::OutOfGas));
-							match <Pallet<T>>::on_contract_initialization(&address, origin, out) {
+
+							let used_gas_and_storage = (gas_used, storage_used as i32);
+							match <Pallet<T>>::on_contract_initialization(&address, origin, out, used_gas_and_storage) {
 								Ok(()) => {
 									TransactionOutcome::Commit(Capture::Exit((s.into(), Some(address), Vec::new())))
 								}
