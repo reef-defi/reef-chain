@@ -1137,7 +1137,7 @@ fn should_selfdestruct_via_evm_call() {
 		assert_eq!(Codes::<Test>::get(code_hash), Vec::<u8>::new());
 
 		// assert refund of resereved balance, minus storage deposit and storage costs
-		assert_eq!(balance(alice()), 999999996720);
+		assert_eq!(balance(alice()), alice_balance);
 	});
 }
 
