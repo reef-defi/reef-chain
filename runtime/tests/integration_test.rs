@@ -455,7 +455,7 @@ fn test_evm_module() {
 			let event = Event::EVM(module_evm::Event::Created(
 				alice_address,
 				contract,
-				(61183, 284),
+				(100199, 1367),
 			));
 			assert_eq!(last_event(), event);
 
