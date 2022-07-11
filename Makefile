@@ -50,6 +50,12 @@ test:
 	SKIP_WASM_BUILD=1 cargo test --features with-ethereum-compatibility --all
 	SKIP_WASM_BUILD=1 cargo test --all
 
+
+.PHONY: test-print
+test-print:
+	SKIP_WASM_BUILD=1 cargo test --features with-ethereum-compatibility --all -- --nocapture
+	SKIP_WASM_BUILD=1 cargo test --all -- --nocapture
+
 .PHONY: debug
 debug:
 	cargo build && RUST_LOG=debug RUST_BACKTRACE=1 rust-gdb --args target/debug/reef-node --dev --tmp -lruntime=debug

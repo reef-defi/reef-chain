@@ -530,7 +530,11 @@ fn create_network_contract_works() {
 			U256::from_str("02").unwrap()
 		);
 
-		let created_event = Event::EVM(crate::Event::Created(H160::from_low_u64_be(primitives::NETWORK_CONTRACT_START)));
+		let created_event = Event::EVM(crate::Event::Created(
+			H160::from_str("0x0000000000000000000000000000000000000000").unwrap(),
+			H160::from_str("0x2000000000000000000000000000000000000001").unwrap(),
+			(Zero::zero(), Zero::zero())
+		));
 		assert!(System::events().iter().any(|record| record.event == created_event));
 
 		assert_eq!(EVM::network_contract_index(), primitives::NETWORK_CONTRACT_START + 1);
@@ -731,7 +735,12 @@ fn create_extrinisic_should_deposit_create_event() {
 			1000000,
 			1000000
 		));
-		assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == mock::Event::from(crate::Event::Created(H160::from_str("0x5f8bd49cd9f0cb2bd5bb9d4320dfe9b61023249d").unwrap()))));
+		let event = mock::Event::from(crate::Event::Created(
+			alice(),
+			H160::from_str("0x5f8bd49cd9f0cb2bd5bb9d4320dfe9b61023249d").unwrap(),
+			(61183, 284)
+		));
+		assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == event));
 	});
 }
 
@@ -756,7 +765,12 @@ fn create2_extrinisic_should_deposit_create_event() {
 			1000000,
 			1000000
 		));
-		assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == mock::Event::from(crate::Event::Created(H160::from_str("0x182f69c8cd38252a33d1a38c48c6fcf8a1742086").unwrap()))));
+		let event = mock::Event::from(crate::Event::Created(
+			alice(),
+			H160::from_str("0x182f69c8cd38252a33d1a38c48c6fcf8a1742086").unwrap(),
+			(61183, 284)
+		));
+		assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == event));
 	});
 }
 
@@ -802,8 +816,19 @@ fn call_extrinsic_should_deposit_create_event() {
 		));
 
 		// We expect two Created events as we have specified argument num = 2 in call
-		assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == mock::Event::from(crate::Event::Created(H160::from_str("0x7b8f8ca099f6e33cf1817cf67d0556429cfc54e4").unwrap()))));
-		assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == mock::Event::from(crate::Event::Created(H160::from_str("0x39b26a36a8a175ce7d498b5ef187d1ab2f381bbd").unwrap()))));
+		let event = mock::Event::from(crate::Event::Created(
+			alice(),
+			H160::from_str("0x7b8f8ca099f6e33cf1817cf67d0556429cfc54e4").unwrap(),
+			(841916, 480)
+		));
+		assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == event));
+
+		let event = mock::Event::from(crate::Event::Created(
+			alice(),
+			H160::from_str("0x39b26a36a8a175ce7d498b5ef187d1ab2f381bbd").unwrap(),
+			(694031, 480)
+		));
+		assert!(<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == event));
 	})
 }
 
@@ -850,8 +875,12 @@ fn call_extrinsic_should_not_deposit_create_event_on_revert() {
 		));
 
 		// We confirm that Created events have not been emitted
-		assert!(!<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == mock::Event::from(crate::Event::Created(H160::from_str("0x7b8f8ca099f6e33cf1817cf67d0556429cfc54e4").unwrap()))));
-		assert!(!<frame_system::Pallet<Test>>::events().iter().any(|x| x.event == mock::Event::from(crate::Event::Created(H160::from_str("0x39b26a36a8a175ce7d498b5ef187d1ab2f381bbd").unwrap()))));
+		for event in <frame_system::Pallet<Test>>::events().iter() {
+			if let Event::EVM(crate::Event::Created(_, address, ..)) = event.event {
+				assert!(address != H160::from_str("0x7b8f8ca099f6e33cf1817cf67d0556429cfc54e4").unwrap());
+				assert!(address != H160::from_str("0x39b26a36a8a175ce7d498b5ef187d1ab2f381bbd").unwrap());
+			}
+		}
 	})
 }
 
@@ -1067,7 +1096,7 @@ fn should_selfdestruct() {
 			Error::<Test>::NoPermission
 		);
 		assert_ok!(EVM::selfdestruct(Origin::signed(alice_account_id), contract_address));
-		let event = Event::EVM(crate::Event::ContractSelfdestructed(contract_address, alice()));
+		let event = Event::EVM(crate::Event::ContractSelfdestructed(alice(), contract_address));
 		assert!(System::events().iter().any(|record| record.event == event));
 
 		// assert storage cleanup successful
@@ -1127,17 +1156,17 @@ fn should_selfdestruct_via_evm_call() {
 			1000000,
 			1000000,
 		));
-		let event = Event::EVM(crate::Event::ContractSelfdestructed(contract_address, alice()));
+		let event = Event::EVM(crate::Event::ContractSelfdestructed(alice(), contract_address));
 		assert!(System::events().iter().any(|record| record.event == event));
 
 		// assert storage cleanup successful
-		assert_eq!(Accounts::<Test>::get(contract_address).unwrap().contract_info, None);
+		assert_eq!(Accounts::<Test>::get(contract_address), None);
 		assert_eq!(AccountStorages::<Test>::iter_key_prefix(contract_address).count(), 0);
 		assert_eq!(CodeInfos::<Test>::get(code_hash), None);
 		assert_eq!(Codes::<Test>::get(code_hash), Vec::<u8>::new());
 
-		// assert refund of resereved balance
-		assert_eq!(balance(alice()), INITIAL_BALANCE);
+		// assert refund of resereved balance, minus storage deposit and storage costs
+		assert_eq!(balance(alice()), alice_balance);
 	});
 }
 
