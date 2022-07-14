@@ -123,6 +123,8 @@ std = [
 	"pallet-indices/std",
 	'pallet-randomness-collective-flip/std',
 	'pallet-sudo/std',
+	"pallet-utility/std",
+	"pallet-multisig/std",
 	"pallet-scheduler/std",
 	'pallet-timestamp/std',
 	'pallet-transaction-payment/std',
