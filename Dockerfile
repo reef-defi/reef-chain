@@ -1,4 +1,4 @@
-FROM rust:1.51.0 as build
+FROM rust:1.59.0 as build
 
 RUN rustup default nightly-2021-05-09
 RUN apt-get update && apt-get install -y clang
