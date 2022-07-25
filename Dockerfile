@@ -7,7 +7,7 @@ WORKDIR /build
 COPY . /build
 RUN make release
 
-FROM debian:buster
+FROM ubuntu:20.04
 
 COPY --from=build /build/target/release/reef-node /usr/local/bin
 ENTRYPOINT ["reef-node"]
