@@ -1,7 +1,7 @@
 ## Reef Chain
 Reef chain is written in [Rust](https://www.rust-lang.org/). A basic familiarity with Rust tooling is required.
 
-To learn more about Reef chain, please refer to **[Documentation](https://docs.reef.finance/)**.
+To learn more about Reef chain, please refer to **[Documentation](https://docs.reef.io/)**.
 
 ### Clone
 To clone the repo with its submodules run:

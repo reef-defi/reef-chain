@@ -39,7 +39,7 @@ impl SubstrateCli for Cli {
 	}
 
 	fn support_url() -> String {
-		"docs.reef.finance".into()
+		"docs.reef.io".into()
 	}
 
 	fn copyright_start_year() -> i32 {
