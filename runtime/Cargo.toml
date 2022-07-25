@@ -1,7 +1,7 @@
 [package]
-authors = ['Reef Finance <https://reef.finance>']
+authors = ['Reef <https://reef.io>']
 edition = '2018'
-homepage = 'https://reef.finance'
+homepage = 'https://reef.io'
 license = 'Unlicense'
 name = 'reef-runtime'
 repository = 'https://github.com/reef-defi/reef-chain'

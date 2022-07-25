@@ -1,9 +1,9 @@
 [package]
-authors = ['Reef Finance <https://reef.finance>']
+authors = ['Reef <https://reef.io>']
 build = 'build.rs'
-description = 'Reef Substrate Node'
+description = 'Reef Node'
 edition = '2018'
-homepage = 'https://reef.finance'
+homepage = 'https://reef.io'
 license = 'Unlicense'
 name = 'reef-node'
 repository = 'https://github.com/reef-defi/reef-chain'
