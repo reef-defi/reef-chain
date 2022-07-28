@@ -719,11 +719,13 @@ pub mod module {
 }
 
 impl<T: Config> Pallet<T> {
-	/// Process queued events
+	/// Process queued events.
+	/// The event queue must be purged at the end of each extrinsic call.
 	pub fn process_queued_events() -> DispatchResult {
-		for event in Self::queued_events().drain(..) {
+		for event in Self::queued_events() {
 			Pallet::<T>::deposit_event(event);
 		}
+		QueuedEvents::<T>::set(Vec::new());
 		Ok(())
 	}
 
