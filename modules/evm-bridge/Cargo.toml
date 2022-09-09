@@ -9,25 +9,25 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 serde = { version = "1.0.101", optional = true, features = ["derive"] }
-codec = { package = "parity-scale-codec", version = "2.0.0", default-features = false }
-frame-support = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
-frame-system = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
-sp-core = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
-sp-std = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
-sp-io = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.10" }
+codec = { package = "parity-scale-codec", version = "3.1.5", default-features = false }
+frame-support = { git = "https://github.com/paritytech/substrate", default-features = false , tag = "monthly-2022-09" }
+frame-system = { git = "https://github.com/paritytech/substrate", default-features = false , tag = "monthly-2022-09" }
+sp-core = { git = "https://github.com/paritytech/substrate", default-features = false , tag = "monthly-2022-09" }
+sp-runtime = { git = "https://github.com/paritytech/substrate", default-features = false , tag = "monthly-2022-09" }
+sp-std = { git = "https://github.com/paritytech/substrate", default-features = false , tag = "monthly-2022-09" }
+sp-io = { git = "https://github.com/paritytech/substrate", default-features = false , tag = "monthly-2022-09" }
 primitive-types = { version = "0.10", default-features = false, features = ["rlp", "byteorder"] }
 sha3 = { version = "0.8", default-features = false }
 impl-trait-for-tuples = "0.2.1"
-ethereum-types = { version = "0.12.0", default-features = false }
+ethereum-types = { version = "0.13.1", default-features = false }
 primitives = { package = "reef-primitives", path = "../../primitives", default-features = false }
 support = { package = "module-support", path = "../support", default-features = false }
 module-evm = { path = "../evm", default-features = false }
 hex-literal = { version = "0.3.1" }
 
 [dev-dependencies]
-pallet-balances = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
-pallet-timestamp = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.10" }
+pallet-balances = { git = "https://github.com/paritytech/substrate", tag = "monthly-2022-09" }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", tag = "monthly-2022-09" }
 
 [features]
 default = ["std"]
